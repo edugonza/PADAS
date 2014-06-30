@@ -56,16 +56,24 @@ public class RedoLogInspector {
 		JMenu mnNewMenu = new JMenu("File");
 		menuBar.add(mnNewMenu);
 		
-		JMenuItem mntmNew = new JMenuItem("New connection");
-		mnNewMenu.add(mntmNew);
-		
-		JMenuItem mntmNewMenuItem = new JMenuItem("Open connection");
-		mnNewMenu.add(mntmNewMenuItem);
+		JMenuItem fileConnManagerMI = new JMenuItem("Connection Manager");
+		fileConnManagerMI.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ConnectionManager manager = new ConnectionManager();
+				manager.setVisible(true);
+			}
+		});
+		mnNewMenu.add(fileConnManagerMI);
 		
 		JSeparator separator = new JSeparator();
 		mnNewMenu.add(separator);
 		
 		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Exit");
+		mntmNewMenuItem_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
 		mnNewMenu.add(mntmNewMenuItem_1);
 		
 		JMenu mnNewMenu_1 = new JMenu("Edit");
