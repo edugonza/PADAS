@@ -3,28 +3,45 @@ package org.processmining.redologs.ui;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.BoxLayout;
 import javax.swing.JList;
 import javax.swing.border.BevelBorder;
+import javax.swing.event.ListDataListener;
 import javax.swing.AbstractListModel;
+
 import java.awt.GridLayout;
 import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+
 import javax.swing.SwingConstants;
 import javax.swing.JLabel;
+
+import org.processmining.redologs.config.Config;
+import org.processmining.redologs.config.DatabaseConnectionData;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+import javax.swing.ListSelectionModel;
 
 public class ConnectionManager extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 
+	private JList<DatabaseConnectionData> listConnections;
+	DefaultListModel<DatabaseConnectionData> listConnectionsModel;
+	
 	/**
 	 * Create the dialog.
 	 */
@@ -44,18 +61,17 @@ public class ConnectionManager extends JDialog {
 			contentPanel.add(panel, BorderLayout.CENTER);
 			panel.setLayout(new GridLayout(0, 1, 5, 5));
 			{
-				JList list = new JList();
-				list.setModel(new AbstractListModel() {
-					String[] values = new String[] {"Connection 1", "Connection 2"};
-					public int getSize() {
-						return values.length;
-					}
-					public Object getElementAt(int index) {
-						return values[index];
-					}
-				});
-				list.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-				panel.add(list);
+				JScrollPane listScrollPane = new JScrollPane();
+				listConnections = new JList<DatabaseConnectionData>();
+				listScrollPane.setViewportView(listConnections);
+				listConnections.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				listConnectionsModel = new DefaultListModel<>();
+				listConnections.setModel(listConnectionsModel);
+				for (DatabaseConnectionData e: Config.getInstance().getConnections()) {
+					listConnectionsModel.addElement(e);
+				}
+				listConnections.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+				panel.add(listScrollPane);
 			}
 		}
 		{
@@ -69,6 +85,17 @@ public class ConnectionManager extends JDialog {
 			panel.setLayout(gbl_panel);
 			{
 				JButton btnNewButton = new JButton("New");
+				btnNewButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						DatabaseConnectionData connection = new DatabaseConnectionData();
+						EditConnectionDialog editDialog = new EditConnectionDialog(connection);
+						if (editDialog.showDialog()) {
+							Config.getInstance().getConnections().add(connection);
+							listConnectionsModel.addElement(connection);
+							Config.getInstance().save();
+						}
+					}
+				});
 				btnNewButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 				GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
 				gbc_btnNewButton.fill = GridBagConstraints.HORIZONTAL;
@@ -79,6 +106,19 @@ public class ConnectionManager extends JDialog {
 			}
 			{
 				JButton btnNewButton_1 = new JButton("Edit");
+				btnNewButton_1.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						DatabaseConnectionData connection = listConnections.getSelectedValue();
+						if (connection != null) {
+							EditConnectionDialog editDialog = new EditConnectionDialog(
+									connection);
+							if (editDialog.showDialog()) {
+								listConnections.repaint();
+								Config.getInstance().save();
+							}
+						}
+					}
+				});
 				btnNewButton_1.setAlignmentX(Component.CENTER_ALIGNMENT);
 				GridBagConstraints gbc_btnNewButton_1 = new GridBagConstraints();
 				gbc_btnNewButton_1.fill = GridBagConstraints.HORIZONTAL;
@@ -89,12 +129,38 @@ public class ConnectionManager extends JDialog {
 			}
 			{
 				JButton btnNewButton_2 = new JButton("Delete");
+				btnNewButton_2.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						DatabaseConnectionData connection = listConnections.getSelectedValue();
+						if (connection != null) {
+							Config.getInstance().getConnections()
+									.remove(connection);
+							listConnectionsModel.removeElement(connection);
+							Config.getInstance().save();
+						}
+					}
+				});
 				btnNewButton_2.setAlignmentX(Component.CENTER_ALIGNMENT);
 				GridBagConstraints gbc_btnNewButton_2 = new GridBagConstraints();
+				gbc_btnNewButton_2.insets = new Insets(0, 0, 5, 0);
 				gbc_btnNewButton_2.fill = GridBagConstraints.HORIZONTAL;
 				gbc_btnNewButton_2.gridx = 0;
 				gbc_btnNewButton_2.gridy = 2;
 				panel.add(btnNewButton_2, gbc_btnNewButton_2);
+			}
+			{
+				JButton btnNewButton_3 = new JButton("Connect");
+				btnNewButton_3.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						DatabaseConnectionData connection = listConnections.getSelectedValue();
+						
+					}
+				});
+				GridBagConstraints gbc_btnNewButton_3 = new GridBagConstraints();
+				gbc_btnNewButton_3.insets = new Insets(0, 0, 5, 0);
+				gbc_btnNewButton_3.gridx = 0;
+				gbc_btnNewButton_3.gridy = 3;
+				panel.add(btnNewButton_3, gbc_btnNewButton_3);
 			}
 		}
 		{
@@ -102,15 +168,14 @@ public class ConnectionManager extends JDialog {
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
-				JButton okButton = new JButton("OK");
-				okButton.setActionCommand("OK");
-				buttonPane.add(okButton);
-				getRootPane().setDefaultButton(okButton);
-			}
-			{
-				JButton cancelButton = new JButton("Cancel");
-				cancelButton.setActionCommand("Cancel");
-				buttonPane.add(cancelButton);
+				JButton closeButton = new JButton("Close");
+				closeButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						ConnectionManager.this.setVisible(false);
+						ConnectionManager.this.dispose();
+					}
+				});
+				buttonPane.add(closeButton);
 			}
 		}
 	}

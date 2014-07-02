@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Vector;
 
 import org.deckfour.xes.classification.XEventAttributeClassifier;
 import org.deckfour.xes.classification.XEventClassifier;
@@ -177,12 +178,13 @@ public class LogTraceSplitter {
 	}
 	
 	
-	private static void computeMetrics(File logFile, boolean new_values, boolean old_values, FieldNameCanoniser canoniser) {
+	public static String[][] computeMetrics(File logFile, boolean new_values, boolean old_values, FieldNameCanoniser canoniser) {
 		try {
 			XParser parser = new XesXmlParser();
 			List<XLog> originalLogs = parser.parse(logFile);
 			XLog originalLog = originalLogs.get(0);
 			Hashtable<String,Hashtable<String,Integer>> attributesValuesCount = new Hashtable<>();
+			String[][] results = null;
 			
 			for (int i = 0; i < originalLog.size(); i++) {
 				XTrace originalTrace = originalLog.get(i);
@@ -233,7 +235,8 @@ public class LogTraceSplitter {
 			}
 			
 			Iterator<Entry<String, Hashtable<String, Integer>>> it = attributesValuesCount.entrySet().iterator();
-			
+			results = new String[attributesValuesCount.size()][6];
+			int i = 0;
 			while (it.hasNext()) {
 				Entry<String, Hashtable<String, Integer>> entry = it.next();
 				
@@ -268,13 +271,17 @@ public class LogTraceSplitter {
 				
 				float std = (float) Math.sqrt(stdSum / (float) num);
 				
+				results[i] = new String[] {entry.getKey(),String.valueOf(mean),String.valueOf(num),String.valueOf(max),String.valueOf(min),String.valueOf(std)};
 				System.out.println(entry.getKey()+" - Mean: "+mean+" Traces: "+num+" Max: "+max+" Min: "+min+" Std: "+std);
+				i++;
 			}
-			
+			return results;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		return null;
+		
 	}
 	
 	public static void main(String[] args) {

@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import org.apache.commons.collections15.Transformer;
 import org.processmining.redologs.common.Column;
@@ -573,15 +574,15 @@ public class OracleRelationsExplorer {
 		frame.setVisible(true);
 	}
 	
-	public void showGraph2(final Graph<GraphNode,GraphEdge> graph, String title) {
+	public VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, String title) {
 		//Layout<GraphNode, GraphEdge> layout = new CircleLayout<>(graph);
 		//Layout<GraphNode, GraphEdge> layout = new SpringLayout2<>(graph);
 		Layout<GraphNode, GraphEdge> layout = new FRLayout2<>(graph);
-		layout.setSize(new Dimension(600,600)); // sets the initial size of the space
+		//layout.setSize(new Dimension(600,600)); // sets the initial size of the space
 		// The BasicVisualizationServer<V,E> is parameterized by the edge types
 		VisualizationViewer<GraphNode,GraphEdge> vv = new VisualizationViewer<GraphNode,GraphEdge>(layout);
 		
-		vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
+		//vv.setPreferredSize(new Dimension(350,350)); //Sets the viewing area size
 		
 		vv.getRenderContext().setVertexLabelTransformer(new ToStringLabeller<GraphNode>());
 
@@ -605,8 +606,13 @@ public class OracleRelationsExplorer {
 		
 		DefaultModalGraphMouse gm = new DefaultModalGraphMouse();
 		gm.setMode(Mode.PICKING);
-		vv.setGraphMouse(gm);
-
+		vv.setGraphMouse(gm);	
+		
+		return vv;
+	}
+	
+	public void showGraph2(final Graph<GraphNode,GraphEdge> graph, String title) {
+		VisualizationViewer<GraphNode,GraphEdge> vv = getViewer(graph, title);
 		JFrame frame = new JFrame(title);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(vv);
@@ -629,7 +635,7 @@ public class OracleRelationsExplorer {
 			
 			Graph<GraphNode, GraphEdge> graph = explorer.generateRelationsGraphPKAndFK();
 			
-			explorer.showGraph2(graph, "Relations from Foreign and Primary Keys");
+			explorer.showGraph2(graph,"Relations from Foreign and Primary Keys");
 			
 			explorer.disconnect();
 			

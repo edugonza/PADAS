@@ -48,6 +48,7 @@ public class AboutDialog extends JDialog {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				AboutDialog.this.setVisible(false);
+				AboutDialog.this.dispose();
 			}
 		};
 		
