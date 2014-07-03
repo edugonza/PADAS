@@ -607,6 +607,7 @@ public class OracleRelationsExplorer {
 		DefaultModalGraphMouse gm = new DefaultModalGraphMouse();
 		gm.setMode(Mode.PICKING);
 		vv.setGraphMouse(gm);	
+		vv.addKeyListener(gm.getModeKeyListener());
 		
 		return vv;
 	}

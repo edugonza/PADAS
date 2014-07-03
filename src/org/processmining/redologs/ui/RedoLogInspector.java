@@ -1,18 +1,17 @@
 package org.processmining.redologs.ui;
 
-import java.awt.Dimension;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
 
+import javax.swing.JFileChooser;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
-import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -37,7 +36,6 @@ import java.awt.Toolkit;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.JDesktopPane;
 import javax.swing.JButton;
 
@@ -47,19 +45,10 @@ import javax.swing.SwingConstants;
 import javax.swing.BoxLayout;
 
 import java.awt.Component;
-import java.beans.PropertyVetoException;
 import java.io.File;
-import java.util.Enumeration;
-import java.util.List;
-
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
-import javax.swing.event.TableColumnModelListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 
 public class RedoLogInspector {
 
@@ -69,6 +58,7 @@ public class RedoLogInspector {
 	private VisualizationViewer<GraphNode, GraphEdge> vv;
 	private GridBagConstraints gbc_vv;
 	private JTable table;
+	private JTable table_logs;
 
 	/**
 	 * Launch the application.
@@ -110,11 +100,18 @@ public class RedoLogInspector {
 	public RedoLogInspector() {
 		initialize();
 	}
-	
-	private VisualizationViewer<GraphNode, GraphEdge> getVV() {
-		return vv;
-	}
 
+	private File getFileFromSelector() {
+		int selectedRow = table_logs.getSelectedRow();
+		if (selectedRow >= 0) {
+			Object file = table_logs.getModel().getValueAt(selectedRow, 0);
+			if (file instanceof File) {
+				return (File) file;
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -175,22 +172,22 @@ public class RedoLogInspector {
 		JDesktopPane desktopPane = new JDesktopPane();
 		frame.getContentPane().add(desktopPane, BorderLayout.CENTER);
 		
-		JInternalFrame internalFrame = new JInternalFrame("Metrics");
-		internalFrame.setClosable(true);
-		internalFrame.setResizable(true);
-		internalFrame.setMaximizable(true);
-		internalFrame.setIconifiable(true);
-		internalFrame.setBounds(113, 41, 310, 121);
-		desktopPane.add(internalFrame);
+		final JInternalFrame infrMetrics = new JInternalFrame("Metrics");
+		infrMetrics.setClosable(true);
+		infrMetrics.setResizable(true);
+		infrMetrics.setMaximizable(true);
+		infrMetrics.setIconifiable(true);
+		infrMetrics.setBounds(113, 41, 310, 121);
+		desktopPane.add(infrMetrics);
 		final String[] metricsTableColumnNames = new String[] {"Attribute","Mean","Amount","Min","Max","Std deviation"};
 		table = new JTable(new String[0][0] ,metricsTableColumnNames);
         table.setFillsViewportHeight(true);
         JScrollPane scrollPane = new JScrollPane(table);
         
-		internalFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+		infrMetrics.getContentPane().add(scrollPane, BorderLayout.CENTER);
 		
 		JPanel panel_2 = new JPanel();
-		internalFrame.getContentPane().add(panel_2, BorderLayout.NORTH);
+		infrMetrics.getContentPane().add(panel_2, BorderLayout.NORTH);
 		
 		final JProgressBar progressBar_metrics = new JProgressBar();
 		panel_2.add(progressBar_metrics);
@@ -199,8 +196,10 @@ public class RedoLogInspector {
 		btnCalculateMetrics.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
+				final File logFile = getFileFromSelector();
+				
 				Thread metricsThread = new Thread(new Runnable() {
-					
+									
 					@Override
 					public void run() {
 						progressBar_metrics.setIndeterminate(true);
@@ -216,27 +215,33 @@ public class RedoLogInspector {
 							FieldNameCanoniser canoniser = new FieldNameCanoniser();
 							canoniser.setRelations(result.relations);
 
-							File logFile = new File("result.backup.xes");
-							
-							final String[][] metrics = LogTraceSplitter.computeMetrics(logFile, true,true, canoniser);
-							
-							table.setModel(new DefaultTableModel(metrics, metricsTableColumnNames) {
+							if (logFile != null) {
 
-								/**
+								infrMetrics.setTitle("Metrics: "+logFile.getName());
+								
+								final String[][] metrics = LogTraceSplitter
+										.computeMetrics(logFile, true, true,
+												canoniser);
+
+								table.setModel(new DefaultTableModel(metrics,
+										metricsTableColumnNames) {
+
+									/**
 								 * 
 								 */
-								private static final long serialVersionUID = 4497128118537468593L;
-								
-								@Override
-								public boolean isCellEditable(int row,
-										int column) {
-									// TODO Auto-generated method stub
-									return false;
-								}
-								
-								
-							});
-							
+									private static final long serialVersionUID = 4497128118537468593L;
+
+									@Override
+									public boolean isCellEditable(int row,
+											int column) {
+										// TODO Auto-generated method stub
+										return false;
+									}
+
+								});
+							} else {
+
+							}
 						}
 						
 						progressBar_metrics.setIndeterminate(false);
@@ -327,6 +332,52 @@ public class RedoLogInspector {
 		});
 		infrRelationsGraph.getContentPane().add(graphPanel, BorderLayout.CENTER);
 		graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.X_AXIS));
-		internalFrame.setVisible(true);
+		
+		final JInternalFrame infrLogsList = new JInternalFrame("Logs list");
+		infrLogsList.setClosable(true);
+		infrLogsList.setResizable(true);
+		infrLogsList.setMaximizable(true);
+		infrLogsList.setIconifiable(true);
+		infrLogsList.setBounds(113, 41, 310, 121);
+		desktopPane.add(infrLogsList);
+		
+		final String[] logsTableColumnNames = new String[] {"Path","Name","Size"};
+		//table_2 = new JTable(new String[0][0] ,logsTableColumnNames);
+		final DefaultTableModel model_table_2 = new DefaultTableModel(new Object[0][0] ,logsTableColumnNames) {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 7762648250691096226L;
+
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		table_logs = new JTable(model_table_2);
+		table_logs.setFillsViewportHeight(true);
+		
+		JScrollPane scrollPane_2 = new JScrollPane(table_logs);
+		infrLogsList.getContentPane().add(scrollPane_2, BorderLayout.CENTER);
+		
+		
+		JPanel panel_4 = new JPanel();
+		infrLogsList.getContentPane().add(panel_4, BorderLayout.NORTH);
+		
+		JButton btnAddLog = new JButton("Add log");
+		final JFileChooser fc = new JFileChooser();
+		btnAddLog.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int returnVal = fc.showOpenDialog(infrLogsList);
+
+		        if (returnVal == JFileChooser.APPROVE_OPTION) {
+		            File file = fc.getSelectedFile();
+		            model_table_2.addRow(new Object[] {file,file.getName(),String.valueOf(file.length())});
+		        }
+			}
+		});
+		panel_4.add(btnAddLog);
+		infrLogsList.setVisible(true);
+		infrMetrics.setVisible(true);
 	}
 }
