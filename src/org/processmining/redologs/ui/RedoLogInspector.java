@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
@@ -23,7 +24,9 @@ import org.processmining.redologs.common.GraphEdge;
 import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.common.LogTraceSplitter;
 import org.processmining.redologs.common.RelationResult;
+import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.Config;
+import org.processmining.redologs.config.DatabaseConnectionData;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
 import edu.uci.ics.jung.graph.Graph;
@@ -46,19 +49,25 @@ import javax.swing.BoxLayout;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.List;
+import java.util.Vector;
+
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
 
 public class RedoLogInspector {
 
 	private JFrame frame;
-	private OracleRelationsExplorer explorer = new OracleRelationsExplorer();
 	private Graph<GraphNode, GraphEdge> graph;
 	private VisualizationViewer<GraphNode, GraphEdge> vv;
 	private GridBagConstraints gbc_vv;
 	private JTable table;
 	private JTable table_logs;
+	private JTable table_tables;
+	private JComboBox<DatabaseConnectionData> comboBox;
 
 	/**
 	 * Launch the application.
@@ -132,6 +141,7 @@ public class RedoLogInspector {
 			public void actionPerformed(ActionEvent e) {
 				ConnectionManager manager = new ConnectionManager();
 				manager.setVisible(true);
+				refreshConnectionsComboBox();
 			}
 		});
 		mnNewMenu.add(fileConnManagerMI);
@@ -203,7 +213,7 @@ public class RedoLogInspector {
 					@Override
 					public void run() {
 						progressBar_metrics.setIndeterminate(true);
-						
+						OracleRelationsExplorer explorer = new OracleRelationsExplorer(getSelectedConnection(),getSelectedTables());
 						if (explorer.connect()) {
 							RelationResult result = explorer
 									.generateRelationsGraphFromForeignKeys(true);
@@ -300,7 +310,7 @@ public class RedoLogInspector {
 						progressBar.setIndeterminate(true);
 						//explorer = new OracleRelationsExplorer();
 						
-						
+						OracleRelationsExplorer explorer = new OracleRelationsExplorer(getSelectedConnection(),getSelectedTables());
 						if (explorer.connect()) {
 							graph = explorer.generateRelationsGraphPKAndFK();
 							
@@ -377,7 +387,84 @@ public class RedoLogInspector {
 			}
 		});
 		panel_4.add(btnAddLog);
+		
+		/**/
+		final JInternalFrame infrTablesList = new JInternalFrame("Tables list");
+		infrTablesList.setClosable(true);
+		infrTablesList.setResizable(true);
+		infrTablesList.setMaximizable(true);
+		infrTablesList.setIconifiable(true);
+		infrTablesList.setBounds(113, 41, 310, 121);
+		desktopPane.add(infrTablesList);
+		
+		final String[] tablesTableColumnNames = new String[] {"Name","Database Name","Table Name"};
+		//table_2 = new JTable(new String[0][0] ,logsTableColumnNames);
+		final DefaultTableModel model_tables = new DefaultTableModel(new Object[0][0] ,tablesTableColumnNames) {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 7762648250691096226L;
+
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		table_tables = new JTable(model_tables);
+		table_tables.setFillsViewportHeight(true);
+		
+		JScrollPane scrollPane_3 = new JScrollPane(table_tables);
+		infrTablesList.getContentPane().add(scrollPane_3, BorderLayout.CENTER);
+		
+		
+		JPanel panel_5 = new JPanel();
+		infrTablesList.getContentPane().add(panel_5, BorderLayout.NORTH);
+		
+		JButton btnObtainTables = new JButton("Obtain tables");
+		btnObtainTables.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				List<TableInfo> tables = OracleRelationsExplorer.getTables(getSelectedConnection());
+				for (TableInfo t: tables) {
+					model_tables.addRow(new Object[] {t,t.db,t.name});
+				}
+			}
+		});
+		panel_5.add(btnObtainTables);
+		/**/
+		
+		JPanel panel_StatusBar = new JPanel();
+		frame.getContentPane().add(panel_StatusBar, BorderLayout.SOUTH);
+		panel_StatusBar.setLayout(new BoxLayout(panel_StatusBar, BoxLayout.X_AXIS));
+		
+		JLabel lblNewLabel = new JLabel("Connection: ");
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_StatusBar.add(lblNewLabel);
+		
+		comboBox = new JComboBox<DatabaseConnectionData>();
+		refreshConnectionsComboBox();
+		
+		comboBox.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		panel_StatusBar.add(comboBox);
 		infrLogsList.setVisible(true);
 		infrMetrics.setVisible(true);
+		infrTablesList.setVisible(true);
+	}
+	
+	private void refreshConnectionsComboBox() {
+		Vector<DatabaseConnectionData> connectionsVector = new Vector<>(Config.getInstance().getConnections());
+		comboBox.setModel(new DefaultComboBoxModel<>(connectionsVector));
+	}
+	
+	public DatabaseConnectionData getSelectedConnection() {
+		return (DatabaseConnectionData) comboBox.getSelectedItem();
+	}
+	
+	public List<TableInfo> getSelectedTables() {
+		int[] selected = table_tables.getSelectedRows();
+		Vector<TableInfo> selectedTables = new Vector<>();
+		for (int i: selected) {
+			selectedTables.add((TableInfo) table_tables.getModel().getValueAt(i, 0));
+		}
+		return selectedTables;
 	}
 }

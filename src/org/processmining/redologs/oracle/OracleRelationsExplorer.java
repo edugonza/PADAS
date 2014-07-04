@@ -30,6 +30,7 @@ import org.processmining.redologs.common.Key;
 import org.processmining.redologs.common.RelationResult;
 import org.processmining.redologs.common.RelationsGraphNode;
 import org.processmining.redologs.common.TableInfo;
+import org.processmining.redologs.config.DatabaseConnectionData;
 
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout2;
@@ -70,6 +71,27 @@ public class OracleRelationsExplorer {
 	
 	public OracleRelationsExplorer(String config_file) {
 		init(config_file);
+	}
+	
+	private OracleRelationsExplorer(DatabaseConnectionData connectionData) {
+		CONNECTION_POOL_NAME = "pool_"+this.hashCode();
+		CONNECTION_USER = connectionData.username;
+		CONNECTION_PASS = connectionData.password;
+		CONNECTION_HOST = connectionData.hostname;
+		CONNECTION_PORT = String.valueOf(connectionData.port);
+	}
+	
+	public OracleRelationsExplorer(DatabaseConnectionData connectionData, List<TableInfo> tables) {
+		CONNECTION_POOL_NAME = "pool_"+this.hashCode();
+		CONNECTION_USER = connectionData.username;
+		CONNECTION_PASS = connectionData.password;
+		CONNECTION_HOST = connectionData.hostname;
+		CONNECTION_PORT = String.valueOf(connectionData.port);
+		targetTables = tables;
+		targetTablesMap = new Hashtable<>();
+		for (TableInfo t: targetTables) {
+			targetTablesMap.put(t.name, t);
+		}
 	}
 	
 	private void init(String config_file) {
@@ -642,6 +664,37 @@ public class OracleRelationsExplorer {
 			
 		} else {
 			System.err.println("ERROR: connection failed");
+		}
+	}
+
+	public List<TableInfo> getAllTables(String db) {
+		List<TableInfo> tables = new Vector<>();
+		try {
+			String query = "SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER='"+db+"'";
+			Statement stm = con.createStatement();
+			ResultSet res = stm.executeQuery(query);
+			
+			while(res.next()) {
+				TableInfo t = new TableInfo();
+				t.db = db;
+				t.name = res.getString(1);
+				tables.add(t);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return tables;
+	}
+	
+	public static List<TableInfo> getTables(
+			DatabaseConnectionData connectionData) {
+		OracleRelationsExplorer explorer = new OracleRelationsExplorer(connectionData);
+		if (explorer.connect()) {
+			return explorer.getAllTables(connectionData.dbname);
+		} else {
+			return null;
 		}
 	}
 

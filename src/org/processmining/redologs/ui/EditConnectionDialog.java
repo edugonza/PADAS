@@ -129,7 +129,6 @@ public class EditConnectionDialog extends JDialog {
 		}
 		{
 			txtUsername = new JTextField(connection.username);
-			txtUsername.setText("username");
 			contentPanel.add(txtUsername, "4, 10, fill, default");
 			txtUsername.setColumns(10);
 		}
