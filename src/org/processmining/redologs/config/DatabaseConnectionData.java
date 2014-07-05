@@ -16,6 +16,7 @@ public class DatabaseConnectionData implements Serializable {
 	public String username = "";
 	public String password = "";
 	public String dbname = "";
+	public String service = "XE";
 	
 	@Override
 	public String toString() {

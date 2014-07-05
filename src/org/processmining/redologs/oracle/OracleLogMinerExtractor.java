@@ -50,6 +50,7 @@ public class OracleLogMinerExtractor {
 	private String CONNECTION_PASS = "";
 	private String CONNECTION_HOST = "localhost";
 	private String CONNECTION_PORT = "1521";
+	private String CONNECTION_SERVICE = "XE";
 	private static final String CONFIG_FILE = "extractor.config";
 	private UniversalConnectionPoolManager mgr;
 	private PoolDataSource pds;
@@ -126,7 +127,7 @@ public class OracleLogMinerExtractor {
 			pds = PoolDataSourceFactory.getPoolDataSource();
 			pds.setConnectionPoolName(CONNECTION_POOL_NAME);
 			pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
-			pds.setURL("jdbc:oracle:thin:@//"+CONNECTION_HOST+":"+CONNECTION_PORT+"/XE");
+			pds.setURL("jdbc:oracle:thin:@//"+CONNECTION_HOST+":"+CONNECTION_PORT+"/"+CONNECTION_SERVICE);
 			pds.setUser(CONNECTION_USER);
 			pds.setPassword(CONNECTION_PASS);
 

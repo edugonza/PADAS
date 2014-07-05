@@ -57,6 +57,7 @@ public class OracleRelationsExplorer {
 	private String CONNECTION_PASS = "";
 	private String CONNECTION_HOST = "localhost";
 	private String CONNECTION_PORT = "1521";
+	private String CONNECTION_SERVICE = "XE";
 	private static final String CONFIG_FILE = "extractor.config";
 	private UniversalConnectionPoolManager mgr;
 	private PoolDataSource pds;
@@ -79,6 +80,7 @@ public class OracleRelationsExplorer {
 		CONNECTION_PASS = connectionData.password;
 		CONNECTION_HOST = connectionData.hostname;
 		CONNECTION_PORT = String.valueOf(connectionData.port);
+		CONNECTION_SERVICE = connectionData.service;
 	}
 	
 	public OracleRelationsExplorer(DatabaseConnectionData connectionData, List<TableInfo> tables) {
@@ -87,6 +89,7 @@ public class OracleRelationsExplorer {
 		CONNECTION_PASS = connectionData.password;
 		CONNECTION_HOST = connectionData.hostname;
 		CONNECTION_PORT = String.valueOf(connectionData.port);
+		CONNECTION_SERVICE = connectionData.service;
 		targetTables = tables;
 		targetTablesMap = new Hashtable<>();
 		for (TableInfo t: targetTables) {
@@ -142,7 +145,7 @@ public class OracleRelationsExplorer {
 			pds = PoolDataSourceFactory.getPoolDataSource();
 			pds.setConnectionPoolName(CONNECTION_POOL_NAME);
 			pds.setConnectionFactoryClassName("oracle.jdbc.pool.OracleDataSource");
-			pds.setURL("jdbc:oracle:thin:@//"+CONNECTION_HOST+":"+CONNECTION_PORT+"/XE");
+			pds.setURL("jdbc:oracle:thin:@//"+CONNECTION_HOST+":"+CONNECTION_PORT+"/"+CONNECTION_SERVICE);
 			pds.setUser(CONNECTION_USER);
 			pds.setPassword(CONNECTION_PASS);
 

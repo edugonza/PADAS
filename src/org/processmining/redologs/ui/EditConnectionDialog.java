@@ -43,6 +43,7 @@ public class EditConnectionDialog extends JDialog {
 	private JComboBox<DatabaseTypes> cbxDatabaseType;
 	private JFormattedTextField formattedTextFieldPort;
 	private boolean result = false;
+	private JTextField txtService;
 
 	/**
 	 * Create the dialog.
@@ -150,6 +151,15 @@ public class EditConnectionDialog extends JDialog {
 			txtDatabasename.setColumns(10);
 		}
 		{
+			JLabel lblService = new JLabel("Service");
+			contentPanel.add(lblService, "2, 16, right, default");
+		}
+		{
+			txtService = new JTextField(connection.service);
+			contentPanel.add(txtService, "4, 16, fill, default");
+			txtService.setColumns(10);
+		}
+		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -164,6 +174,7 @@ public class EditConnectionDialog extends JDialog {
 						connection.username = txtUsername.getText();
 						connection.password = String.valueOf(pwdPassword.getPassword());
 						connection.dbname = txtDatabasename.getText();
+						connection.service = txtService.getText();
 						result = true;
 						EditConnectionDialog.this.setVisible(false);
 						EditConnectionDialog.this.dispose();
