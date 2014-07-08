@@ -9,6 +9,7 @@ public class Key implements GraphNode {
 	public static final int FOREIGN_KEY = 3;
 	
 	public String name;
+	public TableInfo table;
 	public List<Column> fields;
 	public int type;
 	public Key refers_to;

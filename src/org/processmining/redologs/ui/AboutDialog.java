@@ -1,5 +1,6 @@
 package org.processmining.redologs.ui;
 
+import java.awt.Desktop;
 import java.awt.EventQueue;
 
 import javax.swing.JDialog;
@@ -8,7 +9,6 @@ import java.awt.GridLayout;
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-
 import javax.swing.BoxLayout;
 
 import java.awt.Component;
@@ -24,6 +24,9 @@ import javax.swing.JTextPane;
 import org.processmining.redologs.common.Constants;
 
 import java.awt.Font;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class AboutDialog extends JDialog {
 
@@ -53,7 +56,7 @@ public class AboutDialog extends JDialog {
 		};
 		
 		addMouseListener(closeOnMouseRelease);
-		setBounds(100, 100, 268, 333);
+		setBounds(100, 100, 268, 365);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		
 		JLabel lblByRrzeiconsown = new JLabel("");
@@ -73,6 +76,28 @@ public class AboutDialog extends JDialog {
 		lblNewLabel_1.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(lblNewLabel_1);
+		
+		JLabel lblNewLabel_2 = new JLabel(Constants.AUTHOR);
+		lblNewLabel_2.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel_2.setAlignmentX(Component.CENTER_ALIGNMENT);
+		getContentPane().add(lblNewLabel_2);
+		
+		JLabel lblNewLabel_3 = new JLabel("<"+Constants.EMAIL+">");
+		lblNewLabel_3.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					Desktop.getDesktop().browse(new URI(Constants.EMAIL));
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (URISyntaxException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		lblNewLabel_3.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel_3.setAlignmentX(Component.CENTER_ALIGNMENT);
+		getContentPane().add(lblNewLabel_3);
 
 	}
 

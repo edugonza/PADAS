@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 
 import org.apache.commons.collections15.Transformer;
 import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.GraphEdge;
 import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.common.Key;
@@ -185,6 +186,245 @@ public class OracleRelationsExplorer {
 		}
 		
 		return res;
+	}
+	
+	public DataModel extractRelations() {
+		DataModel model = new DataModel();
+		
+		Hashtable<String, Key> primaryKeys = new Hashtable<>();
+		Hashtable<String, Key> foreignKeys = new Hashtable<>();
+		Hashtable<String, Key> uniqueKeys = new Hashtable<>();
+		Hashtable<String, Column> columns = new Hashtable<>();
+		Hashtable<TableInfo, List<Key>> keysPerTable = new Hashtable<>();
+		
+		try {
+			String queryStr = "SELECT PF.constraint_name,PF.table_name,PF.column_name,C.constraint_type,C.r_constraint_name "+
+							  "FROM all_cons_columns PF, all_constraints C "+
+							  "WHERE C.constraint_type IN ('U','P','R') "+
+							  "AND PF.constraint_name = C.constraint_name "+
+							  "AND C.table_name IN (";
+			
+			String sep="";
+			for (TableInfo t: targetTables) {
+				queryStr += sep+"'"+t.name+"'";
+				sep=", ";
+			}
+			queryStr += ") ORDER BY C.constraint_type";
+			
+			ResultSet res = executeQueryGetResultSet(queryStr);
+			
+			while (res.next()) {
+				String constraint_name = res.getString(1);
+				String table_name = res.getString(2);
+				String column_name = res.getString(3);
+				String constraint_type = res.getString(4);
+				String r_constraint_name = res.getString(5);
+				
+				if (constraint_type.equalsIgnoreCase("R")) {
+					// Foreign Key
+					Key k = null;
+					if (foreignKeys.containsKey(constraint_name)) {
+						k = foreignKeys.get(constraint_name);
+					} else {
+						k = new Key();
+						k.name = constraint_name;
+						k.type = Key.FOREIGN_KEY;
+						k.table = targetTablesMap.get(table_name);
+						k.fields = new Vector<>();
+						foreignKeys.put(k.name, k);
+						List<Key> kpt = keysPerTable.get(k.table);
+						if (kpt == null) {
+							kpt = new Vector<>();
+						}
+						kpt.add(k);
+						keysPerTable.put(k.table,kpt); 
+					}
+					
+					Column c = new Column();
+					c.name = column_name;
+					c.table = targetTablesMap.get(table_name);
+					if (columns.containsKey(c.toString())) {
+						c = columns.get(c.toString());
+					} else {
+						columns.put(c.toString(), c);
+					}
+					
+					if (primaryKeys.containsKey(r_constraint_name)) {
+						k.refers_to = primaryKeys.get(r_constraint_name);
+					} else if (uniqueKeys.containsKey(r_constraint_name)) {
+						k.refers_to = uniqueKeys.get(r_constraint_name);
+					}
+					
+					k.fields.add(c);
+					
+				} else if (constraint_type.equalsIgnoreCase("P")) {
+					// Primary Key
+					Key k = null;
+					if (primaryKeys.containsKey(constraint_name)) {
+						k = primaryKeys.get(constraint_name);
+					} else {
+						k = new Key();
+						k.name = constraint_name;
+						k.type = Key.PRIMARY_KEY;
+						k.table = targetTablesMap.get(table_name);
+						k.fields = new Vector<>();
+						primaryKeys.put(k.name, k);
+						List<Key> kpt = keysPerTable.get(k.table);
+						if (kpt == null) {
+							kpt = new Vector<>();
+						}
+						kpt.add(k);
+						keysPerTable.put(k.table,kpt);
+					}
+					
+					Column c = new Column();
+					c.name = column_name;
+					c.table = targetTablesMap.get(table_name);
+					if (columns.containsKey(c.toString())) {
+						c = columns.get(c.toString());
+					} else {
+						columns.put(c.toString(), c);
+					}
+					
+					k.fields.add(c);
+					
+				} else if (constraint_type.equalsIgnoreCase("U")) {
+					// Unique
+					Key k = null;
+					if (uniqueKeys.containsKey(constraint_name)) {
+						k = uniqueKeys.get(constraint_name);
+					} else {
+						k = new Key();
+						k.name = constraint_name;
+						k.type = Key.UNIQUE_KEY;
+						k.table = targetTablesMap.get(table_name);
+						k.fields = new Vector<>();
+						uniqueKeys.put(k.name, k);
+						List<Key> kpt = keysPerTable.get(k.table);
+						if (kpt == null) {
+							kpt = new Vector<>();
+						}
+						kpt.add(k);
+						keysPerTable.put(k.table,kpt);
+					}
+					
+					Column c = new Column();
+					c.name = column_name;
+					c.table = targetTablesMap.get(table_name);
+					if (columns.containsKey(c.toString())) {
+						c = columns.get(c.toString());
+					} else {
+						columns.put(c.toString(), c);
+					}
+					
+					k.fields.add(c);
+				}
+
+			}
+			
+			model.setPrimaryKeys(primaryKeys);
+			model.setUniqueKeys(uniqueKeys);
+			model.setForeignKeys(foreignKeys);
+			model.setColumns(columns);
+			model.setTables(targetTables);
+			model.setKeysPerTable(keysPerTable);
+			
+		} catch (Exception e) {
+			
+		}
+		
+		return model;
+	}
+	
+	public static Graph<GraphNode, GraphEdge> generateRelationsGraphPKAndFK(DataModel model) {
+		Graph<GraphNode, GraphEdge> graph = new SparseGraph<>();
+		
+		Hashtable<String,List<Key>> comparableKeys = new Hashtable<>();
+		
+		for (Entry<String, Key> entry: model.getPrimaryKeys().entrySet()) {
+			Key k = entry.getValue();
+			graph.addVertex(k);
+			Collections.sort(k.fields);
+			String collectionID = "";
+			for (Column c: k.fields) {
+				graph.addVertex(c);
+				graph.addVertex(c.table);
+				graph.addEdge(new GraphEdge(),c,c.table);
+				GraphEdge e = new GraphEdge();
+				graph.addEdge(e,k,c);
+				collectionID += c.toString()+"#";
+			}
+			
+			if (comparableKeys.containsKey(collectionID)) {
+				List<Key> keysList = comparableKeys.get(collectionID);
+				keysList.add(k);
+			} else {
+				List<Key> keysList = new Vector<>();
+				keysList.add(k);
+				comparableKeys.put(collectionID, keysList);
+			}
+		}
+		
+		for (Entry<String, Key> entry: model.getUniqueKeys().entrySet()) {
+			Key k = entry.getValue();
+			graph.addVertex(k);
+			String collectionID = "";
+			for (Column c: k.fields) {
+				graph.addVertex(c);
+				graph.addVertex(c.table);
+				graph.addEdge(new GraphEdge(),c,c.table);
+				GraphEdge e = new GraphEdge();
+				graph.addEdge(e,k,c);
+				collectionID += c.toString()+"#";
+			}
+			
+			if (comparableKeys.containsKey(collectionID)) {
+				List<Key> keysList = comparableKeys.get(collectionID);
+				keysList.add(k);
+			} else {
+				List<Key> keysList = new Vector<>();
+				keysList.add(k);
+				comparableKeys.put(collectionID, keysList);
+			}
+		}
+		
+		for (Entry<String, Key> entry: model.getForeignKeys().entrySet()) {
+			Key k = entry.getValue();
+			graph.addVertex(k);
+			String collectionID = "";
+			for (Column c: k.fields) {
+				graph.addVertex(c);
+				graph.addVertex(c.table);
+				graph.addEdge(new GraphEdge(),c,c.table);
+				GraphEdge e = new GraphEdge();
+				graph.addEdge(e,k,c);
+				collectionID += c.toString()+"#";
+			}
+			
+			List<Key> keysList = null;
+			if (comparableKeys.containsKey(collectionID)) {
+				keysList = comparableKeys.get(collectionID);
+				keysList.add(k);
+			} else {
+				keysList = new Vector<>();
+				keysList.add(k);
+				comparableKeys.put(collectionID, keysList);
+			}
+			
+			if (k.refers_to != null) {
+				graph.addVertex(k.refers_to);
+				GraphEdge e = new GraphEdge();
+				if (keysList.size() > 1) {
+					e.label = k.toString() + " 1 - 1 " + k.refers_to.toString();
+				} else {
+					e.label = k.toString() + " N - 1 " + k.refers_to.toString();
+				}
+				graph.addEdge(e, k, k.refers_to);
+			}
+		}
+		
+		return graph;
+		
 	}
 	
 	public Graph<GraphNode, GraphEdge> generateRelationsGraphPKAndFK() {
@@ -599,7 +839,7 @@ public class OracleRelationsExplorer {
 		frame.setVisible(true);
 	}
 	
-	public VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, String title) {
+	public static VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, String title) {
 		//Layout<GraphNode, GraphEdge> layout = new CircleLayout<>(graph);
 		//Layout<GraphNode, GraphEdge> layout = new SpringLayout2<>(graph);
 		Layout<GraphNode, GraphEdge> layout = new FRLayout2<>(graph);
@@ -695,7 +935,9 @@ public class OracleRelationsExplorer {
 			DatabaseConnectionData connectionData) {
 		OracleRelationsExplorer explorer = new OracleRelationsExplorer(connectionData);
 		if (explorer.connect()) {
-			return explorer.getAllTables(connectionData.dbname);
+			List<TableInfo> tables = explorer.getAllTables(connectionData.dbname);
+			explorer.disconnect();
+			return tables;
 		} else {
 			return null;
 		}

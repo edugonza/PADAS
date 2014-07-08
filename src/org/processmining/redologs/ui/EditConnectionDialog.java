@@ -51,7 +51,7 @@ public class EditConnectionDialog extends JDialog {
 	public EditConnectionDialog(final DatabaseConnectionData connection) {
 		setModal(true);
 		setResizable(false);
-		setBounds(100, 100, 357, 303);
+		setBounds(100, 100, 357, 342);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);

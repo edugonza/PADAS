@@ -36,6 +36,8 @@ import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
+import com.thoughtworks.xstream.core.util.Base64Encoder;
+
 import edu.uci.ics.jung.graph.Graph;
 
 public class LogTraceSplitter {
@@ -178,13 +180,13 @@ public class LogTraceSplitter {
 	}
 	
 	
-	public static String[][] computeMetrics(File logFile, boolean new_values, boolean old_values, FieldNameCanoniser canoniser) {
+	public static Object[][] computeMetrics(File logFile, boolean new_values, boolean old_values,DataModel model) {
 		try {
 			XParser parser = new XesXmlParser();
 			List<XLog> originalLogs = parser.parse(logFile);
 			XLog originalLog = originalLogs.get(0);
 			Hashtable<String,Hashtable<String,Integer>> attributesValuesCount = new Hashtable<>();
-			String[][] results = null;
+			Object[][] results = null;
 			
 			for (int i = 0; i < originalLog.size(); i++) {
 				XTrace originalTrace = originalLog.get(i);
@@ -196,6 +198,91 @@ public class LogTraceSplitter {
 					if (tableNameAttr instanceof XAttributeLiteral) {
 						tableName = ((XAttributeLiteral) tableNameAttr).getValue();
 					}
+					XAttribute DBNameAttr = attributes.get("SEG_OWNER");
+					String DBName = "";
+					if (DBNameAttr instanceof XAttributeLiteral) {
+						DBName = ((XAttributeLiteral) DBNameAttr).getValue();
+					}
+					
+					
+					/* Metrics of Keys are checked here */
+					if (model != null) {
+						String prefix_new = "K_NEW_";
+						String prefix_old = "K_OLD_";
+						List<Key> keys = model.getKeysPerTable(DBName,
+								tableName);
+						Base64Encoder encoder64 = new Base64Encoder();
+						for (Key k : keys) {
+							String keyId = k.table + "#" + "("
+									+ k.typeToString() + ")" + k.name;
+							String keyValNew = "";
+							String keyValOld = "";
+							for (Column c : k.fields) {
+								XAttribute attrNew = attributes.get("V_NEW_"
+										+ c.name);
+								XAttribute attrOld = attributes.get("V_OLD_"
+										+ c.name);
+								String vNew = "";
+								String vOld = "";
+								if (attrNew != null) {
+									if (attrNew instanceof XAttributeLiteral) {
+										vNew = ((XAttributeLiteral) attrNew)
+												.getValue();
+									}
+								}
+								if (attrOld != null) {
+									if (attrOld instanceof XAttributeLiteral) {
+										vOld = ((XAttributeLiteral) attrOld)
+												.getValue();
+									}
+								}
+								keyValNew += ","
+										+ encoder64.encode(vNew.getBytes());
+								keyValOld += ","
+										+ encoder64.encode(vOld.getBytes());
+							}
+
+							if (k.type == Key.FOREIGN_KEY
+									&& k.refers_to != null) {
+								keyId = k.refers_to.table + "#" + "("
+										+ k.refers_to.typeToString() + ")"
+										+ k.refers_to.name;
+							}
+
+							Hashtable<String, Integer> valuesCount;
+							if (attributesValuesCount.containsKey(prefix_new
+									+ keyId)) {
+								valuesCount = attributesValuesCount
+										.get(prefix_new + keyId);
+							} else {
+								valuesCount = new Hashtable<>();
+								attributesValuesCount.put(prefix_new + keyId,
+										valuesCount);
+							}
+							int count = 1;
+							if (valuesCount.containsKey(keyValNew)) {
+								count = valuesCount.get(keyValNew) + 1;
+							}
+							valuesCount.put(keyValNew, count);
+
+							if (attributesValuesCount.containsKey(prefix_old
+									+ keyId)) {
+								valuesCount = attributesValuesCount
+										.get(prefix_old + keyId);
+							} else {
+								valuesCount = new Hashtable<>();
+								attributesValuesCount.put(prefix_old + keyId,
+										valuesCount);
+							}
+							count = 1;
+							if (valuesCount.containsKey(keyValOld)) {
+								count = valuesCount.get(keyValOld) + 1;
+							}
+							valuesCount.put(keyValOld, count);
+						}
+					}
+					/**/
+					
 					Iterator<Entry<String,XAttribute>> it = attributes.entrySet().iterator();
 					while (it.hasNext()) {
 						Entry<String,XAttribute> entry = it.next();
@@ -208,7 +295,7 @@ public class LogTraceSplitter {
 							String prefix = key.substring(0, 6);
 							String originalKey = key.substring(6);
 							
-							String canonizedKey = canoniser.get(tableName,originalKey);
+							String canonizedKey = tableName+":"+originalKey;
 							
 							if (attributesValuesCount.containsKey(prefix+canonizedKey)) {
 								valuesCount = attributesValuesCount.get(prefix+canonizedKey);
@@ -235,7 +322,7 @@ public class LogTraceSplitter {
 			}
 			
 			Iterator<Entry<String, Hashtable<String, Integer>>> it = attributesValuesCount.entrySet().iterator();
-			results = new String[attributesValuesCount.size()][6];
+			results = new Object[attributesValuesCount.size()][6];
 			int i = 0;
 			while (it.hasNext()) {
 				Entry<String, Hashtable<String, Integer>> entry = it.next();
@@ -271,8 +358,8 @@ public class LogTraceSplitter {
 				
 				float std = (float) Math.sqrt(stdSum / (float) num);
 				
-				results[i] = new String[] {entry.getKey(),String.valueOf(mean),String.valueOf(num),String.valueOf(max),String.valueOf(min),String.valueOf(std)};
-				System.out.println(entry.getKey()+" - Mean: "+mean+" Traces: "+num+" Max: "+max+" Min: "+min+" Std: "+std);
+				results[i] = new Object[] {entry.getKey(),new Float(mean),new Integer(num),new Integer(max),new Integer(min),new Float(std)};
+				//System.out.println(entry.getKey()+" - Mean: "+mean+" Traces: "+num+" Max: "+max+" Min: "+min+" Std: "+std);
 				i++;
 			}
 			return results;
@@ -284,35 +371,35 @@ public class LogTraceSplitter {
 		
 	}
 	
-	public static void main(String[] args) {
-		//String traceIdField = "V_NEW_CUSTOMER_ID";
-		String traceIdField = "V_NEW_CUSTOMER_ID";
-		String timestampField = "TIMESTAMP";
-		String orderField = "SCN";
-		String[] activityFields = new String[] {"SEG_OWNER","TABLE_NAME","OPERATION","COLUMN_CHANGES"};
-		File logFile = new File("result.xes");
-		File splittedLogFile = new File("result-splitted-"+traceIdField+".xes");
-		
-		OracleRelationsExplorer explorer = new OracleRelationsExplorer();
-		if (explorer.connect()) {
-			RelationResult result = explorer.generateRelationsGraphFromForeignKeys(true);
-			
-			explorer.showGraph(result.graph,"Relations from Foreign Keys");
-			
-			explorer.disconnect();
-		
-			FieldNameCanoniser canoniser = new FieldNameCanoniser();
-			canoniser.setRelations(result.relations);
-			
-			computeMetrics(logFile,true,true,canoniser);
-			
-		} else {
-			System.err.println("ERROR: connection failed");
-		}
-		
-		splitLog(logFile,traceIdField,orderField,timestampField,activityFields,splittedLogFile);
-		
-		
-	}
+//	public static void main(String[] args) {
+//		//String traceIdField = "V_NEW_CUSTOMER_ID";
+//		String traceIdField = "V_NEW_CUSTOMER_ID";
+//		String timestampField = "TIMESTAMP";
+//		String orderField = "SCN";
+//		String[] activityFields = new String[] {"SEG_OWNER","TABLE_NAME","OPERATION","COLUMN_CHANGES"};
+//		File logFile = new File("result.xes");
+//		File splittedLogFile = new File("result-splitted-"+traceIdField+".xes");
+//		
+//		OracleRelationsExplorer explorer = new OracleRelationsExplorer();
+//		if (explorer.connect()) {
+//			RelationResult result = explorer.generateRelationsGraphFromForeignKeys(true);
+//			
+//			explorer.showGraph(result.graph,"Relations from Foreign Keys");
+//			
+//			explorer.disconnect();
+//		
+//			FieldNameCanoniser canoniser = new FieldNameCanoniser();
+//			canoniser.setRelations(result.relations);
+//			
+//			computeMetrics(logFile,true,true,canoniser);
+//			
+//		} else {
+//			System.err.println("ERROR: connection failed");
+//		}
+//		
+//		splitLog(logFile,traceIdField,orderField,timestampField,activityFields,splittedLogFile);
+//		
+//		
+//	}
 
 }

@@ -17,6 +17,7 @@ public class FieldNameCanoniser {
 	public String get(String tableName, String name) {
 		String canonized = null;
 		String fullName = tableName+":"+name;
+		
 		if (relations.containsKey(fullName)) {
 			RelationsGraphNode node = relations.get(fullName);
 			if (node.to.isEmpty()) {

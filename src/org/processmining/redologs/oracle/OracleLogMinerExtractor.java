@@ -34,6 +34,7 @@ import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.redologs.common.TableInfo;
+import org.processmining.redologs.config.DatabaseConnectionData;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import oracle.ucp.UniversalConnectionPoolAdapter;
@@ -79,6 +80,25 @@ public class OracleLogMinerExtractor {
 	
 	public OracleLogMinerExtractor(String config_file) {
 		init(config_file);
+	}
+	
+	private OracleLogMinerExtractor(DatabaseConnectionData connectionData) {
+		CONNECTION_POOL_NAME = "pool_"+this.hashCode();
+		CONNECTION_USER = connectionData.username;
+		CONNECTION_PASS = connectionData.password;
+		CONNECTION_HOST = connectionData.hostname;
+		CONNECTION_PORT = String.valueOf(connectionData.port);
+		CONNECTION_SERVICE = connectionData.service;
+	}
+	
+	public OracleLogMinerExtractor(DatabaseConnectionData connectionData, List<TableInfo> tables) {
+		CONNECTION_POOL_NAME = "pool_"+this.hashCode();
+		CONNECTION_USER = connectionData.username;
+		CONNECTION_PASS = connectionData.password;
+		CONNECTION_HOST = connectionData.hostname;
+		CONNECTION_PORT = String.valueOf(connectionData.port);
+		CONNECTION_SERVICE = connectionData.service;
+		targetTables = tables;
 	}
 	
 	private void init(String config_file) {
