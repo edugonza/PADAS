@@ -1,6 +1,8 @@
 package org.processmining.redologs.config;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Vector;
 
 
 public class DatabaseConnectionData implements Serializable {
@@ -15,7 +17,7 @@ public class DatabaseConnectionData implements Serializable {
 	public Integer port = 0;
 	public String username = "";
 	public String password = "";
-	public String dbname = "";
+	public List<String> dbname = new Vector<>();
 	public String service = "XE";
 	
 	@Override

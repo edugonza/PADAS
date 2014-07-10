@@ -1,5 +1,6 @@
 package org.processmining.redologs.oracle;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,6 +37,9 @@ import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import au.com.bytecode.opencsv.CSVWriter;
 import oracle.ucp.UniversalConnectionPoolAdapter;
 import oracle.ucp.UniversalConnectionPoolException;
@@ -58,17 +62,17 @@ public class OracleLogMinerExtractor {
 	private Connection con;
 	private Properties prop;
 	private List<TableInfo> targetTables;
-	private static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID"};
+	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID"};
 	private static final String COLUMN_CHANGE_NONE = "1";
 	private static final String COLUMN_CHANGE_UPDATED = "4";
 	private static final String COLUMN_CHANGE_TO_NULL = "2";
 	private static final String COLUMN_CHANGE_FROM_NULL = "3";
 	private static final String COLUMN_PRESENT = "1";
 	private static final String COLUMN_MISSING = "0";
-	private static final String NEW_VALUES_PREFIX = "V_NEW_";
-	private static final String NEW_VALUES_CP_PREFIX = "CP_NEW_";
-	private static final String OLD_VALUES_PREFIX = "V_OLD_";
-	private static final String OLD_VALUES_CP_PREFIX = "CP_OLD_";
+	public static final String NEW_VALUES_PREFIX = "V_NEW_";
+	public static final String NEW_VALUES_CP_PREFIX = "CP_NEW_";
+	public static final String OLD_VALUES_PREFIX = "V_OLD_";
+	public static final String OLD_VALUES_CP_PREFIX = "CP_OLD_";
 	private static final String NEW_VALUES_PREFIX_KEY = "V_NEW";
 	private static final String NEW_VALUES_CP_PREFIX_KEY = "CP_NEW";
 	private static final String OLD_VALUES_PREFIX_KEY = "V_OLD";
@@ -257,6 +261,8 @@ public class OracleLogMinerExtractor {
 			}
 			
 			t.columns = columns;
+			
+			res.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -292,15 +298,33 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-	public void saveResultSet(TableInfo t, ResultSet res, File outCSVFile, XTrace trace, boolean computeEventClasses, boolean oldToNew) {
+	public void saveResultSet(TableInfo t,Hashtable<String,String> aliasTable, ResultSet res, File outCSVFile, XTrace trace, boolean computeEventClasses, boolean oldToNew) {
 		if (oldToNew) {
 			saveResultSetOldToNew(t, res, outCSVFile, computeEventClasses);
 		} else {
-			saveResultSetNewToOld(t, res, outCSVFile, trace, computeEventClasses);
+			saveResultSetNewToOld(t, aliasTable, res,/* outCSVFile,*/ trace, computeEventClasses);
 		}
 	}
 	
-	private void saveResultSetNewToOld(TableInfo t, ResultSet res,File outCSVFile, XTrace trace, boolean computeEventClasses) {
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private static File serializedEventsFile;
+	private static FileOutputStream outSerializedEvents;
+	private static BufferedOutputStream bufferedOutSerializedEvents;
+	private static void serializeEvent(XEvent event) {
+		try {
+			if (serializedEventsFile == null) {
+				serializedEventsFile = new File(System.currentTimeMillis()+"_serialized-events.json");
+				outSerializedEvents = new FileOutputStream(serializedEventsFile);
+				bufferedOutSerializedEvents = new BufferedOutputStream(outSerializedEvents);
+			}
+			String eventStr = gson.toJson(event);
+			bufferedOutSerializedEvents.write(eventStr.getBytes());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,String> aliasTable, ResultSet res,/*File outCSVFile,*/ XTrace trace, boolean computeEventClasses) {
 		try {
 			
 			Hashtable<String,Map<String, String>> records = new Hashtable<>();
@@ -308,9 +332,9 @@ public class OracleLogMinerExtractor {
 			
 			ResultSetMetaData meta = res.getMetaData();
 			
-			FileWriter fwriter = new FileWriter(outCSVFile);
+			//FileWriter fwriter = new FileWriter(outCSVFile);
 
-			CSVWriter csvWriter = new CSVWriter(fwriter);
+			//CSVWriter csvWriter = new CSVWriter(fwriter);
 			
 			String[] headers = new String[meta.getColumnCount()+1];
 			String[] line = new String[meta.getColumnCount()+1];
@@ -318,14 +342,19 @@ public class OracleLogMinerExtractor {
 			headers[0] = "COLUMN_CHANGES";
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
-				headers[j] = meta.getColumnName(j);
+				String colName = meta.getColumnName(j);
+				if (aliasTable.containsKey(colName)) {
+					headers[j] = aliasTable.get(colName);
+				} else {
+					headers[j] = meta.getColumnName(j);
+				}
 			}
 			
 			int rowIdColNum = res.findColumn("ROW_ID");
 			int operationColNum = res.findColumn("OPERATION");
 			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
 			
-			csvWriter.writeNext(headers);
+			//csvWriter.writeNext(headers);
 			
 			String column_changes = "";
 			String new_value = "";
@@ -420,30 +449,30 @@ public class OracleLogMinerExtractor {
 						records.get(rowid).clear();
 					}
 
-					csvWriter.writeNext(line);
+					//csvWriter.writeNext(line);
 					XAttributeMap attributesEvent = new XAttributeMapImpl();
 
 					String key = "";
-					String subAttrKey = null;
+					//String subAttrKey = null;
 					XAttributeLiteralImpl attribute = null;
 					for (int i = 0; i < headers.length; i++) {
 						if (line[i] != null) {
 							key = headers[i];
-							if (key.startsWith(NEW_VALUES_PREFIX)) {
-								key = key.substring(NEW_VALUES_PREFIX.length());
-								subAttrKey = NEW_VALUES_PREFIX_KEY;
-							} else if (key.startsWith(OLD_VALUES_PREFIX)) {
-								key = key.substring(OLD_VALUES_PREFIX.length());
-								subAttrKey = OLD_VALUES_PREFIX_KEY;
-							} else if (key.startsWith(NEW_VALUES_CP_PREFIX)) {
-								key = key.substring(NEW_VALUES_CP_PREFIX.length());
-								subAttrKey = NEW_VALUES_CP_PREFIX_KEY;
-							} else if (key.startsWith(OLD_VALUES_CP_PREFIX)) {
-								key = key.substring(OLD_VALUES_CP_PREFIX.length());
-								subAttrKey = OLD_VALUES_CP_PREFIX_KEY;
-							} else {
-								subAttrKey = null;
-							}
+//							if (key.startsWith(NEW_VALUES_PREFIX)) {
+//								key = key.substring(NEW_VALUES_PREFIX.length());
+//								//subAttrKey = NEW_VALUES_PREFIX_KEY;
+//							} else if (key.startsWith(OLD_VALUES_PREFIX)) {
+//								key = key.substring(OLD_VALUES_PREFIX.length());
+//								//subAttrKey = OLD_VALUES_PREFIX_KEY;
+//							} else if (key.startsWith(NEW_VALUES_CP_PREFIX)) {
+//								key = key.substring(NEW_VALUES_CP_PREFIX.length());
+//								//subAttrKey = NEW_VALUES_CP_PREFIX_KEY;
+//							} else if (key.startsWith(OLD_VALUES_CP_PREFIX)) {
+//								key = key.substring(OLD_VALUES_CP_PREFIX.length());
+//								//subAttrKey = OLD_VALUES_CP_PREFIX_KEY;
+//							} else {
+								//subAttrKey = null;
+//							}
 							
 							
 							if (attributesEvent.containsKey(key)) {
@@ -453,16 +482,16 @@ public class OracleLogMinerExtractor {
 								attributesEvent.put(attribute.getKey(), attribute);
 							}
 							
-							if (subAttrKey != null) {
-								XAttributeMap subAttributes = attribute.getAttributes();
-								if (subAttributes == null) {
-									subAttributes = new XAttributeMapImpl();
-									attribute.setAttributes(subAttributes);
-								}
-								subAttributes.put(subAttrKey, new XAttributeLiteralImpl(subAttrKey, line[i]));
-							} else {
+//							if (subAttrKey != null) {
+//								XAttributeMap subAttributes = attribute.getAttributes();
+//								if (subAttributes == null) {
+//									subAttributes = new XAttributeMapImpl();
+//									attribute.setAttributes(subAttributes);
+//								}
+//								subAttributes.put(subAttrKey, new XAttributeLiteralImpl(subAttrKey, line[i]));
+//							} else {
 								attribute.setValue(line[i]);
-							}
+//							}
 							
 							attributesEvent.put(attribute.getKey(), attribute);
 						}
@@ -470,18 +499,18 @@ public class OracleLogMinerExtractor {
 
 					XEvent event = new XEventImpl();
 					event.setAttributes(attributesEvent);
-					trace.add(event);
+					serializeEvent(event);
+					//trace.add(event); // FIXME
 				}
 			}
 			
-			csvWriter.close();
-			
+			//csvWriter.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
 		}
 	}
 	
@@ -500,6 +529,8 @@ public class OracleLogMinerExtractor {
 			res.close();
 			return result;
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
@@ -656,35 +687,61 @@ public class OracleLogMinerExtractor {
 			}
 		}
 		
-		query += " SCN_TO_TIMESTAMP(V$LOGMNR_CONTENTS.SCN) AS SCN_TIMESTAMP, ";
+		query += " SCN_TO_TIMESTAMP(V$LOGMNR_CONTENTS.SCN) AS SCN_TIMESTAMP ";
 		
-		int i=0;
+		Hashtable<String,String> aliasTable = new Hashtable<>();
+		
+		int i = 0;
 		for (String c: t.columns) {
+			query += ", ";
+			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			
+			aliasTable.put("ALIAS_"+i, NEW_VALUES_PREFIX+c);
 			i++;
-			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS "+NEW_VALUES_PREFIX+c+", ";
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS "+NEW_VALUES_CP_PREFIX+c+", ";
-			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS "+OLD_VALUES_PREFIX+c+", ";
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS "+OLD_VALUES_CP_PREFIX+c;
-			if (i < t.columns.size()) {
-				query += ", ";
-			}
+			
+			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			
+			aliasTable.put("ALIAS_"+i, NEW_VALUES_CP_PREFIX+c);
+			i++;
+			
+			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			
+			aliasTable.put("ALIAS_"+i, OLD_VALUES_PREFIX+c);
+			i++;
+			
+			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i;
+			
+			aliasTable.put("ALIAS_"+i, OLD_VALUES_CP_PREFIX+c);
+			i++;
 		}
 		
 		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN DESC";
 		
+		ResultSet res = null;
+		
 		try {
 			Statement stm = con.createStatement();
-			ResultSet res = stm.executeQuery(query);
+			res = stm.executeQuery(query);
 
-			if (outputCSVFile == null) {
-				printResultSet(res);
-			} else {
+//			if (outputCSVFile == null) {
+//				printResultSet(res);
+//			} else {
 				
-				saveResultSet(t,res,outputCSVFile,trace,computeEventClasses,false);
-			}
+				saveResultSet(t,aliasTable,res,outputCSVFile,trace,computeEventClasses,false);
+//			}
 			
+			//res.close();
 		} catch (SQLException e) {
+			System.out.println("Error: "+query);
 			e.printStackTrace();
+		}
+		
+		if (res != null) {
+			try {
+				res.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

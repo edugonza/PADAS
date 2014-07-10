@@ -65,7 +65,11 @@ public class FrameMetrics extends JInternalFrame {
 						DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
 
 						if (logFile != null) {
-							FrameMetrics.this.setTitle("Metrics: "+logFile.getName());
+							String title = "Metrics - Log: "+logFile.getName();
+							if (model != null) {
+								title += " Data Model: "+model.getName();
+							}
+							FrameMetrics.this.setTitle(title);
 						
 							final Object[][] metrics = LogTraceSplitter
 									.computeMetrics(logFile, true, true, model);

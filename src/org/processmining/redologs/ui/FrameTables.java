@@ -61,7 +61,7 @@ public class FrameTables extends JInternalFrame{
 		int[] selected = table_tables.getSelectedRows();
 		Vector<TableInfo> selectedTables = new Vector<>();
 		for (int i: selected) {
-			selectedTables.add((TableInfo) table_tables.getModel().getValueAt(i, 0));
+			selectedTables.add((TableInfo) table_tables.getModel().getValueAt(table_tables.convertRowIndexToModel(i), 0));
 		}
 		return selectedTables;
 	}
@@ -138,7 +138,7 @@ public class FrameTables extends JInternalFrame{
 					public void run() {
 						progressBar_1.setIndeterminate(true);
 						model_tables.setDataVector(new Object[0][0], tablesTableColumnNames);
-						List<TableInfo> tables = OracleRelationsExplorer.getTables(getSelectedConnection());
+						List<TableInfo> tables = OracleRelationsExplorer.getTables(getSelectedConnection(),false);
 						for (TableInfo t: tables) {
 							model_tables.addRow(new Object[] {t,t.db,t.name});
 						}
@@ -177,6 +177,7 @@ public class FrameTables extends JInternalFrame{
 								DataModel model = explorer.extractRelations();
 								model.setName(modelName);
 								FrameDataModels.getInstance().addDataModel(model);
+								explorer.disconnect();
 							}
 							
 							progressBar_1.setIndeterminate(false);
@@ -199,8 +200,7 @@ public class FrameTables extends JInternalFrame{
 		JButton btnExtractRedoLog = new JButton("Extract Redo Log");
 		btnExtractRedoLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
-				
+								
 				AskNameDialog nameDiag = new AskNameDialog();
 				final String logName = nameDiag.showDialog();
 
@@ -211,6 +211,8 @@ public class FrameTables extends JInternalFrame{
 						@Override
 						public void run() {
 							progressBar_1.setIndeterminate(true);
+							progressBar_1.setString("Connecting...");
+							progressBar_1.setStringPainted(true);
 
 							List<TableInfo> tables = getSelectedTables();
 
@@ -228,12 +230,27 @@ public class FrameTables extends JInternalFrame{
 											attributesTrace);
 									log.add(trace);
 
+									progressBar_1.setIndeterminate(false);
+									
+									int total = tables.size();
+									int progress = 0;
+									progressBar_1.setValue((progress*100)/total);
+									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									for (TableInfo t : tables) {
-										extractor.getTableColumns(t);
+										progress++;
+										if (t.columns == null) {
+											extractor.getTableColumns(t);
+										}
+										System.out.println("Table: "+t.name);
 										extractor.getLogsForTableWithColumns(t,
 												null, trace, false, true);
+										progressBar_1.setValue((progress*100)/total);
+										progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									}
 
+									progressBar_1.setIndeterminate(true);
+									progressBar_1.setString("Writing to disk...");
+									
 									File logFile = new File(System
 											.currentTimeMillis()
 											+ "_"
@@ -259,6 +276,7 @@ public class FrameTables extends JInternalFrame{
 								System.err.println("ERROR: connection failed");
 							}
 
+							progressBar_1.setString("");
 							progressBar_1.setIndeterminate(false);
 						}
 					});

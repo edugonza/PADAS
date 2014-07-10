@@ -20,8 +20,6 @@ import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
-
 import org.apache.commons.collections15.Transformer;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
@@ -206,6 +204,9 @@ public class OracleRelationsExplorer {
 			
 			String sep="";
 			for (TableInfo t: targetTables) {
+				if (t.columns == null) {
+					getTableColumns(t);
+				}
 				queryStr += sep+"'"+t.name+"'";
 				sep=", ";
 			}
@@ -756,6 +757,7 @@ public class OracleRelationsExplorer {
 			}
 			
 			t.columns = columns;
+			res.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -763,44 +765,44 @@ public class OracleRelationsExplorer {
 		return columns;
 	}
 	
-	public Graph<String,String> generateRelationsGraphFromFieldNames() {
-		
-		Graph<String,String> graph = new SparseMultigraph<>();
-		
-		Hashtable<String,List<String>> relations = new Hashtable<>();
-		
-		for (TableInfo t: targetTables) {
-			try {
-				
-				List<String> columns = getTableColumns(t);
-				
-				for (String c: columns) {
-					String vertexName = t.name+":"+c;
-					List<String> list = null;
-					
-					if (relations.containsKey(c)) {
-						list = relations.get(c);
-						for (String v: list) {
-							graph.addEdge(v+" - "+vertexName, v, vertexName);
-						}
-						list.add(vertexName);
-					} else {
-						list = new Vector<>();
-						list.add(vertexName);
-						relations.put(c, list);
-						graph.addVertex(vertexName);
-					}
-				}
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-		System.out.println(graph.toString());
-		
-		return graph;
-	}
+//	public Graph<String,String> generateRelationsGraphFromFieldNames() {
+//		
+//		Graph<String,String> graph = new SparseMultigraph<>();
+//		
+//		Hashtable<String,List<String>> relations = new Hashtable<>();
+//		
+//		for (TableInfo t: targetTables) {
+//			try {
+//				
+//				List<String> columns = getTableColumns(t);
+//				
+//				for (String c: columns) {
+//					String vertexName = t.name+":"+c;
+//					List<String> list = null;
+//					
+//					if (relations.containsKey(c)) {
+//						list = relations.get(c);
+//						for (String v: list) {
+//							graph.addEdge(v+" - "+vertexName, v, vertexName);
+//						}
+//						list.add(vertexName);
+//					} else {
+//						list = new Vector<>();
+//						list.add(vertexName);
+//						relations.put(c, list);
+//						graph.addVertex(vertexName);
+//					}
+//				}
+//				
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		
+//		System.out.println(graph.toString());
+//		
+//		return graph;
+//	}
 	
 	public void showGraph(Graph<String,String> graph, String title) {
 		Layout<String, String> layout = new CircleLayout<>(graph);
@@ -932,10 +934,19 @@ public class OracleRelationsExplorer {
 	}
 	
 	public static List<TableInfo> getTables(
-			DatabaseConnectionData connectionData) {
+			DatabaseConnectionData connectionData,boolean getColumns) {
 		OracleRelationsExplorer explorer = new OracleRelationsExplorer(connectionData);
 		if (explorer.connect()) {
-			List<TableInfo> tables = explorer.getAllTables(connectionData.dbname);
+			List<TableInfo> tables = new Vector<>();
+			for (String db: connectionData.dbname) {
+				List<TableInfo> tablesForDB = explorer.getAllTables(db);
+				if (getColumns) {
+					for (TableInfo t: tablesForDB) {
+						explorer.getTableColumns(t);
+					}
+				}
+				tables.addAll(tablesForDB);
+			}
 			explorer.disconnect();
 			return tables;
 		} else {

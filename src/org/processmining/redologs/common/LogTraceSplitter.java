@@ -41,62 +41,8 @@ import com.thoughtworks.xstream.core.util.Base64Encoder;
 import edu.uci.ics.jung.graph.Graph;
 
 public class LogTraceSplitter {
-
-//	private static void splitLogTransitive(File logFile, String[] traceIdFields, RelationsGraphNode relations, final String orderField, String timestampField, String[] activityNameFields, File splittedLogFile) {
-//		try {
-//			XParser parser = new XesXmlParser();
-//			List<XLog> originalLogs = parser.parse(logFile);
-//			XLog originalLog = originalLogs.get(0);
-//			XLog log = new XLogImpl(originalLog.getAttributes());
-//			log.getExtensions().add(XTimeExtension.instance());
-//			log.getExtensions().add(XConceptExtension.instance());
-//			log.getExtensions().add(XLifecycleExtension.instance());
-//			XEventClassifier classifier = new XEventAttributeClassifier("Activity", activityNameFields);
-//			log.getClassifiers().add(classifier);
-//			
-//			Hashtable<String,XTrace> tracesTable = new Hashtable<>();
-//			
-//			for (int i = 0; i < originalLog.size(); i++) {
-//				XTrace originalTrace = originalLog.get(i);
-//				for (int j = 0; j < originalTrace.size(); j++) {
-//					XEvent event = originalTrace.get(j);
-//					XAttribute idAttribute = event.getAttributes().get(traceIdField);
-//					if (idAttribute != null) {
-//						if (idAttribute instanceof XAttributeLiteral) {
-//							XTrace trace = null;
-//							String value = ((XAttributeLiteral) idAttribute).getValue();
-//							if (tracesTable.containsKey(value)) {
-//								trace = tracesTable.get(value);
-//							} else {
-//								XAttributeMap traceAttributeMap = new XAttributeMapImpl();
-//								XAttributeLiteral instanceAttribute = new XAttributeLiteralImpl(XConceptExtension.KEY_NAME, ((XAttributeLiteral) idAttribute).getValue()); 
-//								traceAttributeMap.put(instanceAttribute.getKey(),instanceAttribute);
-//								trace = new XTraceImpl(traceAttributeMap);
-//								tracesTable.put(value, trace);
-//								log.add(trace);
-//							}
-//							XAttribute timeAttribute = event.getAttributes().get(timestampField);
-//							if (timeAttribute != null) {
-//								if (timeAttribute instanceof XAttributeLiteral) {
-//									event.getAttributes().remove(timestampField);
-//									SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-//									Date date = dateFormat.parse(((XAttributeLiteral) timeAttribute).getValue());
-//									XAttributeTimestamp timestampAttribute = new XAttributeTimestampImpl(XTimeExtension.KEY_TIMESTAMP, date);
-//									event.getAttributes().put(XTimeExtension.KEY_TIMESTAMP, timestampAttribute);
-//								}
-//							}
-//							trace.add(event);
-//						}
-//					}
-//				}
-//			}
-//			
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
-	private static void splitLog(File logFile, String traceIdField, final String orderField, String timestampField, String[] activityNameFields, File splittedLogFile) {
+	public static void splitLog(File logFile, DataModel model, String traceIdField, final String orderField, String timestampField, String[] activityNameFields, File splittedLogFile) {
 		try {
 			XParser parser = new XesXmlParser();
 			List<XLog> originalLogs = parser.parse(logFile);

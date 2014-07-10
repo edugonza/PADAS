@@ -6,7 +6,6 @@ import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
 
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -26,13 +25,8 @@ import java.awt.Toolkit;
 
 import javax.swing.JPanel;
 import javax.swing.JDesktopPane;
-import javax.swing.SwingConstants;
 import javax.swing.BoxLayout;
 
-import java.awt.Component;
-import java.util.Vector;
-
-import javax.swing.JLabel;
 import javax.swing.JComboBox;
 
 public class RedoLogInspector {
@@ -183,6 +177,9 @@ public class RedoLogInspector {
 		
 		desktopPane.add(FrameDataModels.getInstance());
 		FrameDataModels.getInstance().setVisible(true);
+		
+		desktopPane.add(FrameLogSplitter.getInstance());
+		FrameLogSplitter.getInstance().setVisible(true);
 		
 		JPanel panel_StatusBar = new JPanel();
 		frmRedologInspector.getContentPane().add(panel_StatusBar, BorderLayout.SOUTH);

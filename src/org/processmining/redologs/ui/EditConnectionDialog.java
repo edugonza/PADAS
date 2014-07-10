@@ -4,7 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -146,7 +149,11 @@ public class EditConnectionDialog extends JDialog {
 			contentPanel.add(lblDatabaseName, "2, 14");
 		}
 		{
-			txtDatabasename = new JTextField(connection.dbname);
+			String dbnames = "";
+			for (String d: connection.dbname) {
+				dbnames += d+",";
+			}
+			txtDatabasename = new JTextField(dbnames);
 			contentPanel.add(txtDatabasename, "4, 14, fill, default");
 			txtDatabasename.setColumns(10);
 		}
@@ -173,7 +180,8 @@ public class EditConnectionDialog extends JDialog {
 						connection.port = Integer.parseInt(formattedTextFieldPort.getText().trim());
 						connection.username = txtUsername.getText();
 						connection.password = String.valueOf(pwdPassword.getPassword());
-						connection.dbname = txtDatabasename.getText();
+						String dbnames = txtDatabasename.getText();
+						connection.dbname = Arrays.asList(dbnames.split(","));
 						connection.service = txtService.getText();
 						result = true;
 						EditConnectionDialog.this.setVisible(false);

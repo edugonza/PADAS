@@ -86,6 +86,10 @@ public class FrameRelationsGraph extends JInternalFrame {
 						DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
 						
 						if (model != null) {
+							String title = "Relations Graph - Data Model: "+model.getName();
+							
+							FrameRelationsGraph.this.setTitle(title);
+							
 							graph = OracleRelationsExplorer.generateRelationsGraphPKAndFK(model);
 
 							vv = OracleRelationsExplorer.getViewer(graph,

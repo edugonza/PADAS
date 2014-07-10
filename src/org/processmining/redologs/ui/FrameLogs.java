@@ -33,7 +33,7 @@ public class FrameLogs extends JInternalFrame{
 	public File getFileFromSelector() {
 		int selectedRow = table_logs.getSelectedRow();
 		if (selectedRow >= 0) {
-			Object file = table_logs.getModel().getValueAt(selectedRow, 0);
+			Object file = table_logs.getModel().getValueAt(table_logs.convertRowIndexToModel(selectedRow), 0);
 			if (file instanceof File) {
 				return (File) file;
 			}
