@@ -62,7 +62,7 @@ public class AboutDialog extends JDialog {
 		JLabel lblByRrzeiconsown = new JLabel("");
 		lblByRrzeiconsown.addMouseListener(closeOnMouseRelease);
 		lblByRrzeiconsown.setToolTipText("<html>By RRZEicons (Own work) <br/>\n[CC-BY-SA-3.0]<br/>\nvia Wikimedia Commons</html>");
-		lblByRrzeiconsown.setIcon(new ImageIcon(AboutDialog.class.getResource("/org/processminig/redologs/resources/200px-Icon-inspector.svg.png")));
+		lblByRrzeiconsown.setIcon(new ImageIcon(AboutDialog.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png")));
 		lblByRrzeiconsown.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblByRrzeiconsown.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(lblByRrzeiconsown);

@@ -106,6 +106,13 @@ public class LogTraceSplitter {
 							if (e1_SCN instanceof XAttributeLiteral && e2_SCN instanceof XAttributeLiteral) {
 								String e1_SCN_value = ((XAttributeLiteral) e1_SCN).getValue();
 								String e2_SCN_value = ((XAttributeLiteral) e2_SCN).getValue();
+								try {
+									Integer e1_SCN_int = Integer.parseInt(e1_SCN_value);
+									Integer e2_SCN_int = Integer.parseInt(e2_SCN_value);
+									return e1_SCN_int.compareTo(e2_SCN_int);
+								} catch (Exception e) {
+									// no valid integers.
+								}
 								return e1_SCN_value.compareTo(e2_SCN_value);
 							}
 						}

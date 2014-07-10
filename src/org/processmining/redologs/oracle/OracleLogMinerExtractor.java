@@ -63,6 +63,7 @@ public class OracleLogMinerExtractor {
 	private Properties prop;
 	private List<TableInfo> targetTables;
 	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID"};
+	public static final String COLUMN_CHANGES = "COLUMN_CHANGES";
 	private static final String COLUMN_CHANGE_NONE = "1";
 	private static final String COLUMN_CHANGE_UPDATED = "4";
 	private static final String COLUMN_CHANGE_TO_NULL = "2";
@@ -339,7 +340,7 @@ public class OracleLogMinerExtractor {
 			String[] headers = new String[meta.getColumnCount()+1];
 			String[] line = new String[meta.getColumnCount()+1];
 			
-			headers[0] = "COLUMN_CHANGES";
+			headers[0] = COLUMN_CHANGES;
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
 				String colName = meta.getColumnName(j);
@@ -499,8 +500,8 @@ public class OracleLogMinerExtractor {
 
 					XEvent event = new XEventImpl();
 					event.setAttributes(attributesEvent);
-					serializeEvent(event);
-					//trace.add(event); // FIXME
+					//serializeEvent(event);
+					trace.add(event); // FIXME
 				}
 			}
 			

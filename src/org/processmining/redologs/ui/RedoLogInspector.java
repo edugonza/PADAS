@@ -26,7 +26,6 @@ import java.awt.Toolkit;
 import javax.swing.JPanel;
 import javax.swing.JDesktopPane;
 import javax.swing.BoxLayout;
-
 import javax.swing.JComboBox;
 
 public class RedoLogInspector {
@@ -62,13 +61,33 @@ public class RedoLogInspector {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					//SplashWindow splash = new SplashWindow(
+					//		SplashWindow.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png"),
+					//		null, 3000);
 					RedoLogInspector window = RedoLogInspector.getInstance();
-					window.frmRedologInspector.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
+		
+//		try {
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+		
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					RedoLogInspector.getInstance().frmRedologInspector.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		
 	}
 
 	public static RedoLogInspector getInstance() {
@@ -91,7 +110,7 @@ public class RedoLogInspector {
 	private void initialize() {
 		frmRedologInspector = new JFrame();
 		frmRedologInspector.setTitle("RedoLog Inspector"+" v"+Constants.VERSION);
-		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processminig/redologs/resources/200px-Icon-inspector.svg.png")));
+		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png")));
 		frmRedologInspector.setBounds(100, 100, 653, 518);
 		frmRedologInspector.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
