@@ -37,7 +37,7 @@ import org.processmining.redologs.config.DatabaseConnectionData;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
-public class FrameTables extends JInternalFrame{
+public class FrameTables extends CustomInternalFrame {
 
 	
 	
@@ -138,7 +138,13 @@ public class FrameTables extends JInternalFrame{
 					public void run() {
 						progressBar_1.setIndeterminate(true);
 						model_tables.setDataVector(new Object[0][0], tablesTableColumnNames);
-						List<TableInfo> tables = OracleRelationsExplorer.getTables(getSelectedConnection(),false);
+						List<TableInfo> tables = new Vector<>();
+						try {
+							tables = OracleRelationsExplorer.getTables(getSelectedConnection(),false);
+						} catch (Exception e) {
+							InfoDialog info = new InfoDialog(e.getMessage(),FrameTables.getInstance());
+							info.showDialog();
+						}
 						for (TableInfo t: tables) {
 							model_tables.addRow(new Object[] {t,t.db,t.name});
 						}
@@ -160,7 +166,7 @@ public class FrameTables extends JInternalFrame{
 		JButton btnSaveDataModel = new JButton("Save Data Model");
 		btnSaveDataModel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				AskNameDialog nameDiag = new AskNameDialog();
+				AskNameDialog nameDiag = new AskNameDialog(FrameTables.getInstance());
 				final String modelName = nameDiag.showDialog();
 				
 				if (modelName != null && !modelName.isEmpty()) {
@@ -178,6 +184,9 @@ public class FrameTables extends JInternalFrame{
 								model.setName(modelName);
 								FrameDataModels.getInstance().addDataModel(model);
 								explorer.disconnect();
+							} else {
+								InfoDialog info = new InfoDialog("Failure connecting to Database",FrameTables.getInstance());
+								info.showDialog();
 							}
 							
 							progressBar_1.setIndeterminate(false);
@@ -201,7 +210,7 @@ public class FrameTables extends JInternalFrame{
 		btnExtractRedoLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 								
-				AskNameDialog nameDiag = new AskNameDialog();
+				AskNameDialog nameDiag = new AskNameDialog(FrameTables.getInstance());
 				final String logName = nameDiag.showDialog();
 
 				if (logName != null && !logName.isEmpty()) {

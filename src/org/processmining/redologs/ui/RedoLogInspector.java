@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
 
+import javax.swing.JInternalFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -61,22 +62,27 @@ public class RedoLogInspector {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					//SplashWindow splash = new SplashWindow(
-					//		SplashWindow.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png"),
-					//		null, 3000);
-					RedoLogInspector window = RedoLogInspector.getInstance();
+//					SplashWindow splash = new SplashWindow(
+//							//SplashWindow.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png"),
+//							//SplashWindow.class.getResource("/org/processmining/redologs/resources/redolog-inspector.png"),
+//							SplashWindow.class.getResource("/org/processmining/redologs/resources/r.png"),
+//							null, 3000);
+//					splash.setAlwaysOnTop(true);
+					
+					AboutDialog about = new AboutDialog();
+					about.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 		
-//		try {
-//			Thread.sleep(3000);
-//		} catch (InterruptedException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -97,6 +103,10 @@ public class RedoLogInspector {
 		return _instance;
 	}
 	
+	public void addFrame(JInternalFrame frame) {
+		desktopPane.add(frame);
+	}
+	
 	/**
 	 * Create the application.
 	 */
@@ -110,9 +120,10 @@ public class RedoLogInspector {
 	private void initialize() {
 		frmRedologInspector = new JFrame();
 		frmRedologInspector.setTitle("RedoLog Inspector"+" v"+Constants.VERSION);
-		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png")));
+		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/r.png")));
 		frmRedologInspector.setBounds(100, 100, 653, 518);
 		frmRedologInspector.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmRedologInspector.setLocationRelativeTo(null);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmRedologInspector.setJMenuBar(menuBar);
@@ -172,20 +183,33 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmRelationsGraph);
 		
+		JMenuItem mntmLogSplitter = new JMenuItem("Log Splitter");
+		mntmLogSplitter.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FrameLogSplitter logSplitter = new FrameLogSplitter();
+				desktopPane.add(logSplitter);
+				logSplitter.setVisible(true);
+				logSplitter.setFocusable(true);
+			}
+		});
+		mnTools.add(mntmLogSplitter);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		
 		JMenuItem mntmAbout = new JMenuItem("About");
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				AboutDialog.getInstance().setLocationRelativeTo(RedoLogInspector.this.frmRedologInspector);
-				AboutDialog.getInstance().setVisible(true);
+				AboutDialog about = new AboutDialog();
+				about.setLocationRelativeTo(RedoLogInspector.this.frmRedologInspector);
+				about.setVisible(true);
 			}
 		});
 		mnHelp.add(mntmAbout);
 		frmRedologInspector.getContentPane().setLayout(new BorderLayout(0, 0));
 		
 		desktopPane = new JDesktopPane();
+		desktopPane.setBorder(new BackgroundImage());
 		frmRedologInspector.getContentPane().add(desktopPane, BorderLayout.CENTER);
 		
 		desktopPane.add(FrameLogs.getInstance());
@@ -196,9 +220,6 @@ public class RedoLogInspector {
 		
 		desktopPane.add(FrameDataModels.getInstance());
 		FrameDataModels.getInstance().setVisible(true);
-		
-		desktopPane.add(FrameLogSplitter.getInstance());
-		FrameLogSplitter.getInstance().setVisible(true);
 		
 		JPanel panel_StatusBar = new JPanel();
 		frmRedologInspector.getContentPane().add(panel_StatusBar, BorderLayout.SOUTH);

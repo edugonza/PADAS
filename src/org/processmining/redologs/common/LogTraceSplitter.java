@@ -311,7 +311,7 @@ public class LogTraceSplitter {
 				
 				float std = (float) Math.sqrt(stdSum / (float) num);
 				
-				results[i] = new Object[] {entry.getKey(),new Float(mean),new Integer(num),new Integer(max),new Integer(min),new Float(std)};
+				results[i] = new Object[] {entry.getKey(),new Float(mean),new Integer(num),new Integer(min),new Integer(max),new Float(std)};
 				//System.out.println(entry.getKey()+" - Mean: "+mean+" Traces: "+num+" Max: "+max+" Min: "+min+" Std: "+std);
 				i++;
 			}

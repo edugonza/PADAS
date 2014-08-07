@@ -1,8 +1,11 @@
 package org.processmining.redologs.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -17,12 +20,22 @@ public class SplashWindow extends JWindow {
 	
 	private Thread splashThread;
 	
+	private Image bi;
+	  
+	ImageIcon ii;  
+	
     public SplashWindow(URL filename, Frame f, int waitTime)
     {
-        super(f);
-        JLabel l = new JLabel(new ImageIcon(filename));
-        getContentPane().add(l, BorderLayout.CENTER);
-        pack();
+        //super(f);
+        
+        bi=Toolkit.getDefaultToolkit().getImage(filename);
+        ii=new ImageIcon(bi);
+        
+        setSize(ii.getIconWidth(),ii.getIconHeight());  
+
+//        JLabel l = new JLabel(new ImageIcon(filename));
+//        getContentPane().add(l, BorderLayout.CENTER);
+//        pack();
         //Dimension screenSize =
           //Toolkit.getDefaultToolkit().getScreenSize();
         //Dimension labelSize = l.getPreferredSize();
@@ -65,9 +78,17 @@ public class SplashWindow extends JWindow {
                         }
                 }
             };
+        //setVisible(true);
+            
+        setBackground(new Color(0, 255, 0, 0));
         setVisible(true);
         splashThread = new Thread(waitRunner, "SplashThread");
         splashThread.start();
     }
+    
+    public void paint(Graphics g)  
+    {  
+    	g.drawImage(bi,0,0,this);  
+    }  
     
 }

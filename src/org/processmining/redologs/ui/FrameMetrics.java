@@ -19,7 +19,7 @@ import org.processmining.redologs.common.LogTraceSplitter;
 import org.processmining.redologs.common.RelationResult;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
-public class FrameMetrics extends JInternalFrame {
+public class FrameMetrics extends CustomInternalFrame {
 
 	/**
 	 * 
@@ -35,7 +35,7 @@ public class FrameMetrics extends JInternalFrame {
 		this.setMaximizable(true);
 		this.setIconifiable(true);
 		this.setBounds(334, 52, 310, 121);
-		final String[] metricsTableColumnNames = new String[] {"Attribute","Mean","Amount","Min","Max","Std deviation"};
+		final String[] metricsTableColumnNames = new String[] {"Attribute","Mean # events","Traces","Min # events","Max # events","Std deviation # events"};
 		table = new JTable(new Object[0][0] ,metricsTableColumnNames);
 		table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);

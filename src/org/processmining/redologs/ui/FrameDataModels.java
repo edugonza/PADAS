@@ -19,7 +19,7 @@ import javax.swing.tree.TreeSelectionModel;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.TableInfo;
 
-public class FrameDataModels extends JInternalFrame {
+public class FrameDataModels extends CustomInternalFrame {
 
 	/**
 	 * 
@@ -62,6 +62,7 @@ public class FrameDataModels extends JInternalFrame {
 	
 	private FrameDataModels() {
 		super("Data Models");
+		setClosable(false);
 		setBounds(291, 233, 333, 230);
 		setResizable(true);
 		setMaximizable(true);

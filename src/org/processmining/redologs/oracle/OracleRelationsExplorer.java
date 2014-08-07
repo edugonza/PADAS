@@ -20,6 +20,8 @@ import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JFrame;
+
+import org.apache.commons.collections15.Predicate;
 import org.apache.commons.collections15.Transformer;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
@@ -30,6 +32,7 @@ import org.processmining.redologs.common.RelationResult;
 import org.processmining.redologs.common.RelationsGraphNode;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
+import org.processmining.redologs.ui.VertexDisplayPredicate;
 
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout2;
@@ -37,6 +40,7 @@ import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseGraph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
+import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
@@ -421,6 +425,16 @@ public class OracleRelationsExplorer {
 					e.label = k.toString() + " N - 1 " + k.refers_to.toString();
 				}
 				graph.addEdge(e, k, k.refers_to);
+			}
+		}
+		
+		for (Entry<String,Column> entry: model.getColumns().entrySet()) {
+			Column c = entry.getValue();
+			if (!graph.containsVertex(c)) {
+				c.filter = true;
+				graph.addVertex(c);
+				graph.addVertex(c.table);
+				graph.addEdge(new GraphEdge(), c,c.table);
 			}
 		}
 		
@@ -841,6 +855,7 @@ public class OracleRelationsExplorer {
 		frame.setVisible(true);
 	}
 	
+	
 	public static VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, String title) {
 		//Layout<GraphNode, GraphEdge> layout = new CircleLayout<>(graph);
 		//Layout<GraphNode, GraphEdge> layout = new SpringLayout2<>(graph);
@@ -855,6 +870,9 @@ public class OracleRelationsExplorer {
 
 		vv.getRenderContext().setEdgeLabelTransformer(new ToStringLabeller<GraphEdge>());
 
+		Predicate<Context<Graph<GraphNode, GraphEdge>, GraphNode>> show_vertex = new VertexDisplayPredicate<>(false);
+		vv.getRenderContext().setVertexIncludePredicate(show_vertex);
+		
 		vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<GraphNode, Paint>() {
 			
 			@Override
@@ -934,7 +952,7 @@ public class OracleRelationsExplorer {
 	}
 	
 	public static List<TableInfo> getTables(
-			DatabaseConnectionData connectionData,boolean getColumns) {
+			DatabaseConnectionData connectionData,boolean getColumns) throws Exception {
 		OracleRelationsExplorer explorer = new OracleRelationsExplorer(connectionData);
 		if (explorer.connect()) {
 			List<TableInfo> tables = new Vector<>();
@@ -950,7 +968,7 @@ public class OracleRelationsExplorer {
 			explorer.disconnect();
 			return tables;
 		} else {
-			return null;
+			throw new Exception("Failure connecting to Database");
 		}
 	}
 

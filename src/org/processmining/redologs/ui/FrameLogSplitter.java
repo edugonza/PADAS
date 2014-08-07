@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
+import javax.swing.JComponent;
 import javax.swing.JTree;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -21,13 +22,18 @@ import javax.swing.tree.TreeSelectionModel;
 
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.EventAttributeColumn;
+import org.processmining.redologs.common.GraphNode;
+import org.processmining.redologs.common.Key;
 import org.processmining.redologs.common.LogTraceSplitter;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -47,36 +53,67 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.FlowLayout;
 import java.io.File;
+import java.io.IOException;
+import java.text.AttributedCharacterIterator;
+import java.util.List;
+import java.util.Vector;
 
 import javax.swing.JList;
 import javax.swing.JProgressBar;
+
 import java.awt.Component;
 
-public class FrameLogSplitter extends JInternalFrame {
+import javax.swing.border.BevelBorder;
+import javax.swing.border.SoftBevelBorder;
+import javax.swing.border.EtchedBorder;
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class FrameLogSplitter extends CustomInternalFrame {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7078418810402851925L;
 	
-	private static FrameLogSplitter _instance;
+	//private static FrameLogSplitter _instance;
 	private JTree tree;
 	private DefaultTreeModel tree_model;
 	private DefaultMutableTreeNode root;
 	private DataModel model = null;
 	private JTextField textFieldTimestamp;
 	private JTextField textFieldSort;
-	private JTextField textFieldTraceId;
-	private JList<String> listActivityNameFields;
+	private JList<Object> listActivityNameFields;
+	private JList<Object> listTraceIdFields;
 	
-	public static FrameLogSplitter getInstance() {
-		if (_instance == null) {
-			_instance = new FrameLogSplitter();
-		}
-		return _instance;
-	}
+	private Object timeStampSelected = null;
+	private Object sortSelected = null;
+	private List<Object> activityNamesSelected = new Vector<>();
+	private List<Object> traceIdNamesSelected = new Vector<>();
+
+	private List<GraphNode> listTraceIdNodes = new Vector<>();
+	
+//	public static FrameLogSplitter getInstance() {
+//		if (_instance == null) {
+//			_instance = new FrameLogSplitter();
+//		}
+//		return _instance;
+//	}
 	
 	private void setDataModel(DataModel model) {
+		if (model != this.model) {
+			textFieldTimestamp.setText("");
+			textFieldSort.setText("");
+			DefaultListModel listModel = (DefaultListModel) listActivityNameFields.getModel();
+			listModel.removeAllElements();
+			DefaultListModel list2Model = (DefaultListModel) listTraceIdFields.getModel();
+			list2Model.removeAllElements();
+			timeStampSelected = null;
+			sortSelected = null;
+			traceIdNamesSelected = new Vector<>();
+			activityNamesSelected = new Vector<>();
+		}
 		this.model = model;
 		String title = "Log Splitter - Data Model: "+model.getName();
 		root.setUserObject("Fields: "+model.getName());
@@ -85,11 +122,17 @@ public class FrameLogSplitter extends JInternalFrame {
 		
 		/**/
 		
-		DefaultMutableTreeNode nodeC = new DefaultMutableTreeNode(OracleLogMinerExtractor.COLUMN_CHANGES);
+		EventAttributeColumn ec = new EventAttributeColumn();
+		ec.c = new Column();
+		ec.c.name = OracleLogMinerExtractor.COLUMN_CHANGES;
+		DefaultMutableTreeNode nodeC = new DefaultMutableTreeNode(ec);
 		root.add(nodeC);
 		
 		for (String c: OracleLogMinerExtractor.LOG_MINER_BASIC_FIELDS) {
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode(c);
+			EventAttributeColumn eac = new EventAttributeColumn();
+			eac.c = new Column();
+			eac.c.name = c;
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode(eac);
 			root.add(node);
 		}
 		
@@ -100,13 +143,44 @@ public class FrameLogSplitter extends JInternalFrame {
 		for (TableInfo t: model.getTables()) {
 			DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(t);
 			tablesFolderNode.add(tableNode);
-			if (t.columns == null) {
-				
+			
+			if (!model.getKeysPerTable(t).isEmpty()) {
+				DefaultMutableTreeNode keysNode = new DefaultMutableTreeNode("Keys");
+				tableNode.add(keysNode);
+				for (Key k: model.getKeysPerTable(t)) {
+					keysNode.add(new DefaultMutableTreeNode(k));
+				}
 			}
+			
 			for (String c: t.columns) {
-				tableNode.add(new DefaultMutableTreeNode(OracleLogMinerExtractor.NEW_VALUES_PREFIX+c));
-				tableNode.add(new DefaultMutableTreeNode(OracleLogMinerExtractor.OLD_VALUES_PREFIX+c));
+//				EventAttributeColumn ecN = new EventAttributeColumn();
+//				ecN.c = new Column();
+//				ecN.c.name = c;
+//				ecN.c.table = t;
+//				ecN.type = EventAttributeColumn.VALUE_NEW;
+//				
+//				EventAttributeColumn ecO = new EventAttributeColumn();
+//				ecO.c = new Column();
+//				ecO.c.name = c;
+//				ecO.c.table = t;
+//				ecO.type = EventAttributeColumn.VALUE_OLD;				
+//				
+//				tableNode.add(new DefaultMutableTreeNode(ecN));
+//				tableNode.add(new DefaultMutableTreeNode(ecO));
+				
+				EventAttributeColumn ect = new EventAttributeColumn();
+				Column auxC = new Column();
+				auxC.name = c;
+				auxC.table = t;
+				ect.c = model.getColumns().get(auxC.toString());
+				if (ect.c == null) {
+					ect.c = auxC;
+				}
+				ect.type = 0;
+				
+				tableNode.add(new DefaultMutableTreeNode(ect));
 			}
+			
 		}
 		tree.repaint();
 	}
@@ -125,14 +199,95 @@ public class FrameLogSplitter extends JInternalFrame {
 //		return null;
 //	}
 	
+	
+	
+	
+	private static class TransferableDataModelElement implements Transferable {
+
+		private Object data;
+		private DataFlavor dataFlavor;
+		public final static DataFlavor[] flavors = new DataFlavor[] {
+				new DataFlavor(Key.class, "redolog-inspector-key"),
+				new DataFlavor(EventAttributeColumn.class, "redolog-inspector-EventAttributeColumn")};
+		
+		public TransferableDataModelElement(Object data) {
+			super();
+			this.data = data;
+			boolean found = false;
+			int i = 0;
+			while (!found && i < flavors.length) {
+				if (flavors[i].getDefaultRepresentationClass().isInstance(data)) {
+					dataFlavor = flavors[i];
+					found = true;
+				}
+				i++;
+			}
+			if (!found) {
+				dataFlavor = new DataFlavor(data.getClass(), data.getClass().toString());
+			}
+		}
+		
+		@Override
+		public DataFlavor[] getTransferDataFlavors() {
+			return new DataFlavor[] {dataFlavor};
+		}
+
+		@Override
+		public boolean isDataFlavorSupported(DataFlavor flavor) {
+			return (flavor.getRepresentationClass().equals(dataFlavor.getRepresentationClass()));
+		}
+
+		@Override
+		public Object getTransferData(DataFlavor flavor)
+				throws UnsupportedFlavorException, IOException {
+			return data;
+		}
+		
+	}
+	
+	private class TreeTransferHandler extends TransferHandler {
+		
+		@Override
+		public int getSourceActions(JComponent c) {
+			return TransferHandler.COPY;
+		}
+		
+		@Override
+		protected Transferable createTransferable(JComponent c) {
+			JTree tree = (JTree) c;
+			
+			Object selected = tree.getLastSelectedPathComponent();
+			
+			if (selected != null) {
+				if (selected instanceof DefaultMutableTreeNode) {
+					Object selectedObj = ((DefaultMutableTreeNode) selected).getUserObject();
+					return new TransferableDataModelElement(selectedObj);
+				}
+			}
+			
+			return null;
+		}
+	}
+	
 	private class ListTransferHandler extends TransferHandler {
+		
+		public static final int TRACEID_HANDLER = 1;
+		public static final int ACTIVITY_HANDLER = 2;
+		
+		private int type = 0;
+		
+		public ListTransferHandler(int type) {
+			this.type = type;
+		}
+		
 		@Override
 		public boolean canImport(TransferSupport info) {
-			// Check for String flavor
-	        if (!info.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-	            return false;
+			// Check for flavor
+	        if (info.isDataFlavorSupported(new DataFlavor(Key.class, "")) ||
+	        		info.isDataFlavorSupported(new DataFlavor(EventAttributeColumn.class, ""))) {
+	            return true;
 	        }
-	        return true;
+	        return false;
 	   }
 		
 		@Override
@@ -141,57 +296,72 @@ public class FrameLogSplitter extends JInternalFrame {
 			if (!info.isDrop()) {
 				return false;
 			}
-			JList<String> list = (JList<String>)info.getComponent();
+			JList<Object> list = (JList<Object>)info.getComponent();
 			
 			Transferable t = info.getTransferable();
-	        String data;
+	        Object data;
 	        try {
-	            data = (String)t.getTransferData(DataFlavor.stringFlavor);
-	        } 
-	        catch (Exception e) { return false; }
-			
-	        DefaultListModel<String> listModel = (DefaultListModel<String>)list.getModel();
-	        
-	        listModel.addElement(data);
-	        
-			return true;
+	            data = t.getTransferData(new DataFlavor(Object.class,""));
+	            DefaultListModel<Object> listModel = (DefaultListModel<Object>)list.getModel();
+		        listModel.addElement(data);
+		        if (type == TRACEID_HANDLER) {
+		        	traceIdNamesSelected.add(data);
+		        	if (listTraceIdNodes != null) {
+		        		if (data instanceof GraphNode) {
+		        			listTraceIdNodes.add((GraphNode) data);
+		        		} else if (data instanceof EventAttributeColumn) {
+		        			listTraceIdNodes.add(((EventAttributeColumn) data).c);
+		        		}
+		        	}
+		        } else if (type == ACTIVITY_HANDLER) {
+		        	activityNamesSelected.add(data);
+		        }
+		        return true;
+	        } catch (Exception e) {
+	        	return false;
+	        }
 		}
 	}
 	
 	private class TextFieldTransferHandler extends TransferHandler {
 		@Override
 		public boolean canImport(TransferSupport info) {
-			// Check for String flavor
-	        if (!info.isDataFlavorSupported(DataFlavor.stringFlavor)) {
-	            return false;
+			// Check for flavor
+			if (info.isDataFlavorSupported(new DataFlavor(Key.class, "")) ||
+	        		info.isDataFlavorSupported(new DataFlavor(EventAttributeColumn.class, ""))) {
+	            return true;
 	        }
-	        return true;
-	   }
+	        return false;
+	    }
+		
+		public void setData(Object data) {
+			
+		}
 		
 		@Override
 		public boolean importData(TransferSupport info) {
-			//return super.importData(support);
 			if (!info.isDrop()) {
 				return false;
 			}
 			JTextField field = (JTextField) info.getComponent();
 			
 			Transferable t = info.getTransferable();
-	        String data;
+	        Object data;
 	        try {
-	            data = (String)t.getTransferData(DataFlavor.stringFlavor);
+	            data = (Object)t.getTransferData(new DataFlavor(Object.class,""));
+	            setData(data);
 	        } 
 	        catch (Exception e) { return false; }
 			
-	        field.setText(data);	        
+	        field.setText(data.toString()); //FIXME
 			return true;
 		}
 	}
 	
-	private FrameLogSplitter() {
+	public FrameLogSplitter() {
 		super("Log Splitter");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(350, 280, 620, 339);
+		setBounds(350, 280, 783, 711);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
@@ -201,7 +371,7 @@ public class FrameLogSplitter extends JInternalFrame {
 		tree_model = new DefaultTreeModel(root);
 		tree.setModel(tree_model);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		
+		tree.setTransferHandler(new TreeTransferHandler());
 		tree.setDragEnabled(true);
 		
 		JScrollPane scrollPane = new JScrollPane(tree);
@@ -220,6 +390,20 @@ public class FrameLogSplitter extends JInternalFrame {
 		JButton btnSplitLog = new JButton("Split Log");
 		panel_1.add(btnSplitLog);
 		
+		JButton btnVisualizeDataModel = new JButton("Visualize Data Model");
+		btnVisualizeDataModel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (model != null) {
+					FrameRelationsGraph relations = new FrameRelationsGraph(true,FrameLogSplitter.this);
+					RedoLogInspector.getInstance().addFrame(relations);
+					relations.setVisible(true);
+					relations.setFocusable(true);
+					relations.reloadGraph(model);
+				}
+			}
+		});
+		panel_1.add(btnVisualizeDataModel);
+		
 		JPanel panel_2 = new JPanel();
 		panel.add(panel_2);
 		panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
@@ -231,17 +415,30 @@ public class FrameLogSplitter extends JInternalFrame {
 		
 		btnSplitLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
+				String aux = null;
+				
+				if (timeStampSelected != null) {
+					if (timeStampSelected instanceof Key) {
+						
+					} else if (timeStampSelected instanceof EventAttributeColumn) {
+						//aux = timeStampSelected.
+					} else {
+						aux = timeStampSelected.toString();
+					}
+				}
+				
 				final String timestampFieldName = textFieldTimestamp.getText();
 				final String sortFieldName = textFieldSort.getText();
-				final String traceIdFieldName = textFieldTraceId.getText();
-				DefaultListModel<String> listActivityModel = (DefaultListModel<String>) listActivityNameFields.getModel();
+				final List<Object> traceIdFields = traceIdNamesSelected;
+				DefaultListModel<Object> listActivityModel = (DefaultListModel<Object>) listActivityNameFields.getModel();
 				final String[] activityFieldNames = new String[listActivityModel.getSize()];
 				
 				for (int i = 0; i < listActivityModel.getSize(); i++) {
 					activityFieldNames[i] = (String) listActivityModel.get(i);
 				}
 				
-				AskNameDialog askDiag = new AskNameDialog();
+				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
 				
 				final File logFile = FrameLogs.getInstance().getFileFromSelector();
@@ -253,7 +450,7 @@ public class FrameLogSplitter extends JInternalFrame {
 						progressBar.setIndeterminate(true);
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
-						LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile);
+						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME
 						FrameLogs.getInstance().addLog(splittedLogFile.getName(), splittedLogFile);
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Splitted");
@@ -272,11 +469,15 @@ public class FrameLogSplitter extends JInternalFrame {
 			}
 		});
 		
+		JPanel panel_3 = new JPanel();
+		getContentPane().add(panel_3, BorderLayout.EAST);
+		panel_3.setLayout(new BorderLayout(0, 0));
+		
 		JPanel panel_side = new JPanel();
-		getContentPane().add(panel_side, BorderLayout.EAST);
+		panel_3.add(panel_side);
 		GridBagLayout gbl_panel_side = new GridBagLayout();
 		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[]{40, 40, 40, 0, 0, 0};
+		gbl_panel_side.rowHeights = new int[] {40, 40, 40, 40, 40, 0};
 		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
 		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 1.0, Double.MIN_VALUE};
 		panel_side.setLayout(gbl_panel_side);
@@ -289,15 +490,25 @@ public class FrameLogSplitter extends JInternalFrame {
 		gbc_lblNewLabel.gridy = 0;
 		panel_side.add(lblNewLabel, gbc_lblNewLabel);
 		
-		TextFieldTransferHandler textTransferHandler = new TextFieldTransferHandler();
-		
 		textFieldTimestamp = new JTextField();
+		textFieldTimestamp.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				textFieldTimestamp.setText("");
+				timeStampSelected = null;
+			}
+		});
 		textFieldTimestamp.setDropMode(DropMode.INSERT);
-		textFieldTimestamp.setTransferHandler(textTransferHandler);
+		textFieldTimestamp.setTransferHandler(new TextFieldTransferHandler() {
+			@Override
+			public void setData(Object data) {
+				timeStampSelected = data;
+			}
+		});
 		textFieldTimestamp.setEditable(false);
 		GridBagConstraints gbc_textField = new GridBagConstraints();
 		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField.insets = new Insets(0, 0, 5, 5);
+		gbc_textField.insets = new Insets(0, 0, 5, 0);
 		gbc_textField.gridx = 1;
 		gbc_textField.gridy = 0;
 		panel_side.add(textFieldTimestamp, gbc_textField);
@@ -312,56 +523,124 @@ public class FrameLogSplitter extends JInternalFrame {
 		panel_side.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		
 		textFieldSort = new JTextField();
+		textFieldSort.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				textFieldSort.setText("");
+				sortSelected = null;
+			}
+		});
 		textFieldSort.setDropMode(DropMode.INSERT);
-		textFieldSort.setTransferHandler(textTransferHandler);
+		textFieldSort.setTransferHandler(new TextFieldTransferHandler() {
+			@Override
+			public void setData(Object data) {
+				sortSelected = data;
+			}
+		});
 		textFieldSort.setEditable(false);
 		GridBagConstraints gbc_textField_1 = new GridBagConstraints();
 		gbc_textField_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField_1.insets = new Insets(0, 0, 5, 5);
+		gbc_textField_1.insets = new Insets(0, 0, 5, 0);
 		gbc_textField_1.gridx = 1;
 		gbc_textField_1.gridy = 1;
 		panel_side.add(textFieldSort, gbc_textField_1);
 		textFieldSort.setColumns(10);
-		
-		JLabel lblNewLabel_2 = new JLabel("TraceId");
-		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
-		gbc_lblNewLabel_2.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblNewLabel_2.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewLabel_2.gridx = 0;
-		gbc_lblNewLabel_2.gridy = 2;
-		panel_side.add(lblNewLabel_2, gbc_lblNewLabel_2);
-		
-		textFieldTraceId = new JTextField();
-		textFieldTraceId.setDropMode(DropMode.INSERT);
-		textFieldTraceId.setTransferHandler(textTransferHandler);
-		textFieldTraceId.setEditable(false);
-		GridBagConstraints gbc_textField_2 = new GridBagConstraints();
-		gbc_textField_2.insets = new Insets(0, 0, 5, 5);
-		gbc_textField_2.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField_2.gridx = 1;
-		gbc_textField_2.gridy = 2;
-		panel_side.add(textFieldTraceId, gbc_textField_2);
-		textFieldTraceId.setColumns(10);
 		
 		JLabel lblActivityNames = new JLabel("Activity Names");
 		GridBagConstraints gbc_lblActivityNames = new GridBagConstraints();
 		gbc_lblActivityNames.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblActivityNames.insets = new Insets(0, 5, 5, 5);
 		gbc_lblActivityNames.gridx = 0;
-		gbc_lblActivityNames.gridy = 3;
+		gbc_lblActivityNames.gridy = 2;
 		panel_side.add(lblActivityNames, gbc_lblActivityNames);
+		GridBagConstraints gbc_listActivityNameFields = new GridBagConstraints();
+		gbc_listActivityNameFields.insets = new Insets(0, 0, 5, 0);
+		gbc_listActivityNameFields.gridx = 1;
+		gbc_listActivityNameFields.gridy = 2;
 		
-		listActivityNameFields = new JList<String>();
-		listActivityNameFields.setModel(new DefaultListModel<String>());
+		listActivityNameFields = new JList<>();
+		
+		listActivityNameFields.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode()==KeyEvent.VK_DELETE) {
+					int selected = listActivityNameFields.getSelectedIndex();
+					if (selected > -1) {
+						DefaultListModel model = (DefaultListModel) listActivityNameFields.getModel();
+						Object selectedObj = model.get(selected);
+						activityNamesSelected.remove(selectedObj);
+						model.remove(selected);
+					}
+				}
+			}
+		});
+		listActivityNameFields.setModel(new DefaultListModel<>());
 		listActivityNameFields.setDropMode(DropMode.INSERT);
-		listActivityNameFields.setTransferHandler(new ListTransferHandler());
+		listActivityNameFields.setTransferHandler(new ListTransferHandler(ListTransferHandler.ACTIVITY_HANDLER));
 		
 		JScrollPane scrollPane_1 = new JScrollPane(listActivityNameFields);
 		GridBagConstraints gbc_scrollPane_1 = new GridBagConstraints();
-		gbc_scrollPane_1.insets = new Insets(0, 0, 5, 5);
+		gbc_scrollPane_1.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane_1.gridx = 1;
-		gbc_scrollPane_1.gridy = 3;
+		gbc_scrollPane_1.gridy = 2;
 		panel_side.add(scrollPane_1, gbc_scrollPane_1);
+		
+		JLabel lblNewLabel_2 = new JLabel("TraceId");
+		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+		gbc_lblNewLabel_2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblNewLabel_2.insets = new Insets(0, 5, 5, 5);
+		gbc_lblNewLabel_2.gridx = 0;
+		gbc_lblNewLabel_2.gridy = 3;
+		panel_side.add(lblNewLabel_2, gbc_lblNewLabel_2);
+		
+		listTraceIdFields = new JList<>();
+		listTraceIdFields.setModel(new DefaultListModel<>());
+		listTraceIdFields.setDropMode(DropMode.INSERT);
+		listTraceIdFields.setTransferHandler(new ListTransferHandler(ListTransferHandler.TRACEID_HANDLER));
+		listTraceIdFields.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode()==KeyEvent.VK_DELETE) {
+					int selected = listTraceIdFields.getSelectedIndex();
+					if (selected > -1) {
+						DefaultListModel model = (DefaultListModel) listTraceIdFields.getModel();
+						Object selectedObj = model.get(selected);
+						traceIdNamesSelected.remove(selectedObj);
+						if (listTraceIdNodes != null) {
+							listTraceIdNodes.remove(selectedObj);
+						}
+						model.remove(selected);
+					}
+				}
+			}
+		});
+		
+		JScrollPane scrollPane_2 = new JScrollPane(listTraceIdFields);
+		GridBagConstraints gbc_textFieldTraceId = new GridBagConstraints();
+		gbc_textFieldTraceId.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldTraceId.insets = new Insets(0, 0, 5, 0);
+		gbc_textFieldTraceId.gridx = 1;
+		gbc_textFieldTraceId.gridy = 3;
+		panel_side.add(scrollPane_2, gbc_textFieldTraceId);		
+		
+	}
+
+	public void setTraceIdHierarchy(List<GraphNode> listSelectedNodes) {
+		DefaultListModel model = (DefaultListModel) listTraceIdFields.getModel();
+		model.removeAllElements();
+		listTraceIdNodes = new Vector<>();
+		for (GraphNode g: listSelectedNodes) {
+			if (g instanceof Key) {
+				model.addElement(g);
+			} else {
+				model.addElement(g);
+			}
+			listTraceIdNodes.add(g);
+		}
+	}
+
+	public List<GraphNode> getTraceIdHierarchy() {
+		return listTraceIdNodes;
 	}	
 }

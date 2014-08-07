@@ -1,5 +1,7 @@
 package org.processmining.redologs.common;
 
-public interface GraphNode {
+public class GraphNode {
+	
+	public boolean filter = false;
 
 }

@@ -13,7 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-public class FrameLogs extends JInternalFrame{
+public class FrameLogs extends CustomInternalFrame {
 
 	/**
 	 * 

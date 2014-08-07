@@ -1,6 +1,6 @@
 package org.processmining.redologs.common;
 
-public class Column implements Comparable<Column>, GraphNode {
+public class Column extends GraphNode implements Comparable<Column> {
 	
 	public TableInfo table;
 	public String name;

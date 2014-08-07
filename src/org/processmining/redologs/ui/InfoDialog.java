@@ -13,47 +13,44 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.BoxLayout;
+import javax.swing.SwingConstants;
 
-public class AskNameDialog extends JDialog {
+public class InfoDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
-	private JTextField txtName;
-	private String name;
 
 	/**
 	 * Create the dialog.
 	 */
-	public AskNameDialog(JComponent comp) {
+	public InfoDialog(String msg, JComponent comp) {
+		setResizable(false);
 		setModal(true);
-		setTitle("Name");		
-		setBounds(100, 100, 382, 137);
+		setTitle("Info");
+		setBounds(100, 100, 318, 134);
 		
 		if (comp != null) {
 			setLocationRelativeTo(comp);
 		}
 		
 		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
+		contentPanel.setLayout(new BorderLayout(0, 0));
 		{
-			JLabel lblNewLabel = new JLabel("Please provide a name for this element: ");
+			JLabel lblNewLabel = new JLabel(msg);
+			lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 			contentPanel.add(lblNewLabel);
 		}
 		{
-			txtName = new JTextField();
-			contentPanel.add(txtName);
-			txtName.setColumns(10);
-		}
-		{
 			JPanel buttonPane = new JPanel();
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			FlowLayout fl_buttonPane = new FlowLayout(FlowLayout.CENTER);
+			buttonPane.setLayout(fl_buttonPane);
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						name = txtName.getText();
 						setVisible(false);
 					}
 				});
@@ -61,24 +58,12 @@ public class AskNameDialog extends JDialog {
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
 			}
-			{
-				JButton cancelButton = new JButton("Cancel");
-				cancelButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						name = null;
-						setVisible(false);
-					}
-				});
-				cancelButton.setActionCommand("Cancel");
-				buttonPane.add(cancelButton);
-			}
 		}
 	}
 	
-	public String showDialog() {
+	public void showDialog() {
 		setVisible(true);
 		dispose();
-		return name;
 	}
 
 }
