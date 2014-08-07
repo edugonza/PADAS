@@ -34,6 +34,7 @@ import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
+import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
 
@@ -249,8 +250,8 @@ public class OracleLogMinerExtractor {
 		return targetTables;
 	}
 	
-	public List<String> getTableColumns(TableInfo t) {
-		List<String> columns = new Vector<>();
+	public List<Column> getTableColumns(TableInfo t) {
+		List<Column> columns = new Vector<>();
 		try {
 			String query = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='"+
 							t.name+"' AND OWNER='"+t.db+"'";
@@ -258,7 +259,10 @@ public class OracleLogMinerExtractor {
 			ResultSet res = stm.executeQuery(query);
 			
 			while(res.next()) {
-				columns.add(res.getString(1));
+				Column c = new Column();
+				c.name = res.getString(1);
+				c.table = t;
+				columns.add(c);
 			}
 			
 			t.columns = columns;
@@ -432,11 +436,11 @@ public class OracleLogMinerExtractor {
 
 						if ((new_present.equals(COLUMN_MISSING))) {
 							line[(4 * c) + scnTimestampColNum + 1] = fields
-									.get(t.columns.get(c));
+									.get(t.columns.get(c).name);
 						}
 
 						if ((old_present.equals(COLUMN_PRESENT))) {
-							fields.put(t.columns.get(c), old_value);
+							fields.put(t.columns.get(c).name, old_value);
 						}
 
 						if (operation.equalsIgnoreCase("DELETE")) {
@@ -524,7 +528,7 @@ public class OracleLogMinerExtractor {
 			ResultSet res = stm.executeQuery(query);
 			if (res.next()) {
 				for (int i = 0; i < t.columns.size(); i++) {
-					result.put(t.columns.get(i),res.getString(t.columns.get(i)));
+					result.put(t.columns.get(i).name,res.getString(t.columns.get(i).name));
 				}
 			}
 			res.close();
@@ -649,9 +653,9 @@ public class OracleLogMinerExtractor {
 					}
 					
 					if ((new_present.equals(COLUMN_PRESENT))) {
-						fields.put(t.columns.get(c), new_value);
+						fields.put(t.columns.get(c).name, new_value);
 					} else {
-						line[(4*c)+scnTimestampColNum+2] = fields.get(t.columns.get(c));
+						line[(4*c)+scnTimestampColNum+2] = fields.get(t.columns.get(c).name);
 					}
 					
 				}
@@ -693,26 +697,26 @@ public class OracleLogMinerExtractor {
 		Hashtable<String,String> aliasTable = new Hashtable<>();
 		
 		int i = 0;
-		for (String c: t.columns) {
+		for (Column c: t.columns) {
 			query += ", ";
-			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, NEW_VALUES_PREFIX+c);
+			aliasTable.put("ALIAS_"+i, NEW_VALUES_PREFIX+c.name);
 			i++;
 			
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, NEW_VALUES_CP_PREFIX+c);
+			aliasTable.put("ALIAS_"+i, NEW_VALUES_CP_PREFIX+c.name);
 			i++;
 			
-			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i+", ";
+			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, OLD_VALUES_PREFIX+c);
+			aliasTable.put("ALIAS_"+i, OLD_VALUES_PREFIX+c.name);
 			i++;
 			
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c+"')) AS ALIAS_"+i;
+			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i;
 			
-			aliasTable.put("ALIAS_"+i, OLD_VALUES_CP_PREFIX+c);
+			aliasTable.put("ALIAS_"+i, OLD_VALUES_CP_PREFIX+c.name);
 			i++;
 		}
 		

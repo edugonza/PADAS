@@ -5,7 +5,7 @@ import java.util.List;
 public class TableInfo extends GraphNode {
 	public String db;
 	public String name;
-	public List<String> columns;
+	public List<Column> columns;
 	
 	@Override
 	public String toString() {

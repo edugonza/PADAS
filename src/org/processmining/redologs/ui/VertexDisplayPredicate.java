@@ -24,7 +24,7 @@ public class VertexDisplayPredicate<V, E> implements Predicate<Context<Graph<V, 
 		V node = context.element;
 		if (filter_small) {
 			if (node instanceof GraphNode) {
-				return ((GraphNode) node).filter;
+				return !((GraphNode) node).filter;
 			} else {
 				return graph.degree(node) >= MIN_DEGREE;
 			}

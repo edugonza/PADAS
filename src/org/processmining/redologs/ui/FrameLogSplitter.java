@@ -152,7 +152,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				}
 			}
 			
-			for (String c: t.columns) {
+			for (Column c: t.columns) {
 //				EventAttributeColumn ecN = new EventAttributeColumn();
 //				ecN.c = new Column();
 //				ecN.c.name = c;
@@ -169,13 +169,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 //				tableNode.add(new DefaultMutableTreeNode(ecO));
 				
 				EventAttributeColumn ect = new EventAttributeColumn();
-				Column auxC = new Column();
-				auxC.name = c;
-				auxC.table = t;
-				ect.c = model.getColumns().get(auxC.toString());
-				if (ect.c == null) {
-					ect.c = auxC;
-				}
+				ect.c = c;
 				ect.type = 0;
 				
 				tableNode.add(new DefaultMutableTreeNode(ect));

@@ -428,13 +428,14 @@ public class OracleRelationsExplorer {
 			}
 		}
 		
-		for (Entry<String,Column> entry: model.getColumns().entrySet()) {
-			Column c = entry.getValue();
-			if (!graph.containsVertex(c)) {
-				c.filter = true;
-				graph.addVertex(c);
-				graph.addVertex(c.table);
-				graph.addEdge(new GraphEdge(), c,c.table);
+		for (TableInfo t: model.getTables()) {
+			graph.addVertex(t);
+			for (Column c: t.columns) {
+				if (!graph.containsVertex(c)) {
+					c.filter = true;
+					graph.addVertex(c);
+					graph.addEdge(new GraphEdge(), c,c.table);
+				}
 			}
 		}
 		
@@ -758,8 +759,8 @@ public class OracleRelationsExplorer {
 		return result;
 	}
 	
-	public List<String> getTableColumns(TableInfo t) {
-		List<String> columns = new Vector<>();
+	public List<Column> getTableColumns(TableInfo t) {
+		List<Column> columns = new Vector<>();
 		try {
 			String query = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='"+
 							t.name+"' AND OWNER='"+t.db+"'";
@@ -767,7 +768,10 @@ public class OracleRelationsExplorer {
 			ResultSet res = stm.executeQuery(query);
 			
 			while(res.next()) {
-				columns.add(res.getString(1));
+				Column c = new Column();
+				c.name = res.getString(1);
+				c.table = t;
+				columns.add(c);
 			}
 			
 			t.columns = columns;

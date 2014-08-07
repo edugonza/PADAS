@@ -97,12 +97,13 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 			}
 		});
 		
-		JButton btnShowExtraFields = new JButton("Show Extra fields");
+		JButton btnShowExtraFields = new JButton("Toggle Extra fields");
 		btnShowExtraFields.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				VertexDisplayPredicate<GraphNode, GraphEdge> vdpred =
 						(VertexDisplayPredicate<GraphNode, GraphEdge>) vv.getRenderContext().getVertexIncludePredicate();
 				vdpred.filterSmall(!vdpred.filter_small);
+				vv.repaint();
 			}
 		});
 		panel_1.add(btnShowExtraFields);
