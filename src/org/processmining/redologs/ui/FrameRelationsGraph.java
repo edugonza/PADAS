@@ -27,6 +27,9 @@ import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.picking.PickedState;
+import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 public class FrameRelationsGraph extends CustomInternalFrame {
 
@@ -51,7 +54,7 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 		this.traceIdSelector = traceIdSelector;
 		graphPanel = new JPanel();
 		graphPanel.setAlignmentY(Component.BOTTOM_ALIGNMENT);
-		this.setBounds(404, 267, 542, 421);
+		this.setBounds(404, 267, 534, 441);
 		this.setClosable(true);
 		this.setResizable(true);
 		this.setMaximizable(true);
@@ -64,27 +67,49 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 
 		progressBar = new JProgressBar();
 		panel.add(progressBar);
+		
+		JPanel panel_2 = new JPanel();
+		panel.add(panel_2);
+		JButton btnReload = new JButton("Reload");
+		panel_2.add(btnReload);
+		btnReload.setAlignmentX(Component.CENTER_ALIGNMENT);
+		btnReload.setVerticalAlignment(SwingConstants.TOP);
+		
+				JButton btnRepaint = new JButton("Reset");
+				panel_2.add(btnRepaint);
+				btnRepaint.setVerticalAlignment(SwingConstants.TOP);
+				
+				JButton btnShowExtraFields = new JButton("Toggle Extra fields");
+				panel_2.add(btnShowExtraFields);
+				btnShowExtraFields.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						VertexDisplayPredicate<GraphNode, GraphEdge> vdpred =
+								(VertexDisplayPredicate<GraphNode, GraphEdge>) vv.getRenderContext().getVertexIncludePredicate();
+						vdpred.filterSmall(!vdpred.filter_small);
+						vv.repaint();
+					}
+				});
+				btnRepaint.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						vv.getRenderContext().getMultiLayerTransformer()
+								.getTransformer(Layer.VIEW)
+								.setScale(1.0, 1.0, vv.getCenter());
+						vv.getRenderContext().getMultiLayerTransformer()
+								.getTransformer(Layer.LAYOUT)
+								.setScale(1.0, 1.0, vv.getCenter());
+					}
+				});
+		
+		btnReload.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
+				reloadGraph(model);
+			}
+		});
 
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1);
-		JButton btnReload = new JButton("Reload");
-		panel_1.add(btnReload);
-		btnReload.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnReload.setVerticalAlignment(SwingConstants.TOP);
-
-		JButton btnRepaint = new JButton("Reset");
-		btnRepaint.setVerticalAlignment(SwingConstants.TOP);
-		btnRepaint.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				vv.getRenderContext().getMultiLayerTransformer()
-						.getTransformer(Layer.VIEW)
-						.setScale(1.0, 1.0, vv.getCenter());
-				vv.getRenderContext().getMultiLayerTransformer()
-						.getTransformer(Layer.LAYOUT)
-						.setScale(1.0, 1.0, vv.getCenter());
-			}
-		});
-		panel_1.add(btnRepaint);
+				panel_1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
 		JButton btnSaveTraceidHierarchy = new JButton("Save TraceId Hierarchy");
 		btnSaveTraceidHierarchy.addActionListener(new ActionListener() {
@@ -97,18 +122,6 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 			}
 		});
 		
-		JButton btnShowExtraFields = new JButton("Toggle Extra fields");
-		btnShowExtraFields.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				VertexDisplayPredicate<GraphNode, GraphEdge> vdpred =
-						(VertexDisplayPredicate<GraphNode, GraphEdge>) vv.getRenderContext().getVertexIncludePredicate();
-				vdpred.filterSmall(!vdpred.filter_small);
-				vv.repaint();
-			}
-		});
-		panel_1.add(btnShowExtraFields);
-		panel_1.add(btnSaveTraceidHierarchy);
-		
 		JButton btnHighlightTraceidHierarchy = new JButton("Highlight TraceId Hierarchy");
 		btnHighlightTraceidHierarchy.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -116,6 +129,7 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 			}
 		});
 		panel_1.add(btnHighlightTraceidHierarchy);
+		panel_1.add(btnSaveTraceidHierarchy);
 		
 		if (traceIdSelector) {
 			btnSaveTraceidHierarchy.setVisible(true);
@@ -124,13 +138,6 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 			btnSaveTraceidHierarchy.setVisible(false);
 			btnHighlightTraceidHierarchy.setVisible(false);
 		}
-		
-		btnReload.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
-				reloadGraph(model);
-			}
-		});
 		this.getContentPane()
 				.add(graphPanel, BorderLayout.CENTER);
 		graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.X_AXIS));

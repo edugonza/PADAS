@@ -355,7 +355,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	public FrameLogSplitter() {
 		super("Log Splitter");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(350, 280, 783, 711);
+		setBounds(350, 280, 794, 486);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
@@ -471,9 +471,9 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_3.add(panel_side);
 		GridBagLayout gbl_panel_side = new GridBagLayout();
 		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[] {40, 40, 40, 40, 40, 0};
+		gbl_panel_side.rowHeights = new int[] {40, 40, 100, 100, 0};
 		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
-		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 1.0, Double.MIN_VALUE};
+		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0};
 		panel_side.setLayout(gbl_panel_side);
 		
 		JLabel lblNewLabel = new JLabel("Timestamp");
@@ -612,7 +612,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		
 		JScrollPane scrollPane_2 = new JScrollPane(listTraceIdFields);
 		GridBagConstraints gbc_textFieldTraceId = new GridBagConstraints();
-		gbc_textFieldTraceId.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldTraceId.fill = GridBagConstraints.BOTH;
 		gbc_textFieldTraceId.insets = new Insets(0, 0, 5, 0);
 		gbc_textFieldTraceId.gridx = 1;
 		gbc_textFieldTraceId.gridy = 3;
