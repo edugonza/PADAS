@@ -47,5 +47,6 @@
 			<attribute name="javadoc_location" value="jar:file:/home/eduardo/Software/Libraries/google-gson-2.2.4/gson-2.2.4-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/sqlite-jdbc-3.8.5-pre1.jar" sourcepath="/home/eduardo/.m2/repository/org/xerial/sqlite-jdbc/3.8.5-pre1/sqlite-jdbc-3.8.5-pre1-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

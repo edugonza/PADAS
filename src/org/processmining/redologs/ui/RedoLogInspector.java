@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.config.Config;
 import org.processmining.redologs.config.DatabaseConnectionData;
+import org.processmining.redologs.storage.LogStorage;
 
 import java.awt.event.ActionListener;
 import java.awt.Toolkit;
@@ -112,6 +113,18 @@ public class RedoLogInspector {
 	 */
 	private RedoLogInspector() {
 		initialize();
+		
+		try {
+			
+			LogStorage logStorage = LogStorage.getInstance();
+			
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 	/**
@@ -147,6 +160,11 @@ public class RedoLogInspector {
 		JMenuItem mntmNewMenuItem_1 = new JMenuItem("Exit");
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				try {
+					LogStorage.getInstance().disconnect();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 				System.exit(0);
 			}
 		});
