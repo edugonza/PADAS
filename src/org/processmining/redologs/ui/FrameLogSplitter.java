@@ -435,7 +435,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
 				
-				final File logFile = FrameLogs.getInstance().getFileFromSelector();
+				final File logFile = FramePerspectives.getInstance().getFileFromSelector();
 				final File splittedLogFile = new File(System.currentTimeMillis()+"-splitted-"+outputLogName);
 				
 				Thread logSplitThread = new Thread(new Runnable() {
@@ -445,7 +445,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
 						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME
-						FrameLogs.getInstance().addLog(splittedLogFile.getName(), splittedLogFile);
+						FramePerspectives.getInstance().addLog(splittedLogFile.getName(), splittedLogFile);
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Splitted");
 					}

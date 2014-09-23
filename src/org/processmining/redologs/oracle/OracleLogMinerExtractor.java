@@ -34,6 +34,11 @@ import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
+import org.processmining.openslex.LogStorage;
+import org.processmining.openslex.SLEXAttribute;
+import org.processmining.openslex.SLEXAttributeValue;
+import org.processmining.openslex.SLEXEvent;
+import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
@@ -80,6 +85,8 @@ public class OracleLogMinerExtractor {
 	private static final String OLD_VALUES_PREFIX_KEY = "V_OLD";
 	private static final String OLD_VALUES_CP_PREFIX_KEY = "CP_OLD";
 	
+	private boolean stopExtraction = false;
+	
 	public OracleLogMinerExtractor() {
 		init(CONFIG_FILE);
 	}
@@ -105,6 +112,10 @@ public class OracleLogMinerExtractor {
 		CONNECTION_PORT = String.valueOf(connectionData.port);
 		CONNECTION_SERVICE = connectionData.service;
 		targetTables = tables;
+	}
+	
+	public void setExtractionFlag(boolean enabled) {
+		this.stopExtraction = !enabled;
 	}
 	
 	private void init(String config_file) {
@@ -303,61 +314,64 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-	public void saveResultSet(TableInfo t,Hashtable<String,String> aliasTable, ResultSet res, File outCSVFile, XTrace trace, boolean computeEventClasses, boolean oldToNew) {
-		if (oldToNew) {
-			saveResultSetOldToNew(t, res, outCSVFile, computeEventClasses);
-		} else {
-			saveResultSetNewToOld(t, aliasTable, res,/* outCSVFile,*/ trace, computeEventClasses);
-		}
+	public void saveResultSet(TableInfo t,Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, File outCSVFile, SLEXEventCollection eventCollection, boolean computeEventClasses/*, boolean oldToNew*/) {
+//		if (oldToNew) {
+//			saveResultSetOldToNew(t, res, outCSVFile, computeEventClasses);
+//		} else {
+			saveResultSetNewToOld(t, aliasTable, res,/* outCSVFile,*/ eventCollection, computeEventClasses);
+//		}
 	}
 	
-	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	private static File serializedEventsFile;
-	private static FileOutputStream outSerializedEvents;
-	private static BufferedOutputStream bufferedOutSerializedEvents;
-	private static void serializeEvent(XEvent event) {
-		try {
-			if (serializedEventsFile == null) {
-				serializedEventsFile = new File(System.currentTimeMillis()+"_serialized-events.json");
-				outSerializedEvents = new FileOutputStream(serializedEventsFile);
-				bufferedOutSerializedEvents = new BufferedOutputStream(outSerializedEvents);
-			}
-			String eventStr = gson.toJson(event);
-			bufferedOutSerializedEvents.write(eventStr.getBytes());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//	private static File serializedEventsFile;
+//	private static FileOutputStream outSerializedEvents;
+//	private static BufferedOutputStream bufferedOutSerializedEvents;
+//	private static void serializeEvent(XEvent event) {
+//		try {
+//			if (serializedEventsFile == null) {
+//				serializedEventsFile = new File(System.currentTimeMillis()+"_serialized-events.json");
+//				outSerializedEvents = new FileOutputStream(serializedEventsFile);
+//				bufferedOutSerializedEvents = new BufferedOutputStream(outSerializedEvents);
+//			}
+//			String eventStr = gson.toJson(event);
+//			bufferedOutSerializedEvents.write(eventStr.getBytes());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
-	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,String> aliasTable, ResultSet res,/*File outCSVFile,*/ XTrace trace, boolean computeEventClasses) {
+	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses) {
 		try {
 			
 			Hashtable<String,Map<String, String>> records = new Hashtable<>();
 			
-			
 			ResultSetMetaData meta = res.getMetaData();
-			
-			//FileWriter fwriter = new FileWriter(outCSVFile);
-
-			//CSVWriter csvWriter = new CSVWriter(fwriter);
-			
-			String[] headers = new String[meta.getColumnCount()+1];
-			String[] line = new String[meta.getColumnCount()+1];
-			
-			headers[0] = COLUMN_CHANGES;
-			
-			for (int j = 1; j <= meta.getColumnCount(); j++) {
-				String colName = meta.getColumnName(j);
-				if (aliasTable.containsKey(colName)) {
-					headers[j] = aliasTable.get(colName);
-				} else {
-					headers[j] = meta.getColumnName(j);
-				}
-			}
 			
 			int rowIdColNum = res.findColumn("ROW_ID");
 			int operationColNum = res.findColumn("OPERATION");
 			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
+			
+			int numAttributes = (aliasTable.size() / 4) + scnTimestampColNum + 1;
+			
+			SLEXAttribute[] attributeNames = new SLEXAttribute[numAttributes];
+			
+			String[] headers = new String[meta.getColumnCount()+1];
+			String[] line = new String[meta.getColumnCount()+1];
+			
+			//headers[0] = COLUMN_CHANGES;
+			attributeNames[0] = LogStorage.getInstance().findOrCreateAttribute(LogStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
+			
+			for (int j = 1; j <= meta.getColumnCount(); j++) {
+				String colName = meta.getColumnName(j);
+				if (aliasTable.containsKey(colName)) {
+					AliasColumnNameType ac = aliasTable.get(colName);
+					headers[j] = ac.name;
+					//attributeNames[j] = LogStorage.getInstance().createAttribute(t.name,ac.name,false);
+				} else {
+					//headers[j] = meta.getColumnName(j);
+					attributeNames[j] = LogStorage.getInstance().findOrCreateAttribute(LogStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
+				}
+			}
 			
 			//csvWriter.writeNext(headers);
 			
@@ -369,9 +383,16 @@ public class OracleLogMinerExtractor {
 			String rowid = "";
 			String operation = "";
 			
-			while (res.next()) {
+			while (res.next() && !stopExtraction) {
+				SLEXEvent event = LogStorage.getInstance().createEvent(eventCollection.getId());
+				
+				SLEXAttributeValue[] attributeValues = new SLEXAttributeValue[numAttributes];
+				
 				for (int c = 1; c <= meta.getColumnCount(); c++) {
 					line[c] = res.getString(c);
+					if (c <= scnTimestampColNum) {
+						attributeValues[c] = LogStorage.getInstance().createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
+					}
 				}
 				
 				/**/
@@ -392,7 +413,7 @@ public class OracleLogMinerExtractor {
 					} else {
 						fields = records.get(rowid);
 					}
-
+					
 					column_changes = "";
 					for (int c = 0; c < t.columns.size(); c++) {
 						new_value = line[(4 * c) + scnTimestampColNum + 1];
@@ -446,66 +467,74 @@ public class OracleLogMinerExtractor {
 						if (operation.equalsIgnoreCase("DELETE")) {
 							line[(4 * c) + scnTimestampColNum + 1] = old_value;
 						}
+						
+						/**/
+						attributeNames[c+scnTimestampColNum+1] = LogStorage.getInstance().findOrCreateAttribute(t.name,headers[(4*c)+scnTimestampColNum+1],false);
+						attributeValues[c+scnTimestampColNum+1] = 
+								LogStorage.getInstance().createAttributeValue(attributeNames[c+scnTimestampColNum+1].getId(), event.getId(), line[(4*c)+scnTimestampColNum+1]);
+						/**/
 					}
 
 					line[0] = column_changes;
+					attributeValues[0] = LogStorage.getInstance().createAttributeValue(attributeNames[0].getId(), event.getId(), column_changes);
 
 					if (operation.equalsIgnoreCase("INSERT")) {
 						records.get(rowid).clear();
 					}
 
 					//csvWriter.writeNext(line);
-					XAttributeMap attributesEvent = new XAttributeMapImpl();
+//					XAttributeMap attributesEvent = new XAttributeMapImpl();
 
-					String key = "";
+//					String key = "";
 					//String subAttrKey = null;
-					XAttributeLiteralImpl attribute = null;
-					for (int i = 0; i < headers.length; i++) {
-						if (line[i] != null) {
-							key = headers[i];
-//							if (key.startsWith(NEW_VALUES_PREFIX)) {
-//								key = key.substring(NEW_VALUES_PREFIX.length());
-//								//subAttrKey = NEW_VALUES_PREFIX_KEY;
-//							} else if (key.startsWith(OLD_VALUES_PREFIX)) {
-//								key = key.substring(OLD_VALUES_PREFIX.length());
-//								//subAttrKey = OLD_VALUES_PREFIX_KEY;
-//							} else if (key.startsWith(NEW_VALUES_CP_PREFIX)) {
-//								key = key.substring(NEW_VALUES_CP_PREFIX.length());
-//								//subAttrKey = NEW_VALUES_CP_PREFIX_KEY;
-//							} else if (key.startsWith(OLD_VALUES_CP_PREFIX)) {
-//								key = key.substring(OLD_VALUES_CP_PREFIX.length());
-//								//subAttrKey = OLD_VALUES_CP_PREFIX_KEY;
+//					XAttributeLiteralImpl attribute = null;
+//					for (int i = 0; i < headers.length; i++) {
+//						if (line[i] != null) {
+//							key = headers[i];
+////							if (key.startsWith(NEW_VALUES_PREFIX)) {
+////								key = key.substring(NEW_VALUES_PREFIX.length());
+////								//subAttrKey = NEW_VALUES_PREFIX_KEY;
+////							} else if (key.startsWith(OLD_VALUES_PREFIX)) {
+////								key = key.substring(OLD_VALUES_PREFIX.length());
+////								//subAttrKey = OLD_VALUES_PREFIX_KEY;
+////							} else if (key.startsWith(NEW_VALUES_CP_PREFIX)) {
+////								key = key.substring(NEW_VALUES_CP_PREFIX.length());
+////								//subAttrKey = NEW_VALUES_CP_PREFIX_KEY;
+////							} else if (key.startsWith(OLD_VALUES_CP_PREFIX)) {
+////								key = key.substring(OLD_VALUES_CP_PREFIX.length());
+////								//subAttrKey = OLD_VALUES_CP_PREFIX_KEY;
+////							} else {
+//								//subAttrKey = null;
+////							}
+//							
+//							
+//							if (attributesEvent.containsKey(key)) {
+//								attribute = (XAttributeLiteralImpl) attributesEvent.get(key);
 //							} else {
-								//subAttrKey = null;
+//								attribute = new XAttributeLiteralImpl(key, "");
+//								attributesEvent.put(attribute.getKey(), attribute);
 //							}
-							
-							
-							if (attributesEvent.containsKey(key)) {
-								attribute = (XAttributeLiteralImpl) attributesEvent.get(key);
-							} else {
-								attribute = new XAttributeLiteralImpl(key, "");
-								attributesEvent.put(attribute.getKey(), attribute);
-							}
-							
-//							if (subAttrKey != null) {
-//								XAttributeMap subAttributes = attribute.getAttributes();
-//								if (subAttributes == null) {
-//									subAttributes = new XAttributeMapImpl();
-//									attribute.setAttributes(subAttributes);
-//								}
-//								subAttributes.put(subAttrKey, new XAttributeLiteralImpl(subAttrKey, line[i]));
-//							} else {
-								attribute.setValue(line[i]);
-//							}
-							
-							attributesEvent.put(attribute.getKey(), attribute);
-						}
-					}
+//							
+////							if (subAttrKey != null) {
+////								XAttributeMap subAttributes = attribute.getAttributes();
+////								if (subAttributes == null) {
+////									subAttributes = new XAttributeMapImpl();
+////									attribute.setAttributes(subAttributes);
+////								}
+////								subAttributes.put(subAttrKey, new XAttributeLiteralImpl(subAttrKey, line[i]));
+////							} else {
+//								attribute.setValue(line[i]);
+////							}
+//							
+//							attributesEvent.put(attribute.getKey(), attribute);
+//						}
+//					}
 
-					XEvent event = new XEventImpl();
-					event.setAttributes(attributesEvent);
+					//XEvent event = new XEventImpl();
+					//FIXME event.setAttributes(attributesEvent);
 					//serializeEvent(event);
-					trace.add(event); // FIXME
+					//eventCollection.add(event);
+					//trace.add(event); // FIXME
 				}
 			}
 			
@@ -516,6 +545,8 @@ public class OracleLogMinerExtractor {
 //			e.printStackTrace();
 //		} catch (IOException e) {
 //			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -542,146 +573,152 @@ public class OracleLogMinerExtractor {
 		return null;
 	}
 
-	private void saveResultSetOldToNew(TableInfo t, ResultSet res,File outFile,boolean computeEventClasses) {
-		try {
-			Hashtable<String, Long> idsForRowId = new Hashtable<>();
-			
-			Hashtable<Long,Map<String, String>> records = new Hashtable<>();
-			
-			Long idsCount = new Long(0);
-			
-			ResultSetMetaData meta = res.getMetaData();
-			
-			FileWriter fwriter = new FileWriter(outFile);
-
-			CSVWriter csvWriter = new CSVWriter(fwriter);
-
-			String[] headers = new String[meta.getColumnCount()+2];
-			String[] line = new String[meta.getColumnCount()+2];
-			
-			headers[0] = "UNIQUE_ID";
-			headers[1] = "COLUMN_CHANGES";
-			
-			for (int j = 1; j <= meta.getColumnCount(); j++) {
-				headers[j+1] = meta.getColumnName(j);
-			}
-			
-			int rowIdColNum = res.findColumn("ROW_ID");
-			int operationColNum = res.findColumn("OPERATION");
-			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
-			
-			csvWriter.writeNext(headers);
-			
-			//csvWriter.writeAll(res, true);
-			
-			String column_changes = "";
-			String new_value = "";
-			String old_value = "";
-			String new_present = "";
-			String old_present = "";
-			String rowid = "";
-			String operation = "";
-			String uniqueId = "";
-			
-			while (res.next()) {
-				for (int c = 1; c <= meta.getColumnCount(); c++) {
-					line[c+1] = res.getString(c);
-				}
-				
-				/**/
-				rowid = line[rowIdColNum+1];
-				operation = line[operationColNum+1];
-				
-				if (idsForRowId.containsKey(rowid)) {
-					uniqueId = idsForRowId.get(rowid).toString();
-				} else {
-					idsCount++;
-					idsForRowId.put(rowid,idsCount);
-					uniqueId = idsCount.toString();
-				}
-				
-				line[0] = uniqueId;
-				/**/
-				
-				Map<String, String> fields = null;
-				
-				if (!records.containsKey(Long.valueOf(uniqueId))) {
-					fields = new HashMap<>();
-					records.put(Long.valueOf(uniqueId), fields);
-				} else {
-					fields = records.get(Long.valueOf(uniqueId));
-				}
-				
-				column_changes = "";
-				for (int c = 0; c < t.columns.size(); c++) {
-					new_value = line[(4*c)+scnTimestampColNum+2];
-					new_present = line[(4*c)+scnTimestampColNum+3];
-					old_value = line[(4*c)+scnTimestampColNum+4];
-					old_present = line[(4*c)+scnTimestampColNum+5];
-					
-					if ((new_present.equals(COLUMN_PRESENT))) {
-						if (old_present.equals(COLUMN_PRESENT)) {
-							if ((new_value != null) && (old_value != null)) {
-								if (new_value.equals(old_value)) {
-									column_changes += COLUMN_CHANGE_NONE;
-								} else {
-									column_changes += COLUMN_CHANGE_UPDATED;
-								}
-							} else if ((new_value == null) && (old_value == null)) {
-								column_changes += COLUMN_CHANGE_NONE;
-							} else if (new_value == null) {
-								column_changes += COLUMN_CHANGE_TO_NULL;
-							} else if (old_value == null) {
-								column_changes += COLUMN_CHANGE_FROM_NULL;
-							} else {
-								// Impossible
-								System.err.println("Impossible situation");
-							}
-						} else {
-							if (new_value == null) {
-								column_changes += COLUMN_CHANGE_NONE;
-							} else {
-								column_changes += COLUMN_CHANGE_UPDATED;
-							}
-						}
-					} else {
-						if (old_present.equals(COLUMN_PRESENT)) {
-							column_changes += COLUMN_CHANGE_UPDATED;
-						} else {
-							column_changes += COLUMN_CHANGE_NONE;
-						}
-					}
-					
-					if ((new_present.equals(COLUMN_PRESENT))) {
-						fields.put(t.columns.get(c).name, new_value);
-					} else {
-						line[(4*c)+scnTimestampColNum+2] = fields.get(t.columns.get(c).name);
-					}
-					
-				}
-				
-				line[1] = column_changes; 
-				
-				if (operation.equalsIgnoreCase("DELETE")) {
-					idsForRowId.remove(rowid);
-					records.remove(Long.valueOf(uniqueId));
-				}
-				
-				csvWriter.writeNext(line);
-			}
-			
-			csvWriter.close();
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//	private void saveResultSetOldToNew(TableInfo t, ResultSet res,File outFile,boolean computeEventClasses) {
+//		try {
+//			Hashtable<String, Long> idsForRowId = new Hashtable<>();
+//			
+//			Hashtable<Long,Map<String, String>> records = new Hashtable<>();
+//			
+//			Long idsCount = new Long(0);
+//			
+//			ResultSetMetaData meta = res.getMetaData();
+//			
+//			FileWriter fwriter = new FileWriter(outFile);
+//
+//			CSVWriter csvWriter = new CSVWriter(fwriter);
+//
+//			String[] headers = new String[meta.getColumnCount()+2];
+//			String[] line = new String[meta.getColumnCount()+2];
+//			
+//			headers[0] = "UNIQUE_ID";
+//			headers[1] = "COLUMN_CHANGES";
+//			
+//			for (int j = 1; j <= meta.getColumnCount(); j++) {
+//				headers[j+1] = meta.getColumnName(j);
+//			}
+//			
+//			int rowIdColNum = res.findColumn("ROW_ID");
+//			int operationColNum = res.findColumn("OPERATION");
+//			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
+//			
+//			csvWriter.writeNext(headers);
+//			
+//			//csvWriter.writeAll(res, true);
+//			
+//			String column_changes = "";
+//			String new_value = "";
+//			String old_value = "";
+//			String new_present = "";
+//			String old_present = "";
+//			String rowid = "";
+//			String operation = "";
+//			String uniqueId = "";
+//			
+//			while (res.next()) {
+//				for (int c = 1; c <= meta.getColumnCount(); c++) {
+//					line[c+1] = res.getString(c);
+//				}
+//				
+//				/**/
+//				rowid = line[rowIdColNum+1];
+//				operation = line[operationColNum+1];
+//				
+//				if (idsForRowId.containsKey(rowid)) {
+//					uniqueId = idsForRowId.get(rowid).toString();
+//				} else {
+//					idsCount++;
+//					idsForRowId.put(rowid,idsCount);
+//					uniqueId = idsCount.toString();
+//				}
+//				
+//				line[0] = uniqueId;
+//				/**/
+//				
+//				Map<String, String> fields = null;
+//				
+//				if (!records.containsKey(Long.valueOf(uniqueId))) {
+//					fields = new HashMap<>();
+//					records.put(Long.valueOf(uniqueId), fields);
+//				} else {
+//					fields = records.get(Long.valueOf(uniqueId));
+//				}
+//				
+//				column_changes = "";
+//				for (int c = 0; c < t.columns.size(); c++) {
+//					new_value = line[(4*c)+scnTimestampColNum+2];
+//					new_present = line[(4*c)+scnTimestampColNum+3];
+//					old_value = line[(4*c)+scnTimestampColNum+4];
+//					old_present = line[(4*c)+scnTimestampColNum+5];
+//					
+//					if ((new_present.equals(COLUMN_PRESENT))) {
+//						if (old_present.equals(COLUMN_PRESENT)) {
+//							if ((new_value != null) && (old_value != null)) {
+//								if (new_value.equals(old_value)) {
+//									column_changes += COLUMN_CHANGE_NONE;
+//								} else {
+//									column_changes += COLUMN_CHANGE_UPDATED;
+//								}
+//							} else if ((new_value == null) && (old_value == null)) {
+//								column_changes += COLUMN_CHANGE_NONE;
+//							} else if (new_value == null) {
+//								column_changes += COLUMN_CHANGE_TO_NULL;
+//							} else if (old_value == null) {
+//								column_changes += COLUMN_CHANGE_FROM_NULL;
+//							} else {
+//								// Impossible
+//								System.err.println("Impossible situation");
+//							}
+//						} else {
+//							if (new_value == null) {
+//								column_changes += COLUMN_CHANGE_NONE;
+//							} else {
+//								column_changes += COLUMN_CHANGE_UPDATED;
+//							}
+//						}
+//					} else {
+//						if (old_present.equals(COLUMN_PRESENT)) {
+//							column_changes += COLUMN_CHANGE_UPDATED;
+//						} else {
+//							column_changes += COLUMN_CHANGE_NONE;
+//						}
+//					}
+//					
+//					if ((new_present.equals(COLUMN_PRESENT))) {
+//						fields.put(t.columns.get(c).name, new_value);
+//					} else {
+//						line[(4*c)+scnTimestampColNum+2] = fields.get(t.columns.get(c).name);
+//					}
+//					
+//				}
+//				
+//				line[1] = column_changes; 
+//				
+//				if (operation.equalsIgnoreCase("DELETE")) {
+//					idsForRowId.remove(rowid);
+//					records.remove(Long.valueOf(uniqueId));
+//				}
+//				
+//				csvWriter.writeNext(line);
+//			}
+//			
+//			csvWriter.close();
+//			
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//	}
+	
+	public class AliasColumnNameType {
+		public boolean isCP = false;
+		public boolean isNewValue = false;
+		public String name = null;
 	}
 	
-	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, XTrace trace, boolean allRedoFields, boolean computeEventClasses) {
+	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses) {
 		String query = "SELECT ";
 		
 		if (allRedoFields) {
@@ -694,29 +731,47 @@ public class OracleLogMinerExtractor {
 		
 		query += " SCN_TO_TIMESTAMP(V$LOGMNR_CONTENTS.SCN) AS SCN_TIMESTAMP ";
 		
-		Hashtable<String,String> aliasTable = new Hashtable<>();
+		Hashtable<String,AliasColumnNameType> aliasTable = new Hashtable<>();
 		
 		int i = 0;
 		for (Column c: t.columns) {
+			
+			AliasColumnNameType ac1 = new AliasColumnNameType();
+			AliasColumnNameType ac2 = new AliasColumnNameType();
+			AliasColumnNameType ac3 = new AliasColumnNameType();
+			AliasColumnNameType ac4 = new AliasColumnNameType();
+			
 			query += ", ";
 			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, NEW_VALUES_PREFIX+c.name);
+			ac1.isCP = false;
+			ac1.isNewValue = true;
+			ac1.name = c.name;
+			aliasTable.put("ALIAS_"+i, ac1);
 			i++;
 			
 			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, NEW_VALUES_CP_PREFIX+c.name);
+			ac2.isCP = true;
+			ac2.isNewValue = true;
+			ac2.name = c.name;
+			aliasTable.put("ALIAS_"+i, ac2);
 			i++;
 			
 			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
 			
-			aliasTable.put("ALIAS_"+i, OLD_VALUES_PREFIX+c.name);
+			ac3.isCP = false;
+			ac3.isNewValue = false;
+			ac3.name = c.name;
+			aliasTable.put("ALIAS_"+i, ac3);
 			i++;
 			
 			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i;
 			
-			aliasTable.put("ALIAS_"+i, OLD_VALUES_CP_PREFIX+c.name);
+			ac4.isCP = true;
+			ac4.isNewValue = false;
+			ac4.name = c.name;
+			aliasTable.put("ALIAS_"+i, ac4);
 			i++;
 		}
 		
@@ -732,7 +787,7 @@ public class OracleLogMinerExtractor {
 //				printResultSet(res);
 //			} else {
 				
-				saveResultSet(t,aliasTable,res,outputCSVFile,trace,computeEventClasses,false);
+				saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses);
 //			}
 			
 			//res.close();
@@ -758,39 +813,39 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-	public static void main(String[] args) {
-		OracleLogMinerExtractor extractor = new OracleLogMinerExtractor();
-		if (extractor.connect()) {
-			List<String> redoFiles = extractor.getRedoLogFiles();
-			if (extractor.startLogMiner(redoFiles)) {
-				List<TableInfo> tables = extractor.getTargetTables();
-				
-				XAttributeMap attributesLog = new XAttributeMapImpl();
-				XAttributeMap attributesTrace = new XAttributeMapImpl();
-				XLog log = new XLogImpl(attributesLog);
-				XTrace trace = new XTraceImpl(attributesTrace);
-				log.add(trace);
-				
-				for (TableInfo t: tables) {
-					extractor.getTableColumns(t);
-					extractor.getLogsForTableWithColumns(t,new File("result_"+t.name+".csv"),trace,false,true);
-				}
-				
-				try {
-					XSerializer serializer = new XesXmlSerializer();
-					OutputStream xesOut = new FileOutputStream(new File("result"+".xes"));
-					serializer.serialize(log, xesOut);
-					xesOut.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				//extractor.executeQuery("SELECT OPERATION, TIMESTAMP, SQL_REDO, SQL_UNDO FROM V$LOGMNR_CONTENTS WHERE OPERATION = 'INSERT' AND TABLE_NAME='CONCERT'");
-				//extractor.executeQuery("SELECT (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS NEW_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_NEW_CONCERT_ID, (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS OLD_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_OLD_CONCERT_ID, V$LOGMNR_CONTENTS.* FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='SAMPLEDB' AND TABLE_NAME='CONCERT'");
-			}
-			extractor.disconnect();
-		} else {
-			System.err.println("ERROR: connection failed");
-		}
-	}
+//	public static void main(String[] args) {
+//		OracleLogMinerExtractor extractor = new OracleLogMinerExtractor();
+//		if (extractor.connect()) {
+//			List<String> redoFiles = extractor.getRedoLogFiles();
+//			if (extractor.startLogMiner(redoFiles)) {
+//				List<TableInfo> tables = extractor.getTargetTables();
+//				
+//				XAttributeMap attributesLog = new XAttributeMapImpl();
+//				XAttributeMap attributesTrace = new XAttributeMapImpl();
+//				XLog log = new XLogImpl(attributesLog);
+//				XTrace trace = new XTraceImpl(attributesTrace);
+//				log.add(trace);
+//				
+//				for (TableInfo t: tables) {
+//					extractor.getTableColumns(t);
+//					extractor.getLogsForTableWithColumns(t,new File("result_"+t.name+".csv"),trace,false,true);
+//				}
+//				
+//				try {
+//					XSerializer serializer = new XesXmlSerializer();
+//					OutputStream xesOut = new FileOutputStream(new File("result"+".xes"));
+//					serializer.serialize(log, xesOut);
+//					xesOut.close();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//				
+//				//extractor.executeQuery("SELECT OPERATION, TIMESTAMP, SQL_REDO, SQL_UNDO FROM V$LOGMNR_CONTENTS WHERE OPERATION = 'INSERT' AND TABLE_NAME='CONCERT'");
+//				//extractor.executeQuery("SELECT (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS NEW_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_NEW_CONCERT_ID, (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS OLD_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_OLD_CONCERT_ID, V$LOGMNR_CONTENTS.* FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='SAMPLEDB' AND TABLE_NAME='CONCERT'");
+//			}
+//			extractor.disconnect();
+//		} else {
+//			System.err.println("ERROR: connection failed");
+//		}
+//	}
 }

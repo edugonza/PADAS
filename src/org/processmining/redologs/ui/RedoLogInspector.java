@@ -17,10 +17,10 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import java.awt.event.ActionEvent;
 
+import org.processmining.openslex.LogStorage;
 import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.config.Config;
 import org.processmining.redologs.config.DatabaseConnectionData;
-import org.processmining.redologs.storage.LogStorage;
 
 import java.awt.event.ActionListener;
 import java.awt.Toolkit;
@@ -230,8 +230,11 @@ public class RedoLogInspector {
 		desktopPane.setBorder(new BackgroundImage());
 		frmRedologInspector.getContentPane().add(desktopPane, BorderLayout.CENTER);
 		
-		desktopPane.add(FrameLogs.getInstance());
-		FrameLogs.getInstance().setVisible(true);
+		desktopPane.add(FrameEventCollections.getInstance());
+		FrameEventCollections.getInstance().setVisible(true);
+		
+		desktopPane.add(FramePerspectives.getInstance());
+		FramePerspectives.getInstance().setVisible(true);
 		
 		desktopPane.add(FrameTables.getInstance());
 		FrameTables.getInstance().setVisible(true);

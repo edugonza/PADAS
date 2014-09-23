@@ -1,8 +1,14 @@
+CREATE TABLE IF NOT EXISTS "class" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "name" TEXT NOT NULL,
+    "common" BOOLEAN NOT NULL DEFAULT FALSE
+);
+
 CREATE TABLE IF NOT EXISTS "attribute" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     "name" TEXT NOT NULL,
-    "collectionID" INTEGER NOT NULL,
-    FOREIGN KEY ("collectionID") REFERENCES "collection"("id")
+    "classID" INTEGER NOT NULL,
+    FOREIGN KEY ("classID") REFERENCES "class"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "attribute_value" (

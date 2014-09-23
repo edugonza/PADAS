@@ -30,6 +30,8 @@ import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
+import org.processmining.openslex.SLEXEventCollection;
+import org.processmining.openslex.LogStorage;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.Config;
@@ -49,12 +51,22 @@ public class FrameTables extends CustomInternalFrame {
 	private static FrameTables _instance;
 	private JComboBox comboBoxConnections;
 	private final String[] tablesTableColumnNames = new String[] {"Name","Database Name","Table Name"};
+	
+	private OracleLogMinerExtractor extractor = null;
+	private boolean stopExtractor = false;
 
 	public static FrameTables getInstance() {
 		if (_instance == null) {
 			_instance = new FrameTables();
 		}
 		return _instance;
+	}
+	
+	public void stopExtractor() {
+		this.stopExtractor = true;
+		if (extractor != null) {
+			extractor.setExtractionFlag(false);
+		}
 	}
 	
 	public List<TableInfo> getSelectedTables() {
@@ -105,9 +117,9 @@ public class FrameTables extends CustomInternalFrame {
 		JPanel panel_5 = new JPanel();
 		this.getContentPane().add(panel_5, BorderLayout.NORTH);
 		GridBagLayout gbl_panel_5 = new GridBagLayout();
-		gbl_panel_5.rowHeights = new int[] {27, 0, 0};
+		gbl_panel_5.rowHeights = new int[] {27, 0, 0, 0};
 		gbl_panel_5.columnWeights = new double[]{0.0, 0.0};
-		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, 0.0};
+		gbl_panel_5.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0};
 		panel_5.setLayout(gbl_panel_5);
 		
 		comboBoxConnections = new JComboBox();
@@ -123,9 +135,9 @@ public class FrameTables extends CustomInternalFrame {
 		
 		final JProgressBar progressBar_1 = new JProgressBar();
 		GridBagConstraints gbc_progressBar_1 = new GridBagConstraints();
+		gbc_progressBar_1.insets = new Insets(0, 0, 5, 0);
 		gbc_progressBar_1.fill = GridBagConstraints.HORIZONTAL;
 		gbc_progressBar_1.gridwidth = 2;
-		gbc_progressBar_1.insets = new Insets(0, 0, 0, 5);
 		gbc_progressBar_1.gridx = 0;
 		gbc_progressBar_1.gridy = 2;
 		panel_5.add(progressBar_1, gbc_progressBar_1);
@@ -158,7 +170,7 @@ public class FrameTables extends CustomInternalFrame {
 		GridBagConstraints gbc_btnObtainTables = new GridBagConstraints();
 		gbc_btnObtainTables.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnObtainTables.anchor = GridBagConstraints.EAST;
-		gbc_btnObtainTables.insets = new Insets(0, 0, 5, 5);
+		gbc_btnObtainTables.insets = new Insets(0, 0, 5, 0);
 		gbc_btnObtainTables.gridx = 1;
 		gbc_btnObtainTables.gridy = 0;
 		panel_5.add(btnObtainTables, gbc_btnObtainTables);
@@ -209,12 +221,14 @@ public class FrameTables extends CustomInternalFrame {
 		JButton btnExtractRedoLog = new JButton("Extract Redo Log");
 		btnExtractRedoLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-								
+				
 				AskNameDialog nameDiag = new AskNameDialog(FrameTables.getInstance());
 				final String logName = nameDiag.showDialog();
 
 				if (logName != null && !logName.isEmpty()) {
 
+					stopExtractor = false;
+					
 					Thread extractLogThread = new Thread(new Runnable() {
 
 						@Override
@@ -225,54 +239,44 @@ public class FrameTables extends CustomInternalFrame {
 
 							List<TableInfo> tables = getSelectedTables();
 
-							OracleLogMinerExtractor extractor = new OracleLogMinerExtractor(
+							extractor = new OracleLogMinerExtractor(
 									getSelectedConnection(), tables);
+							extractor.setExtractionFlag(true);
 							if (extractor.connect()) {
 								List<String> redoFiles = extractor
 										.getRedoLogFiles();
 								if (extractor.startLogMiner(redoFiles)) {
-
-									XAttributeMap attributesLog = new XAttributeMapImpl();
-									XAttributeMap attributesTrace = new XAttributeMapImpl();
-									XLog log = new XLogImpl(attributesLog);
-									XTrace trace = new XTraceImpl(
-											attributesTrace);
-									log.add(trace);
-
+									
+									SLEXEventCollection eventCollection = null;
+									
+									try {
+										eventCollection = LogStorage.getInstance().createEventCollection(logName);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+									
 									progressBar_1.setIndeterminate(false);
 									
 									int total = tables.size();
 									int progress = 0;
 									progressBar_1.setValue((progress*100)/total);
 									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
-									for (TableInfo t : tables) {
+									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
+										//for (TableInfo t : tables) {
+										TableInfo t = tables.get(it);
 										progress++;
 										if (t.columns == null) {
 											extractor.getTableColumns(t);
 										}
 										System.out.println("Table: "+t.name);
 										extractor.getLogsForTableWithColumns(t,
-												null, trace, false, true);
+												null, eventCollection, false, true);
 										progressBar_1.setValue((progress*100)/total);
 										progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									}
 
-									progressBar_1.setIndeterminate(true);
-									progressBar_1.setString("Writing to disk...");
-									
-									File logFile = new File(System
-											.currentTimeMillis()
-											+ "_"
-											+ logName + ".xes");
-
 									try {
-										XSerializer serializer = new XesXmlSerializer();
-										OutputStream xesOut = new FileOutputStream(
-												logFile);
-										serializer.serialize(log, xesOut);
-										xesOut.close();
-
-										FrameLogs.getInstance().addLog(logName, logFile);
+										FrameEventCollections.getInstance().addEventCollection(eventCollection);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -281,6 +285,7 @@ public class FrameTables extends CustomInternalFrame {
 									// extractor.executeQuery("SELECT (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS NEW_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_NEW_CONCERT_ID, (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS OLD_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_OLD_CONCERT_ID, V$LOGMNR_CONTENTS.* FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='SAMPLEDB' AND TABLE_NAME='CONCERT'");
 								}
 								extractor.disconnect();
+								extractor = null;
 							} else {
 								System.err.println("ERROR: connection failed");
 							}
@@ -297,9 +302,21 @@ public class FrameTables extends CustomInternalFrame {
 		GridBagConstraints gbc_btnExtractRedoLog = new GridBagConstraints();
 		gbc_btnExtractRedoLog.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExtractRedoLog.anchor = GridBagConstraints.EAST;
-		gbc_btnExtractRedoLog.insets = new Insets(0, 0, 5, 5);
+		gbc_btnExtractRedoLog.insets = new Insets(0, 0, 5, 0);
 		gbc_btnExtractRedoLog.gridx = 1;
 		gbc_btnExtractRedoLog.gridy = 1;
 		panel_5.add(btnExtractRedoLog, gbc_btnExtractRedoLog);
+		
+		JButton btnStop = new JButton("Stop Extraction");
+		btnStop.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				stopExtractor();
+			}
+		});
+		GridBagConstraints gbc_btnStop = new GridBagConstraints();
+		gbc_btnStop.insets = new Insets(0, 0, 0, 5);
+		gbc_btnStop.gridx = 0;
+		gbc_btnStop.gridy = 3;
+		panel_5.add(btnStop, gbc_btnStop);
 	}
 }

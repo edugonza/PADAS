@@ -1,4 +1,4 @@
-package org.processmining.redologs.storage;
+package org.processmining.openslex;
 
 /*
  * Slightly modified version of the com.ibatis.common.jdbc.ScriptRunner class
