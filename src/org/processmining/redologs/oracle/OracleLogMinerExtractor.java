@@ -34,7 +34,7 @@ import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
-import org.processmining.openslex.LogStorage;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXAttributeValue;
 import org.processmining.openslex.SLEXEvent;
@@ -359,7 +359,7 @@ public class OracleLogMinerExtractor {
 			String[] line = new String[meta.getColumnCount()+1];
 			
 			//headers[0] = COLUMN_CHANGES;
-			attributeNames[0] = LogStorage.getInstance().findOrCreateAttribute(LogStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
+			attributeNames[0] = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
 				String colName = meta.getColumnName(j);
@@ -369,7 +369,7 @@ public class OracleLogMinerExtractor {
 					//attributeNames[j] = LogStorage.getInstance().createAttribute(t.name,ac.name,false);
 				} else {
 					//headers[j] = meta.getColumnName(j);
-					attributeNames[j] = LogStorage.getInstance().findOrCreateAttribute(LogStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
+					attributeNames[j] = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
 				}
 			}
 			
@@ -384,14 +384,14 @@ public class OracleLogMinerExtractor {
 			String operation = "";
 			
 			while (res.next() && !stopExtraction) {
-				SLEXEvent event = LogStorage.getInstance().createEvent(eventCollection.getId());
+				SLEXEvent event = SLEXStorage.getInstance().createEvent(eventCollection.getId());
 				
 				SLEXAttributeValue[] attributeValues = new SLEXAttributeValue[numAttributes];
 				
 				for (int c = 1; c <= meta.getColumnCount(); c++) {
 					line[c] = res.getString(c);
 					if (c <= scnTimestampColNum) {
-						attributeValues[c] = LogStorage.getInstance().createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
+						attributeValues[c] = SLEXStorage.getInstance().createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
 					}
 				}
 				
@@ -469,14 +469,14 @@ public class OracleLogMinerExtractor {
 						}
 						
 						/**/
-						attributeNames[c+scnTimestampColNum+1] = LogStorage.getInstance().findOrCreateAttribute(t.name,headers[(4*c)+scnTimestampColNum+1],false);
+						attributeNames[c+scnTimestampColNum+1] = SLEXStorage.getInstance().findOrCreateAttribute(t.name,headers[(4*c)+scnTimestampColNum+1],false);
 						attributeValues[c+scnTimestampColNum+1] = 
-								LogStorage.getInstance().createAttributeValue(attributeNames[c+scnTimestampColNum+1].getId(), event.getId(), line[(4*c)+scnTimestampColNum+1]);
+								SLEXStorage.getInstance().createAttributeValue(attributeNames[c+scnTimestampColNum+1].getId(), event.getId(), line[(4*c)+scnTimestampColNum+1]);
 						/**/
 					}
 
 					line[0] = column_changes;
-					attributeValues[0] = LogStorage.getInstance().createAttributeValue(attributeNames[0].getId(), event.getId(), column_changes);
+					attributeValues[0] = SLEXStorage.getInstance().createAttributeValue(attributeNames[0].getId(), event.getId(), column_changes);
 
 					if (operation.equalsIgnoreCase("INSERT")) {
 						records.get(rowid).clear();

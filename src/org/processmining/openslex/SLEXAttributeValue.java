@@ -1,12 +1,12 @@
 package org.processmining.openslex;
 
-public class SLEXAttributeValue extends SLEXDatabaseObject {
+public class SLEXAttributeValue extends SLEXAbstractDatabaseObject {
 
 	private int attributeId = -1;
 	private int eventId = -1;
 	private String value = null;
 	
-	protected SLEXAttributeValue(LogStorage storage,int attributeId, int eventId) {
+	protected SLEXAttributeValue(SLEXStorage storage,int attributeId, int eventId) {
 		super(storage);
 		this.attributeId = attributeId;
 		this.eventId = eventId;
@@ -30,12 +30,12 @@ public class SLEXAttributeValue extends SLEXDatabaseObject {
 	}
 	
 	@Override
-	boolean insert(SLEXDatabaseObject at) {
+	boolean insert(SLEXAbstractDatabaseObject at) {
 		return storage.insert((SLEXAttributeValue) at);
 	}
 
 	@Override
-	boolean update(SLEXDatabaseObject at) {
+	boolean update(SLEXAbstractDatabaseObject at) {
 		return storage.update((SLEXAttributeValue) at);
 	}
 

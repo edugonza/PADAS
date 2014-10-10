@@ -1,12 +1,12 @@
 package org.processmining.openslex;
 
 
-abstract class SLEXDatabaseObject {
-	protected LogStorage storage = null;
+abstract class SLEXAbstractDatabaseObject {
+	protected SLEXStorage storage = null;
 	private boolean dirty = true;
 	private boolean inserted = false;
 	
-	public SLEXDatabaseObject(LogStorage storage) {
+	public SLEXAbstractDatabaseObject(SLEXStorage storage) {
 		this.storage = storage;
 	}
 	
@@ -26,9 +26,9 @@ abstract class SLEXDatabaseObject {
 		this.dirty = dirty;
 	}
 	
-	abstract boolean insert(SLEXDatabaseObject dbob);
+	abstract boolean insert(SLEXAbstractDatabaseObject dbob);
 	
-	abstract boolean update(SLEXDatabaseObject dbob);
+	abstract boolean update(SLEXAbstractDatabaseObject dbob);
 	
 	public boolean commit() {
 		

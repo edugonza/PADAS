@@ -13,7 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.processmining.openslex.LogStorage;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventCollectionResultSet;
 
@@ -53,7 +53,7 @@ public class FrameEventCollections extends CustomInternalFrame {
 	
 	private void queryEventCollections() {
 		try {
-			SLEXEventCollectionResultSet evcrset = LogStorage.getInstance()
+			SLEXEventCollectionResultSet evcrset = SLEXStorage.getInstance()
 					.getEventCollections();
 			SLEXEventCollection ec = null;
 			while ((ec = evcrset.getNext()) != null) {

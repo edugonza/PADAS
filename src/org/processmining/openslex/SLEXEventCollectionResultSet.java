@@ -3,9 +3,9 @@ package org.processmining.openslex;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SLEXEventCollectionResultSet extends SLEXResultSetObject {
+public class SLEXEventCollectionResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXEventCollectionResultSet(LogStorage storage, ResultSet rset) {
+	protected SLEXEventCollectionResultSet(SLEXStorage storage, ResultSet rset) {
 		super(storage, rset);
 	}
 	

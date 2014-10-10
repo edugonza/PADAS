@@ -20,6 +20,8 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.processmining.openslex.SLEXEventCollection;
+import org.processmining.openslex.SLEXPerspective;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.EventAttributeColumn;
@@ -435,8 +437,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
 				
-				final File logFile = FramePerspectives.getInstance().getFileFromSelector();
-				final File splittedLogFile = new File(System.currentTimeMillis()+"-splitted-"+outputLogName);
+				final SLEXEventCollection evCol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
 				
 				Thread logSplitThread = new Thread(new Runnable() {
 					@Override
@@ -445,7 +446,8 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
 						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME
-						FramePerspectives.getInstance().addLog(splittedLogFile.getName(), splittedLogFile);
+						SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(evCol,model,traceIdFieldName,sortFieldName,timestampFieldName,activityFieldNames);
+						FramePerspectives.getInstance().addPerspective(splittedPerspective);
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Splitted");
 					}

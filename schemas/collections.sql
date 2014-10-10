@@ -39,19 +39,17 @@ CREATE TABLE IF NOT EXISTS "perspective" (
 );
 
 CREATE TABLE IF NOT EXISTS "trace" (
-    "id" TEXT NOT NULL,
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "caseID" TEXT NOT NULL,
     "perspectiveID" INTEGER NOT NULL,
-    FOREIGN KEY ("perspectiveID") REFERENCES "perspective"("id"),
-    PRIMARY KEY ("id","perspectiveID")
+    FOREIGN KEY ("perspectiveID") REFERENCES "perspective"("id")
 );
 
 CREATE TABLE IF NOT EXISTS "trace_has_event" (
-    "traceID" TEXT NOT NULL,
-    "collectionID" INTEGER NOT NULL,
+    "traceID" INTEGER NOT NULL,
     "eventID" INTEGER NOT NULL,
     FOREIGN KEY ("traceID") REFERENCES "trace"("id"),
-    FOREIGN KEY ("collectionID") REFERENCES "trace"("collectionID"),
     FOREIGN KEY ("eventID") REFERENCES "event"("id"),
-    PRIMARY KEY ("traceID","collectionID","eventID")
+    PRIMARY KEY ("traceID","eventID")
 );
 

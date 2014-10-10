@@ -1,12 +1,12 @@
 package org.processmining.openslex;
 
-public class SLEXClass extends SLEXDatabaseObject {
+public class SLEXClass extends SLEXAbstractDatabaseObject {
 
 	private int id = -1;
 	private String name = null;
 	private boolean common = false;
 	
-	protected SLEXClass(LogStorage storage, String name, boolean common) {
+	protected SLEXClass(SLEXStorage storage, String name, boolean common) {
 		super(storage);
 		this.name = name;
 		this.common = common;
@@ -39,12 +39,12 @@ public class SLEXClass extends SLEXDatabaseObject {
 	}
 	
 	@Override
-	boolean insert(SLEXDatabaseObject cl) {
+	boolean insert(SLEXAbstractDatabaseObject cl) {
 		return storage.insert((SLEXClass) cl);
 	}
 
 	@Override
-	boolean update(SLEXDatabaseObject cl) {
+	boolean update(SLEXAbstractDatabaseObject cl) {
 		return storage.update((SLEXClass) cl);
 	}
 

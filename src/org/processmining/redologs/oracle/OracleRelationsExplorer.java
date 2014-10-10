@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map.Entry;
@@ -23,6 +24,12 @@ import javax.swing.JFrame;
 
 import org.apache.commons.collections15.Predicate;
 import org.apache.commons.collections15.Transformer;
+import org.processmining.openslex.SLEXDMAttribute;
+import org.processmining.openslex.SLEXDMClass;
+import org.processmining.openslex.SLEXDMDataModel;
+import org.processmining.openslex.SLEXDMKey;
+import org.processmining.openslex.SLEXDMKeyAttribute;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.GraphEdge;
@@ -190,6 +197,12 @@ public class OracleRelationsExplorer {
 		return res;
 	}
 	
+	public static DataModel loadDataModelFromSLEXDM(SLEXDMDataModel dm) {
+		DataModel model = new DataModel();
+		// TODO
+		return model;
+	}
+	
 	public DataModel extractRelations() {
 		DataModel model = new DataModel();
 		
@@ -200,7 +213,7 @@ public class OracleRelationsExplorer {
 		Hashtable<TableInfo, List<Key>> keysPerTable = new Hashtable<>();
 		
 		try {
-			String queryStr = "SELECT PF.constraint_name,PF.table_name,PF.column_name,C.constraint_type,C.r_constraint_name "+
+			String queryStr = "SELECT PF.constraint_name,PF.table_name,PF.column_name,C.constraint_type,C.r_constraint_name,PF.position "+
 							  "FROM all_cons_columns PF, all_constraints C "+
 							  "WHERE C.constraint_type IN ('U','P','R') "+
 							  "AND PF.constraint_name = C.constraint_name "+
@@ -224,6 +237,7 @@ public class OracleRelationsExplorer {
 				String column_name = res.getString(3);
 				String constraint_type = res.getString(4);
 				String r_constraint_name = res.getString(5);
+				int column_position = res.getInt(6);
 				
 				if (constraint_type.equalsIgnoreCase("R")) {
 					// Foreign Key
@@ -236,6 +250,8 @@ public class OracleRelationsExplorer {
 						k.type = Key.FOREIGN_KEY;
 						k.table = targetTablesMap.get(table_name);
 						k.fields = new Vector<>();
+						k.fields_ordered = new HashMap<>();
+						k.refers_to_column = new HashMap<>();
 						foreignKeys.put(k.name, k);
 						List<Key> kpt = keysPerTable.get(k.table);
 						if (kpt == null) {
@@ -261,6 +277,8 @@ public class OracleRelationsExplorer {
 					}
 					
 					k.fields.add(c);
+					k.fields_ordered.put(column_position,c);
+					k.refers_to_column.put(c,k.refers_to.fields_ordered.get(column_position));
 					
 				} else if (constraint_type.equalsIgnoreCase("P")) {
 					// Primary Key
@@ -273,6 +291,7 @@ public class OracleRelationsExplorer {
 						k.type = Key.PRIMARY_KEY;
 						k.table = targetTablesMap.get(table_name);
 						k.fields = new Vector<>();
+						k.fields_ordered = new HashMap<>();
 						primaryKeys.put(k.name, k);
 						List<Key> kpt = keysPerTable.get(k.table);
 						if (kpt == null) {
@@ -292,6 +311,7 @@ public class OracleRelationsExplorer {
 					}
 					
 					k.fields.add(c);
+					k.fields_ordered.put(column_position,c);
 					
 				} else if (constraint_type.equalsIgnoreCase("U")) {
 					// Unique
@@ -304,6 +324,7 @@ public class OracleRelationsExplorer {
 						k.type = Key.UNIQUE_KEY;
 						k.table = targetTablesMap.get(table_name);
 						k.fields = new Vector<>();
+						k.fields_ordered = new HashMap<>();
 						uniqueKeys.put(k.name, k);
 						List<Key> kpt = keysPerTable.get(k.table);
 						if (kpt == null) {
@@ -323,6 +344,7 @@ public class OracleRelationsExplorer {
 					}
 					
 					k.fields.add(c);
+					k.fields_ordered.put(column_position,c);
 				}
 
 			}
@@ -330,12 +352,11 @@ public class OracleRelationsExplorer {
 			model.setPrimaryKeys(primaryKeys);
 			model.setUniqueKeys(uniqueKeys);
 			model.setForeignKeys(foreignKeys);
-			model.setColumns(columns);
 			model.setTables(targetTables);
 			model.setKeysPerTable(keysPerTable);
 			
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 		
 		return model;

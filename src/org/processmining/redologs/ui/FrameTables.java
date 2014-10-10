@@ -30,8 +30,9 @@ import org.deckfour.xes.model.impl.XLogImpl;
 import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
+import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEventCollection;
-import org.processmining.openslex.LogStorage;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.Config;
@@ -188,19 +189,30 @@ public class FrameTables extends CustomInternalFrame {
 						public void run() {
 							
 							progressBar_1.setIndeterminate(true);
-							
-							OracleRelationsExplorer explorer = new OracleRelationsExplorer(getSelectedConnection(), getSelectedTables());
-							
-							if (explorer.connect()) {
-								DataModel model = explorer.extractRelations();
-								model.setName(modelName);
-								FrameDataModels.getInstance().addDataModel(model);
-								explorer.disconnect();
-							} else {
-								InfoDialog info = new InfoDialog("Failure connecting to Database",FrameTables.getInstance());
-								info.showDialog();
+							try {
+								OracleRelationsExplorer explorer = new OracleRelationsExplorer(
+										getSelectedConnection(),
+										getSelectedTables());
+
+								if (explorer.connect()) {
+									DataModel model = explorer
+											.extractRelations();
+									model.setName(modelName);
+									SLEXDMDataModel dm = SLEXStorage
+											.getInstance()
+											.saveDataModelToSLEXDM(model);
+									FrameDataModels.getInstance().addDataModel(
+											model);
+									explorer.disconnect();
+								} else {
+									InfoDialog info = new InfoDialog(
+											"Failure connecting to Database",
+											FrameTables.getInstance());
+									info.showDialog();
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
-							
 							progressBar_1.setIndeterminate(false);
 						}
 					});
@@ -250,7 +262,7 @@ public class FrameTables extends CustomInternalFrame {
 									SLEXEventCollection eventCollection = null;
 									
 									try {
-										eventCollection = LogStorage.getInstance().createEventCollection(logName);
+										eventCollection = SLEXStorage.getInstance().createEventCollection(logName);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -280,9 +292,6 @@ public class FrameTables extends CustomInternalFrame {
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
-
-									// extractor.executeQuery("SELECT OPERATION, TIMESTAMP, SQL_REDO, SQL_UNDO FROM V$LOGMNR_CONTENTS WHERE OPERATION = 'INSERT' AND TABLE_NAME='CONCERT'");
-									// extractor.executeQuery("SELECT (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS NEW_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_NEW_CONCERT_ID, (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS OLD_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_OLD_CONCERT_ID, V$LOGMNR_CONTENTS.* FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='SAMPLEDB' AND TABLE_NAME='CONCERT'");
 								}
 								extractor.disconnect();
 								extractor = null;

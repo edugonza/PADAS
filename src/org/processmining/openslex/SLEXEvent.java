@@ -2,13 +2,13 @@ package org.processmining.openslex;
 
 import java.util.Hashtable;
 
-public class SLEXEvent extends SLEXDatabaseObject {
+public class SLEXEvent extends SLEXAbstractDatabaseObject {
 
 	private int id = -1;
 	private int collectionId = -1;
 	private Hashtable<SLEXAttribute, SLEXAttributeValue> attributeValues = null;
 	
-	protected SLEXEvent(LogStorage storage) {
+	protected SLEXEvent(SLEXStorage storage) {
 		super(storage);
 	}
 	
@@ -30,12 +30,12 @@ public class SLEXEvent extends SLEXDatabaseObject {
 	}
 	
 	@Override
-	boolean insert(SLEXDatabaseObject e) {
+	boolean insert(SLEXAbstractDatabaseObject e) {
 		return storage.insert((SLEXEvent)e);
 	}
 
 	@Override
-	boolean update(SLEXDatabaseObject e) {
+	boolean update(SLEXAbstractDatabaseObject e) {
 		return storage.update((SLEXEvent)e);
 	}
 

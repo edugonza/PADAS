@@ -3,12 +3,12 @@ package org.processmining.openslex;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-public class SLEXEventCollection extends SLEXDatabaseObject {
+public class SLEXEventCollection extends SLEXAbstractDatabaseObject {
 	
 	private int id = -1;
 	private String name = null;
 	
-	protected SLEXEventCollection(LogStorage storage, String name) {
+	protected SLEXEventCollection(SLEXStorage storage, String name) {
 		super(storage);
 		this.name = name;
 	}
@@ -36,12 +36,12 @@ public class SLEXEventCollection extends SLEXDatabaseObject {
 	}
 	
 	@Override
-	boolean insert(SLEXDatabaseObject ec) {
+	boolean insert(SLEXAbstractDatabaseObject ec) {
 		return storage.insert((SLEXEventCollection) ec);
 	}
 
 	@Override
-	boolean update(SLEXDatabaseObject ec) {
+	boolean update(SLEXAbstractDatabaseObject ec) {
 		return storage.update((SLEXEventCollection) ec);
 	}
 	

@@ -1,5 +1,6 @@
 package org.processmining.redologs.common;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class Key extends GraphNode {
@@ -10,9 +11,12 @@ public class Key extends GraphNode {
 	
 	public String name;
 	public TableInfo table;
+	//public List<Column> fields;
+	public HashMap<Integer,Column> fields_ordered;
 	public List<Column> fields;
 	public int type;
 	public Key refers_to;
+	public HashMap<Column,Column> refers_to_column;
 	
 	public String typeToString() {
 		switch (type) {

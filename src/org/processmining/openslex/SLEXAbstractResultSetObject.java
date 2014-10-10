@@ -3,12 +3,12 @@ package org.processmining.openslex;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-abstract class SLEXResultSetObject {
+abstract class SLEXAbstractResultSetObject {
 	
 	protected ResultSet rset = null;
-	protected LogStorage storage = null;
+	protected SLEXStorage storage = null;
 	
-	protected SLEXResultSetObject(LogStorage storage, ResultSet rset) {
+	protected SLEXAbstractResultSetObject(SLEXStorage storage, ResultSet rset) {
 		this.storage = storage;
 		this.rset = rset;
 	}

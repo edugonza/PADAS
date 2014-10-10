@@ -13,7 +13,7 @@ public class DataModel {
 	private Hashtable<String, Key> primaryKeys = new Hashtable<>();
 	private Hashtable<String, Key> foreignKeys = new Hashtable<>();
 	private Hashtable<String, Key> uniqueKeys = new Hashtable<>();
-	private Hashtable<String, Column> columns = new Hashtable<>();
+	//private Hashtable<String, Column> columns = new Hashtable<>();
 	private Hashtable<TableInfo, List<Key>> keysPerTable = new Hashtable<>();
 	
 	public DataModel() {
@@ -66,13 +66,13 @@ public class DataModel {
 		this.uniqueKeys = uniqueKeys;
 	}
 
-	public Hashtable<String, Column> getColumns() {
-		return columns;
-	}
-
-	public void setColumns(Hashtable<String, Column> columns) {
-		this.columns = columns;
-	}
+//	public Hashtable<String, Column> getColumns() {
+//		return columns;
+//	}
+//
+//	public void setColumns(Hashtable<String, Column> columns) {
+//		this.columns = columns;
+//	}
 
 	public List<Key> getKeysPerTable(TableInfo table) {
 		List<Key> keys = null;

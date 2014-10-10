@@ -9,6 +9,7 @@ public class TableInfo extends GraphNode {
 	
 	@Override
 	public String toString() {
-		return db+"@"+name;
+		//return db+"@"+name;
+		return name;
 	}
 }

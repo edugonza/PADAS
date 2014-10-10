@@ -1,4 +1,4 @@
-package org.processmining.openslex;
+package org.processmining.openslex.utils;
 
 /*
  * Slightly modified version of the com.ibatis.common.jdbc.ScriptRunner class

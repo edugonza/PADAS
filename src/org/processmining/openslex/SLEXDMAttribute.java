@@ -1,12 +1,12 @@
 package org.processmining.openslex;
 
-public class SLEXAttribute extends SLEXAbstractDatabaseObject {
+public class SLEXDMAttribute extends SLEXAbstractDatabaseObject {
 
 	private int id = -1;
 	private String name = null;
 	private int classId = -1;
 	
-	protected SLEXAttribute(SLEXStorage storage) {
+	protected SLEXDMAttribute(SLEXStorage storage) {
 		super(storage);
 	}
 	
@@ -38,12 +38,12 @@ public class SLEXAttribute extends SLEXAbstractDatabaseObject {
 	
 	@Override
 	boolean insert(SLEXAbstractDatabaseObject at) {
-		return storage.insert((SLEXAttribute) at);
+		return storage.insert((SLEXDMAttribute) at);
 	}
 
 	@Override
 	boolean update(SLEXAbstractDatabaseObject at) {
-		return storage.update((SLEXAttribute) at);
+		return storage.update((SLEXDMAttribute) at);
 	}
 
 	@Override
@@ -59,8 +59,8 @@ public class SLEXAttribute extends SLEXAbstractDatabaseObject {
 	@Override
 	public boolean equals(Object obj) {
 		if (!super.equals(obj)) {
-			if (obj instanceof SLEXAttribute) {
-				SLEXAttribute objat = (SLEXAttribute) obj;
+			if (obj instanceof SLEXDMAttribute) {
+				SLEXDMAttribute objat = (SLEXDMAttribute) obj;
 				if (this.getId() == objat.getId() &&
 						this.getClassId() == objat.getClassId() &&
 						this.getName().equals(objat.getName())) {

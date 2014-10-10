@@ -1,12 +1,12 @@
 package org.processmining.openslex;
 
-public class SLEXPerspective extends SLEXDatabaseObject {
+public class SLEXPerspective extends SLEXAbstractDatabaseObject {
 
 	private int id = -1;
 	private int collectionId = -1;
 	private String name = null;
 	
-	protected SLEXPerspective(LogStorage storage) {
+	protected SLEXPerspective(SLEXStorage storage) {
 		super(storage);
 	}
 
@@ -28,19 +28,21 @@ public class SLEXPerspective extends SLEXDatabaseObject {
 	
 	protected void setCollectionId(int collectionId) {
 		this.collectionId = collectionId;
+		setDirty(true);
 	}
 	
 	protected void setName(String name) {
 		this.name = name;
+		setDirty(true);
 	}
 	
 	@Override
-	boolean insert(SLEXDatabaseObject p) {
+	boolean insert(SLEXAbstractDatabaseObject p) {
 		return storage.insert((SLEXPerspective) p);
 	}
 
 	@Override
-	boolean update(SLEXDatabaseObject p) {
+	boolean update(SLEXAbstractDatabaseObject p) {
 		return storage.update((SLEXPerspective) p);
 	}
 

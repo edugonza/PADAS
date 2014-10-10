@@ -1,6 +1,7 @@
 package org.processmining.redologs.ui;
 
 import java.awt.EventQueue;
+import java.awt.Rectangle;
 
 import javax.swing.JFrame;
 
@@ -17,7 +18,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import java.awt.event.ActionEvent;
 
-import org.processmining.openslex.LogStorage;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.config.Config;
 import org.processmining.redologs.config.DatabaseConnectionData;
@@ -116,7 +117,7 @@ public class RedoLogInspector {
 		
 		try {
 			
-			LogStorage logStorage = LogStorage.getInstance();
+			SLEXStorage logStorage = SLEXStorage.getInstance();
 			
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -134,7 +135,7 @@ public class RedoLogInspector {
 		frmRedologInspector = new JFrame();
 		frmRedologInspector.setTitle("RedoLog Inspector"+" v"+Constants.VERSION);
 		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/r.png")));
-		frmRedologInspector.setBounds(100, 100, 653, 518);
+		frmRedologInspector.setBounds(100, 100, 887, 700);
 		frmRedologInspector.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmRedologInspector.setLocationRelativeTo(null);
 		
@@ -161,7 +162,7 @@ public class RedoLogInspector {
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					LogStorage.getInstance().disconnect();
+					SLEXStorage.getInstance().disconnect();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
@@ -230,16 +231,36 @@ public class RedoLogInspector {
 		desktopPane.setBorder(new BackgroundImage());
 		frmRedologInspector.getContentPane().add(desktopPane, BorderLayout.CENTER);
 		
-		desktopPane.add(FrameEventCollections.getInstance());
-		FrameEventCollections.getInstance().setVisible(true);
-		
-		desktopPane.add(FramePerspectives.getInstance());
-		FramePerspectives.getInstance().setVisible(true);
-		
 		desktopPane.add(FrameTables.getInstance());
+		Rectangle rTables = FrameTables.getInstance().getBounds();
+		rTables.y = 30;
+		rTables.height += 150;
+		FrameTables.getInstance().setBounds(rTables);
 		FrameTables.getInstance().setVisible(true);
 		
+		desktopPane.add(FramePerspectives.getInstance());
+		Rectangle rPerspectives = FramePerspectives.getInstance().getBounds();
+		rPerspectives.x = rTables.x;
+		rPerspectives.y = rTables.y + rTables.height + 30;
+		rPerspectives.width = rTables.width;
+		FramePerspectives.getInstance().setBounds(rPerspectives);
+		FramePerspectives.getInstance().setVisible(true);
+		
+		desktopPane.add(FrameEventCollections.getInstance());
+		Rectangle rEvCollections = FrameEventCollections.getInstance().getBounds();
+		rEvCollections.height += 200;
+		rEvCollections.x = rTables.x + rTables.width + 30;
+		rEvCollections.y = rTables.y;
+		FrameEventCollections.getInstance().setBounds(rEvCollections);
+		FrameEventCollections.getInstance().setVisible(true);
+		
+		
 		desktopPane.add(FrameDataModels.getInstance());
+		Rectangle rDataModels = FrameDataModels.getInstance().getBounds();
+		rDataModels.x = rEvCollections.x;
+		rDataModels.y = rEvCollections.y + rEvCollections.height + 30;
+		rDataModels.width = rEvCollections.width;
+		FrameDataModels.getInstance().setBounds(rDataModels);
 		FrameDataModels.getInstance().setVisible(true);
 		
 		JPanel panel_StatusBar = new JPanel();

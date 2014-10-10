@@ -16,6 +16,9 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.processmining.openslex.SLEXDMDataModel;
+import org.processmining.openslex.SLEXDMDataModelResultSet;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.TableInfo;
 
@@ -60,6 +63,19 @@ public class FrameDataModels extends CustomInternalFrame {
 		return null;
 	}
 	
+	private void obtainDataModelsFromDB() {
+		try {
+			SLEXDMDataModelResultSet rset = SLEXStorage.getInstance()
+					.getDataModels();
+			SLEXDMDataModel dm = null;
+			while ((dm = rset.getNext()) != null) {
+				addDataModel(SLEXStorage.getInstance().loadDataModelFromSLEXDM(dm));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private FrameDataModels() {
 		super("Data Models");
 		setClosable(false);
@@ -83,5 +99,6 @@ public class FrameDataModels extends CustomInternalFrame {
 		JButton btnLoad = new JButton("Load");
 		panel.add(btnLoad);
 		
+		obtainDataModelsFromDB();
 	}	
 }
