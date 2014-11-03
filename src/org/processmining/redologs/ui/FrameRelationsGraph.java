@@ -25,8 +25,10 @@ import org.processmining.redologs.oracle.OracleRelationsExplorer;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
+import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.picking.PickedState;
+
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -67,42 +69,45 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 
 		progressBar = new JProgressBar();
 		panel.add(progressBar);
-		
+
 		JPanel panel_2 = new JPanel();
 		panel.add(panel_2);
 		JButton btnReload = new JButton("Reload");
 		panel_2.add(btnReload);
 		btnReload.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnReload.setVerticalAlignment(SwingConstants.TOP);
-		
-				JButton btnRepaint = new JButton("Reset");
-				panel_2.add(btnRepaint);
-				btnRepaint.setVerticalAlignment(SwingConstants.TOP);
-				
-				JButton btnShowExtraFields = new JButton("Toggle Extra fields");
-				panel_2.add(btnShowExtraFields);
-				btnShowExtraFields.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						VertexDisplayPredicate<GraphNode, GraphEdge> vdpred =
-								(VertexDisplayPredicate<GraphNode, GraphEdge>) vv.getRenderContext().getVertexIncludePredicate();
-						vdpred.filterSmall(!vdpred.filter_small);
-						vv.repaint();
-					}
-				});
-				btnRepaint.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						vv.getRenderContext().getMultiLayerTransformer()
-								.getTransformer(Layer.VIEW)
-								.setScale(1.0, 1.0, vv.getCenter());
-						vv.getRenderContext().getMultiLayerTransformer()
-								.getTransformer(Layer.LAYOUT)
-								.setScale(1.0, 1.0, vv.getCenter());
-					}
-				});
-		
+
+		JButton btnRepaint = new JButton("Reset");
+		panel_2.add(btnRepaint);
+		btnRepaint.setVerticalAlignment(SwingConstants.TOP);
+
+		JButton btnShowExtraFields = new JButton("Toggle Extra fields");
+		panel_2.add(btnShowExtraFields);
+		btnShowExtraFields.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (vv != null) {
+					VertexDisplayPredicate<GraphNode, GraphEdge> vdpred = (VertexDisplayPredicate<GraphNode, GraphEdge>) vv
+							.getRenderContext().getVertexIncludePredicate();
+					vdpred.filterExtraFields(!vdpred.filter_small);
+					vv.repaint();
+				}
+			}
+		});
+		btnRepaint.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				vv.getRenderContext().getMultiLayerTransformer()
+						.getTransformer(Layer.VIEW)
+						.setScale(1.0, 1.0, vv.getCenter());
+				vv.getRenderContext().getMultiLayerTransformer()
+						.getTransformer(Layer.LAYOUT)
+						.setScale(1.0, 1.0, vv.getCenter());
+			}
+		});
+
 		btnReload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
+				DataModel model = FrameDataModels.getInstance()
+						.getSelectedDataModel();
 				reloadGraph(model);
 			}
 		});
@@ -128,15 +133,26 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 				pickTraceIdHierarchy(logSplitter.getTraceIdHierarchy());
 			}
 		});
+		
+		JButton btnToogleFilterTraceidHierarchy = new JButton("Show only TraceId Hierarchy");
+		btnToogleFilterTraceidHierarchy.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				filterTraceIdHierarchy(logSplitter.getTraceIdHierarchy());
+			}
+		});
+		
 		panel_1.add(btnHighlightTraceidHierarchy);
 		panel_1.add(btnSaveTraceidHierarchy);
+		panel_1.add(btnToogleFilterTraceidHierarchy);
 		
 		if (traceIdSelector) {
 			btnSaveTraceidHierarchy.setVisible(true);
 			btnHighlightTraceidHierarchy.setVisible(true);
+			btnToogleFilterTraceidHierarchy.setVisible(true);
 		} else {
 			btnSaveTraceidHierarchy.setVisible(false);
 			btnHighlightTraceidHierarchy.setVisible(false);
+			btnToogleFilterTraceidHierarchy.setVisible(false);
 		}
 		this.getContentPane()
 				.add(graphPanel, BorderLayout.CENTER);
@@ -218,6 +234,16 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 		pickedState.clear();
 		for (GraphNode g: listNodes) {
 			pickedState.pick(g, true);
+			g.traceIdSet = true;
+		}
+	}
+	
+	public void filterTraceIdHierarchy(List<GraphNode> listNodes) {
+		if (vv != null) {
+			VertexDisplayPredicate<GraphNode, GraphEdge> vdpred = (VertexDisplayPredicate<GraphNode, GraphEdge>) vv
+					.getRenderContext().getVertexIncludePredicate();
+			vdpred.filterTraceId(!vdpred.filter_traceId);
+			vv.repaint();
 		}
 	}
 }

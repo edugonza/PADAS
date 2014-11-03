@@ -36,10 +36,16 @@ import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXAttribute;
+import org.processmining.openslex.SLEXAttributeMapper;
 import org.processmining.openslex.SLEXAttributeValue;
+import org.processmining.openslex.SLEXDMAttribute;
+import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventResultSet;
+import org.processmining.openslex.SLEXPerspective;
+import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXTrace;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
 import com.thoughtworks.xstream.core.util.Base64Encoder;
@@ -141,90 +147,12 @@ public class LogTraceSplitter {
 	
 	public static Object[][] computeMetrics(SLEXEventCollection collection, DataModel model) {
 		try {
-//			XParser parser = new XesXmlParser();
-//			List<XLog> originalLogs = parser.parse(logFile);
-//			XLog originalLog = originalLogs.get(0);
 			Hashtable<SLEXAttribute,HashMap<String,Integer>> attributesValuesCount = new Hashtable<>();
 			Object[][] results = null;
 			SLEXEventResultSet erset = collection.getEventsResultSet();
 			SLEXEvent ev = null;
 			while ((ev = erset.getNext()) != null) {
 				Hashtable<SLEXAttribute, SLEXAttributeValue> attributeValues = ev.getAttributeValues();
-				
-				/* Metrics of Keys are checked here FIXME */
-//				if (model != null) {
-//					String prefix_new = "K_NEW_";
-//					String prefix_old = "K_OLD_";
-//					List<Key> keys = model.getKeysPerTable(DBName,
-//							tableName);
-//					Base64Encoder encoder64 = new Base64Encoder();
-//					for (Key k : keys) {
-//						String keyId = k.table + "#" + "("
-//								+ k.typeToString() + ")" + k.name;
-//						String keyValNew = "";
-//						String keyValOld = "";
-//						for (Column c : k.fields) {
-//							XAttribute attrNew = attributes.get("V_NEW_"
-//									+ c.name);
-//							XAttribute attrOld = attributes.get("V_OLD_"
-//									+ c.name);
-//							String vNew = "";
-//							String vOld = "";
-//							if (attrNew != null) {
-//								if (attrNew instanceof XAttributeLiteral) {
-//									vNew = ((XAttributeLiteral) attrNew)
-//											.getValue();
-//								}
-//							}
-//							if (attrOld != null) {
-//								if (attrOld instanceof XAttributeLiteral) {
-//									vOld = ((XAttributeLiteral) attrOld)
-//											.getValue();
-//								}
-//							}
-//							keyValNew += ","
-//									+ encoder64.encode(vNew.getBytes());
-//							keyValOld += ","
-//									+ encoder64.encode(vOld.getBytes());
-//						}
-//							if (k.type == Key.FOREIGN_KEY
-//								&& k.refers_to != null) {
-//							keyId = k.refers_to.table + "#" + "("
-//									+ k.refers_to.typeToString() + ")"
-//									+ k.refers_to.name;
-//						}
-//							Hashtable<String, Integer> valuesCount;
-//						if (attributesValuesCount.containsKey(prefix_new
-//								+ keyId)) {
-//							valuesCount = attributesValuesCount
-//									.get(prefix_new + keyId);
-//						} else {
-//							valuesCount = new Hashtable<>();
-//							attributesValuesCount.put(prefix_new + keyId,
-//									valuesCount);
-//						}
-//						int count = 1;
-//						if (valuesCount.containsKey(keyValNew)) {
-//							count = valuesCount.get(keyValNew) + 1;
-//						}
-//						valuesCount.put(keyValNew, count);
-//							if (attributesValuesCount.containsKey(prefix_old
-//								+ keyId)) {
-//							valuesCount = attributesValuesCount
-//									.get(prefix_old + keyId);
-//						} else {
-//							valuesCount = new Hashtable<>();
-//							attributesValuesCount.put(prefix_old + keyId,
-//									valuesCount);
-//						}
-//						count = 1;
-//						if (valuesCount.containsKey(keyValOld)) {
-//							count = valuesCount.get(keyValOld) + 1;
-//						}
-//						valuesCount.put(keyValOld, count);
-//					}
-//				}
-				/**/
 				
 				Iterator<Entry<SLEXAttribute, SLEXAttributeValue>> it = attributeValues.entrySet().iterator();
 				while (it.hasNext()) {
@@ -240,13 +168,13 @@ public class LogTraceSplitter {
 					}
 					SLEXAttributeValue valueAttr = entry.getValue();
 					String value = valueAttr.getValue();
-					//if (value != null) {
-						int count = 1;
-						if (valuesCount.containsKey(value)) {
-							count = valuesCount.get(value) + 1;
-						}
-						valuesCount.put(value, count);
-					//}
+
+					int count = 1;
+					if (valuesCount.containsKey(value)) {
+						count = valuesCount.get(value) + 1;
+					}
+					valuesCount.put(value, count);
+					
 				}
 			}
 
@@ -292,7 +220,6 @@ public class LogTraceSplitter {
 				results[i] = new Object[] { entry.getKey(), new Float(mean),
 						new Integer(num), new Integer(min), new Integer(max),
 						new Float(std) };
-				// System.out.println(entry.getKey()+" - Mean: "+mean+" Traces: "+num+" Max: "+max+" Min: "+min+" Std: "+std);
 				i++;
 			}
 			return results;
@@ -302,36 +229,231 @@ public class LogTraceSplitter {
 		return null;
 
 	}
+
+	public static SLEXAttributeMapper computeMapping(SLEXEventCollection ev, DataModel dm) {
+		SLEXAttributeMapper mapper = new SLEXAttributeMapper();
+		
+		// TODO computeMapping Implement
+		
+		return mapper;
+	}
 	
-//	public static void main(String[] args) {
-//		//String traceIdField = "V_NEW_CUSTOMER_ID";
-//		String traceIdField = "V_NEW_CUSTOMER_ID";
-//		String timestampField = "TIMESTAMP";
-//		String orderField = "SCN";
-//		String[] activityFields = new String[] {"SEG_OWNER","TABLE_NAME","OPERATION","COLUMN_CHANGES"};
-//		File logFile = new File("result.xes");
-//		File splittedLogFile = new File("result-splitted-"+traceIdField+".xes");
-//		
-//		OracleRelationsExplorer explorer = new OracleRelationsExplorer();
-//		if (explorer.connect()) {
-//			RelationResult result = explorer.generateRelationsGraphFromForeignKeys(true);
-//			
-//			explorer.showGraph(result.graph,"Relations from Foreign Keys");
-//			
-//			explorer.disconnect();
-//		
-//			FieldNameCanoniser canoniser = new FieldNameCanoniser();
-//			canoniser.setRelations(result.relations);
-//			
-//			computeMetrics(logFile,true,true,canoniser);
-//			
-//		} else {
-//			System.err.println("ERROR: connection failed");
-//		}
-//		
-//		splitLog(logFile,traceIdField,orderField,timestampField,activityFields,splittedLogFile);
-//		
-//		
-//	}
+	public static List<Column> canonicalize(DataModel dm, TraceIDPattern tp, TraceIDPatternElement e) {
+		Vector<Column> r = new Vector<>();
+		if (e.isKey()) {
+			Key k = e.getKey();
+			for (Column c: k.fields) {
+				r.addAll(canonicalize(dm,tp,new TraceIDPatternElement(c)));
+			}
+		} else {
+			boolean existsK = false;
+			Column c = e.getColumn();
+			for (Key k: dm.getKeysPerTable(c.table)) {
+				if (k.fields.contains(c)) {
+					if (k.type == Key.FOREIGN_KEY) {
+						if (tp.containsKey(k)) {
+							if (tp.containsKey(k.refers_to)) {
+								r.add(k.refers_to_column.get(c));
+								existsK = true;
+							}
+						}
+					}
+					break;
+				}
+			}
+			if (!existsK) {
+				r.add(c);
+			}
+		}
+		return r;
+	}
+
+	public static TraceID generateTraceID(TraceIDPattern tp, SLEXAttributeMapper m, SLEXTrace t) {
+		TraceID tid = new TraceID(tp);
+		
+		SLEXEventResultSet erset = t.getEventsResultSet();
+		SLEXEvent e = null;
+		
+		while ((e = erset.getNext()) != null) {
+			if (generateTraceID(tp,tid,m,e,false) == null) {
+				return null;
+			}
+		}
+		
+		return tid;
+	}
+	
+	public static TraceID generateTraceID(TraceIDPattern tp, SLEXAttributeMapper m, SLEXEvent e) {
+		TraceID tid = new TraceID(tp);
+		return generateTraceID(tp, tid, m, e, false);
+	}
+	
+	public static TraceID generateTraceID(TraceIDPattern tp, TraceID tid, SLEXAttributeMapper m, SLEXEvent e) {
+		return generateTraceID(tp, tid, m, e, true);
+	}
+	
+	private static TraceID generateTraceID(TraceIDPattern tp, TraceID tid, SLEXAttributeMapper m, SLEXEvent e, boolean cloneTID) {
+		TraceID newTID = tid;
+		if (cloneTID) {
+			newTID = tid.clone();
+		}
+		
+		for (Entry<SLEXAttribute, SLEXAttributeValue> ae : e.getAttributeValues().entrySet()) {
+			String v = null;
+			if (ae.getValue() != null) {
+				v = ae.getValue().getValue();
+			}
+			
+			Column c_mapped = m.map(ae.getKey());
+			Column c_canonical = tp.getCanonical(c_mapped);
+			
+			if (tp.getPAList().contains(c_canonical)) {
+				String tva = newTID.getValue(c_canonical);
+				if (tva != null && tva != v) {
+					return null;
+				} else {
+					newTID.setValue(c_canonical, v);
+				}
+			}
+		}
+		
+		return newTID;
+	}
+	
+	public static boolean compatibleTraces(TraceID tidA, TraceID tidB) { 
+		// TEST Test compatibleTraces
+		
+		for (Column ca: tidA.getPA()) {
+			String vB = tidB.getValue(ca);
+			if (vB != null) {
+				String vA = tidA.getValue(ca);
+				if (vA != null) {
+					if (vA != vB) {
+						return false;
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	public static boolean relatedTraces(TraceID tidA, TraceID tidB) {
+		// TEST Test relatedTraces
+		
+		for (Column ca: tidA.getPA()) {
+			String vB = tidB.getValue(ca);
+			if (vB != null) {
+				String vA = tidA.getValue(ca);
+				if (vA != null) {
+					if (vA == vB) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	public static boolean supertrace(TraceID tidA, TraceID tidB) {
+		// TEST supertrace
+		
+		return subtrace(tidB,tidA);
+	}
+	
+	public static boolean subtrace(TraceID tidA, TraceID tidB) {
+		// TEST subtrace
+		
+		for (Column c: tidA.getPA()) {
+			String vA = tidA.getValue(c);
+			if (vA != null) {
+				if (tidB.getValue(c) != vA) {
+					return false;
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, Column orderField) {
+		// TEST Check if log splitting works
+		
+		SLEXPerspective perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
+		
+		HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
+		
+		TraceIDPatternElement root = tp.getRoot();
+		List<Column> rootCanonical = canonicalize(dm, tp, root);
+		
+		SLEXAttribute orderAt = m.map(orderField);
+		SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAt);
+		SLEXEvent e = null;
+		
+		while ((e = erset.getNext()) != null) {
+			//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);
+			List<SLEXTrace> tracesCAndR = new Vector<>();
+			TraceID eTID = generateTraceID(tp, m, e);
+			
+			for (Entry<SLEXTrace,TraceID> te: tracesMap.entrySet()) {
+				if (compatibleTraces(te.getValue(),eTID)) {
+					if (relatedTraces(te.getValue(), eTID)) {
+						tracesCAndR.add(te.getKey());
+					}
+				}
+			}
+			
+			if (tracesCAndR.isEmpty()) {
+				boolean containsRoot = true;
+				for (Column c: rootCanonical) {
+					if (eTID.getValue(c) == null) {
+						containsRoot = false;
+						break;
+					}
+				}
+				
+				if (containsRoot) {
+					SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective,eTID);
+					t.add(e);
+					tracesMap.put(t, eTID);
+				}
+				
+			} else {
+				for (SLEXTrace t: tracesCAndR) {
+					TraceID tid = tracesMap.get(t);
+					TraceID tAndETID = generateTraceID(tp, tid, m, e);
+					if (tid.equals(tAndETID)) {
+						t.add(e);
+					} else {
+						SLEXTrace t2 = SLEXStorage.getInstance().cloneTrace(t);
+						t2.setTraceID(tAndETID);
+						t2.add(e);
+						tracesMap.put(t2, tAndETID);
+					}
+				}
+			}
+		}
+		
+		Iterator<Entry<SLEXTrace, TraceID>> it = tracesMap.entrySet().iterator();
+		while (it.hasNext()) {
+			Entry<SLEXTrace, TraceID> te = it.next();
+			
+			for (Entry<SLEXTrace,TraceID> te2: tracesMap.entrySet()) {
+				
+				if (!te.getValue().equals(te2.getValue())) {
+					
+					if (subtrace(te.getValue(), te2.getValue())) {
+						
+						it.remove();
+						break;
+					}
+				}
+				
+			}
+			
+		}
+		
+	}
 
 }

@@ -46,4 +46,8 @@ public class SLEXTrace extends SLEXAbstractDatabaseObject {
 		return storage.update((SLEXTrace) t);
 	}
 
+	public SLEXEventResultSet getEventsResultSet() {
+		return storage.getEventsOfTrace(this);
+	}
+	
 }

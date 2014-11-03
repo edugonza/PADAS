@@ -199,7 +199,7 @@ public class OracleRelationsExplorer {
 	
 	public static DataModel loadDataModelFromSLEXDM(SLEXDMDataModel dm) {
 		DataModel model = new DataModel();
-		// TODO
+		// TODO implement loading datamodel from slexdm
 		return model;
 	}
 	

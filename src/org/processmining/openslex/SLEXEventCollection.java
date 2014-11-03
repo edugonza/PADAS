@@ -1,8 +1,5 @@
 package org.processmining.openslex;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
-
 public class SLEXEventCollection extends SLEXAbstractDatabaseObject {
 	
 	private int id = -1;
@@ -49,8 +46,14 @@ public class SLEXEventCollection extends SLEXAbstractDatabaseObject {
 		return storage.getEventsOfCollection(this);
 	}
 	
+	public SLEXEventResultSet getEventsResultSetOrderedBy(SLEXAttribute orderAttribute) {
+		// TEST ordering of events in collection
+		return storage.getEventsOfCollectionOrderedBy(this,orderAttribute);
+	}
+	
 	@Override
 	public String toString() {
 		return getId()+"";
 	}
+
 }

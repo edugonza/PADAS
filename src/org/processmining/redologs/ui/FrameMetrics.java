@@ -125,7 +125,7 @@ public class FrameMetrics extends CustomInternalFrame {
 				//SLEXEventCollection ec = FrameEventCollections.getInstance().getEventCollectionFromSelector();
 				//File logFile = FrameLogs.getInstance().getFileFromSelector();
 				//calculateMetrics(ec,model);
-				// FIXME
+				// FIXME calculate metrics button
 			}
 		});
 		panel_2.add(btnCalculateMetrics);

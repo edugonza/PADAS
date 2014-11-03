@@ -53,3 +53,21 @@ CREATE TABLE IF NOT EXISTS "trace_has_event" (
     PRIMARY KEY ("traceID","eventID")
 );
 
+CREATE TABLE IF NOT EXISTS "perspective_has_trace_id_pattern" (
+    "id" INTEGER PRIMARY KEY NOT NULL,
+    "perspectiveID" INTEGER NOT NULL,
+    "classID" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" INTEGER NOT NULL,
+    FOREIGN KEY ("perspectiveID") REFERENCES "perspective"("id"),
+    FOREIGN KEY ("classID") REFERENCES "class"("id")
+);
+
+CREATE TABLE IF NOT EXISTS "trace_has_value_trace_id_pattern" (
+    "traceID" INTEGER NOT NULL,
+    "perspectiveTraceIDPattern" INTEGER NOT NULL,
+    "value" TEXT,
+    FOREIGN KEY ("traceID") REFERENCES "trace"("id"),
+    FOREIGN KEY ("perspectiveTraceIDPattern") REFERENCES "perspective_has_trace_id_pattern"("id"),
+    PRIMARY KEY ("traceID","perspectiveTraceIDPattern")
+);

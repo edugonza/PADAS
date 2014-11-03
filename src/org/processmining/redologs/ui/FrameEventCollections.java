@@ -104,7 +104,7 @@ public class FrameEventCollections extends CustomInternalFrame {
 				RedoLogInspector.getInstance().addFrame(fmetrics);
 				fmetrics.setVisible(true);
 				fmetrics.setFocusable(true);
-				fmetrics.calculateMetrics(getEventCollectionFromSelector(), null); // FIXME
+				fmetrics.calculateMetrics(getEventCollectionFromSelector(), null); // FIXME calculate metrics according to data model
 			}
 		});
 		panel_4.add(btnMetrics);

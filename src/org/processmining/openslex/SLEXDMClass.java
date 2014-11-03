@@ -1,7 +1,6 @@
 package org.processmining.openslex;
 
 import java.util.List;
-import java.util.Vector;
 
 public class SLEXDMClass extends SLEXAbstractDatabaseObject {
 

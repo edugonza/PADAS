@@ -1,12 +1,11 @@
 package org.processmining.openslex;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class SLEXDMDataModelResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXDMDataModelResultSet(SLEXStorage storage, ResultSet rset) {
-		super(storage, rset);
+	protected SLEXDMDataModelResultSet(SLEXStorage storage, ResultSet rset, String alias) {
+		super(storage, rset, alias);
 	}
 	
 	public SLEXDMDataModel getNext() {
@@ -14,8 +13,8 @@ public class SLEXDMDataModelResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				String name = this.rset.getString("name");
-				int id = this.rset.getInt("id");
+				String name = this.rset.getString(alias+"name");
+				int id = this.rset.getInt(alias+"id");
 				dm = new SLEXDMDataModel(storage);
 				dm.setName(name);
 				dm.setId(id);

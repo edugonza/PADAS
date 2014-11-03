@@ -71,6 +71,7 @@ import javax.swing.border.EtchedBorder;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.ListSelectionModel;
 
 public class FrameLogSplitter extends CustomInternalFrame {
 
@@ -95,6 +96,9 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private List<Object> traceIdNamesSelected = new Vector<>();
 
 	private List<GraphNode> listTraceIdNodes = new Vector<>();
+	
+	private Object selectedRoot = null;
+	private JTextField txtRootelement;
 	
 //	public static FrameLogSplitter getInstance() {
 //		if (_instance == null) {
@@ -349,7 +353,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	        } 
 	        catch (Exception e) { return false; }
 			
-	        field.setText(data.toString()); //FIXME
+	        field.setText(data.toString()); //FIXME proper field name transformation
 			return true;
 		}
 	}
@@ -357,7 +361,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	public FrameLogSplitter() {
 		super("Log Splitter");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(350, 280, 794, 486);
+		setBounds(350, 280, 660, 429);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
@@ -438,6 +442,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				final String outputLogName = askDiag.showDialog();
 				
 				final SLEXEventCollection evCol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
+				final Object mapping = null; // FIXME obtain mapping
 				
 				Thread logSplitThread = new Thread(new Runnable() {
 					@Override
@@ -445,9 +450,12 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setIndeterminate(true);
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
-						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME
-						SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(evCol,model,traceIdFieldName,sortFieldName,timestampFieldName,activityFieldNames);
-						FramePerspectives.getInstance().addPerspective(splittedPerspective);
+						
+						//SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(outputLogName, evCol,model,mapping,traceIdFields,selectedRoot,sortFieldName,timestampFieldName,activityFieldNames);
+						
+						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME splitter split button
+						//SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(evCol,model,traceIdFieldName,sortFieldName,timestampFieldName,activityFieldNames);
+						//FramePerspectives.getInstance().addPerspective(splittedPerspective);
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Splitted");
 					}
@@ -473,7 +481,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_3.add(panel_side);
 		GridBagLayout gbl_panel_side = new GridBagLayout();
 		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[] {40, 40, 100, 100, 0};
+		gbl_panel_side.rowHeights = new int[] {40, 40, 100, 100, 40, 0};
 		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
 		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0};
 		panel_side.setLayout(gbl_panel_side);
@@ -502,12 +510,12 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			}
 		});
 		textFieldTimestamp.setEditable(false);
-		GridBagConstraints gbc_textField = new GridBagConstraints();
-		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField.insets = new Insets(0, 0, 5, 0);
-		gbc_textField.gridx = 1;
-		gbc_textField.gridy = 0;
-		panel_side.add(textFieldTimestamp, gbc_textField);
+		GridBagConstraints gbc_textFieldTimestamp = new GridBagConstraints();
+		gbc_textFieldTimestamp.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldTimestamp.insets = new Insets(0, 0, 5, 0);
+		gbc_textFieldTimestamp.gridx = 1;
+		gbc_textFieldTimestamp.gridy = 0;
+		panel_side.add(textFieldTimestamp, gbc_textFieldTimestamp);
 		textFieldTimestamp.setColumns(10);
 		
 		JLabel lblNewLabel_1 = new JLabel("Order");
@@ -591,6 +599,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_side.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		
 		listTraceIdFields = new JList<>();
+		listTraceIdFields.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listTraceIdFields.setModel(new DefaultListModel<>());
 		listTraceIdFields.setDropMode(DropMode.INSERT);
 		listTraceIdFields.setTransferHandler(new ListTransferHandler(ListTransferHandler.TRACEID_HANDLER));
@@ -620,8 +629,35 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbc_textFieldTraceId.gridy = 3;
 		panel_side.add(scrollPane_2, gbc_textFieldTraceId);		
 		
+		JButton btnSelectRootTraceid = new JButton("Select Root");
+		btnSelectRootTraceid.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				selectedRoot = getSelectedTraceIdElement();
+				txtRootelement.setText(selectedRoot.toString());
+			}
+		});
+		GridBagConstraints gbc_btnSelectRootTraceid = new GridBagConstraints();
+		gbc_btnSelectRootTraceid.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectRootTraceid.gridx = 0;
+		gbc_btnSelectRootTraceid.gridy = 4;
+		panel_side.add(btnSelectRootTraceid, gbc_btnSelectRootTraceid);
+		
+		txtRootelement = new JTextField();
+		txtRootelement.setEditable(false);
+		GridBagConstraints gbc_txtRootelement = new GridBagConstraints();
+		gbc_txtRootelement.insets = new Insets(0, 0, 5, 0);
+		gbc_txtRootelement.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtRootelement.gridx = 1;
+		gbc_txtRootelement.gridy = 4;
+		panel_side.add(txtRootelement, gbc_txtRootelement);
+		txtRootelement.setColumns(10);
+		
 	}
 
+	private Object getSelectedTraceIdElement() {
+		return listTraceIdFields.getSelectedValue();
+	}
+	
 	public void setTraceIdHierarchy(List<GraphNode> listSelectedNodes) {
 		DefaultListModel model = (DefaultListModel) listTraceIdFields.getModel();
 		model.removeAllElements();

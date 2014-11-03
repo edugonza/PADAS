@@ -314,31 +314,9 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-	public void saveResultSet(TableInfo t,Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, File outCSVFile, SLEXEventCollection eventCollection, boolean computeEventClasses/*, boolean oldToNew*/) {
-//		if (oldToNew) {
-//			saveResultSetOldToNew(t, res, outCSVFile, computeEventClasses);
-//		} else {
-			saveResultSetNewToOld(t, aliasTable, res,/* outCSVFile,*/ eventCollection, computeEventClasses);
-//		}
+	public void saveResultSet(TableInfo t,Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, File outCSVFile, SLEXEventCollection eventCollection, boolean computeEventClasses) {
+			saveResultSetNewToOld(t, aliasTable, res, eventCollection, computeEventClasses);
 	}
-	
-//	private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//	private static File serializedEventsFile;
-//	private static FileOutputStream outSerializedEvents;
-//	private static BufferedOutputStream bufferedOutSerializedEvents;
-//	private static void serializeEvent(XEvent event) {
-//		try {
-//			if (serializedEventsFile == null) {
-//				serializedEventsFile = new File(System.currentTimeMillis()+"_serialized-events.json");
-//				outSerializedEvents = new FileOutputStream(serializedEventsFile);
-//				bufferedOutSerializedEvents = new BufferedOutputStream(outSerializedEvents);
-//			}
-//			String eventStr = gson.toJson(event);
-//			bufferedOutSerializedEvents.write(eventStr.getBytes());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
 	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses) {
 		try {
@@ -482,69 +460,12 @@ public class OracleLogMinerExtractor {
 						records.get(rowid).clear();
 					}
 
-					//csvWriter.writeNext(line);
-//					XAttributeMap attributesEvent = new XAttributeMapImpl();
 
-//					String key = "";
-					//String subAttrKey = null;
-//					XAttributeLiteralImpl attribute = null;
-//					for (int i = 0; i < headers.length; i++) {
-//						if (line[i] != null) {
-//							key = headers[i];
-////							if (key.startsWith(NEW_VALUES_PREFIX)) {
-////								key = key.substring(NEW_VALUES_PREFIX.length());
-////								//subAttrKey = NEW_VALUES_PREFIX_KEY;
-////							} else if (key.startsWith(OLD_VALUES_PREFIX)) {
-////								key = key.substring(OLD_VALUES_PREFIX.length());
-////								//subAttrKey = OLD_VALUES_PREFIX_KEY;
-////							} else if (key.startsWith(NEW_VALUES_CP_PREFIX)) {
-////								key = key.substring(NEW_VALUES_CP_PREFIX.length());
-////								//subAttrKey = NEW_VALUES_CP_PREFIX_KEY;
-////							} else if (key.startsWith(OLD_VALUES_CP_PREFIX)) {
-////								key = key.substring(OLD_VALUES_CP_PREFIX.length());
-////								//subAttrKey = OLD_VALUES_CP_PREFIX_KEY;
-////							} else {
-//								//subAttrKey = null;
-////							}
-//							
-//							
-//							if (attributesEvent.containsKey(key)) {
-//								attribute = (XAttributeLiteralImpl) attributesEvent.get(key);
-//							} else {
-//								attribute = new XAttributeLiteralImpl(key, "");
-//								attributesEvent.put(attribute.getKey(), attribute);
-//							}
-//							
-////							if (subAttrKey != null) {
-////								XAttributeMap subAttributes = attribute.getAttributes();
-////								if (subAttributes == null) {
-////									subAttributes = new XAttributeMapImpl();
-////									attribute.setAttributes(subAttributes);
-////								}
-////								subAttributes.put(subAttrKey, new XAttributeLiteralImpl(subAttrKey, line[i]));
-////							} else {
-//								attribute.setValue(line[i]);
-////							}
-//							
-//							attributesEvent.put(attribute.getKey(), attribute);
-//						}
-//					}
-
-					//XEvent event = new XEventImpl();
-					//FIXME event.setAttributes(attributesEvent);
-					//serializeEvent(event);
-					//eventCollection.add(event);
-					//trace.add(event); // FIXME
 				}
 			}
 			
-			//csvWriter.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -572,145 +493,6 @@ public class OracleLogMinerExtractor {
 		
 		return null;
 	}
-
-//	private void saveResultSetOldToNew(TableInfo t, ResultSet res,File outFile,boolean computeEventClasses) {
-//		try {
-//			Hashtable<String, Long> idsForRowId = new Hashtable<>();
-//			
-//			Hashtable<Long,Map<String, String>> records = new Hashtable<>();
-//			
-//			Long idsCount = new Long(0);
-//			
-//			ResultSetMetaData meta = res.getMetaData();
-//			
-//			FileWriter fwriter = new FileWriter(outFile);
-//
-//			CSVWriter csvWriter = new CSVWriter(fwriter);
-//
-//			String[] headers = new String[meta.getColumnCount()+2];
-//			String[] line = new String[meta.getColumnCount()+2];
-//			
-//			headers[0] = "UNIQUE_ID";
-//			headers[1] = "COLUMN_CHANGES";
-//			
-//			for (int j = 1; j <= meta.getColumnCount(); j++) {
-//				headers[j+1] = meta.getColumnName(j);
-//			}
-//			
-//			int rowIdColNum = res.findColumn("ROW_ID");
-//			int operationColNum = res.findColumn("OPERATION");
-//			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
-//			
-//			csvWriter.writeNext(headers);
-//			
-//			//csvWriter.writeAll(res, true);
-//			
-//			String column_changes = "";
-//			String new_value = "";
-//			String old_value = "";
-//			String new_present = "";
-//			String old_present = "";
-//			String rowid = "";
-//			String operation = "";
-//			String uniqueId = "";
-//			
-//			while (res.next()) {
-//				for (int c = 1; c <= meta.getColumnCount(); c++) {
-//					line[c+1] = res.getString(c);
-//				}
-//				
-//				/**/
-//				rowid = line[rowIdColNum+1];
-//				operation = line[operationColNum+1];
-//				
-//				if (idsForRowId.containsKey(rowid)) {
-//					uniqueId = idsForRowId.get(rowid).toString();
-//				} else {
-//					idsCount++;
-//					idsForRowId.put(rowid,idsCount);
-//					uniqueId = idsCount.toString();
-//				}
-//				
-//				line[0] = uniqueId;
-//				/**/
-//				
-//				Map<String, String> fields = null;
-//				
-//				if (!records.containsKey(Long.valueOf(uniqueId))) {
-//					fields = new HashMap<>();
-//					records.put(Long.valueOf(uniqueId), fields);
-//				} else {
-//					fields = records.get(Long.valueOf(uniqueId));
-//				}
-//				
-//				column_changes = "";
-//				for (int c = 0; c < t.columns.size(); c++) {
-//					new_value = line[(4*c)+scnTimestampColNum+2];
-//					new_present = line[(4*c)+scnTimestampColNum+3];
-//					old_value = line[(4*c)+scnTimestampColNum+4];
-//					old_present = line[(4*c)+scnTimestampColNum+5];
-//					
-//					if ((new_present.equals(COLUMN_PRESENT))) {
-//						if (old_present.equals(COLUMN_PRESENT)) {
-//							if ((new_value != null) && (old_value != null)) {
-//								if (new_value.equals(old_value)) {
-//									column_changes += COLUMN_CHANGE_NONE;
-//								} else {
-//									column_changes += COLUMN_CHANGE_UPDATED;
-//								}
-//							} else if ((new_value == null) && (old_value == null)) {
-//								column_changes += COLUMN_CHANGE_NONE;
-//							} else if (new_value == null) {
-//								column_changes += COLUMN_CHANGE_TO_NULL;
-//							} else if (old_value == null) {
-//								column_changes += COLUMN_CHANGE_FROM_NULL;
-//							} else {
-//								// Impossible
-//								System.err.println("Impossible situation");
-//							}
-//						} else {
-//							if (new_value == null) {
-//								column_changes += COLUMN_CHANGE_NONE;
-//							} else {
-//								column_changes += COLUMN_CHANGE_UPDATED;
-//							}
-//						}
-//					} else {
-//						if (old_present.equals(COLUMN_PRESENT)) {
-//							column_changes += COLUMN_CHANGE_UPDATED;
-//						} else {
-//							column_changes += COLUMN_CHANGE_NONE;
-//						}
-//					}
-//					
-//					if ((new_present.equals(COLUMN_PRESENT))) {
-//						fields.put(t.columns.get(c).name, new_value);
-//					} else {
-//						line[(4*c)+scnTimestampColNum+2] = fields.get(t.columns.get(c).name);
-//					}
-//					
-//				}
-//				
-//				line[1] = column_changes; 
-//				
-//				if (operation.equalsIgnoreCase("DELETE")) {
-//					idsForRowId.remove(rowid);
-//					records.remove(Long.valueOf(uniqueId));
-//				}
-//				
-//				csvWriter.writeNext(line);
-//			}
-//			
-//			csvWriter.close();
-//			
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
 	
 	public class AliasColumnNameType {
 		public boolean isCP = false;

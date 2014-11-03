@@ -898,7 +898,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".collection");
-			ecrset = new SLEXEventCollectionResultSet(this, rset);
+			ecrset = new SLEXEventCollectionResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -913,7 +913,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".perspective");
-			ecrset = new SLEXPerspectiveResultSet(this, rset);
+			ecrset = new SLEXPerspectiveResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -928,13 +928,13 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".perspective WHERE collectionID = "+ec.getId());
-			ecrset = new SLEXPerspectiveResultSet(this, rset);
+			ecrset = new SLEXPerspectiveResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
 		}
 		
-		return ecrset; 
+		return ecrset;
 	}
 	
 	protected SLEXEventResultSet getEventsOfCollection(
@@ -944,13 +944,35 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event WHERE collectionID = "+ec.getId());
-			erset = new SLEXEventResultSet(this, rset);
+			erset = new SLEXEventResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
 		}
 		
 		return erset; 
+	}
+	
+	protected SLEXEventResultSet getEventsOfCollectionOrderedBy(
+			SLEXEventCollection ec,
+			SLEXAttribute orderAttribute) {
+		// TEST ordering of events in collection according to attribute
+		SLEXEventResultSet erset = null;
+		Statement statement = null;
+		try {
+			String alias = "E";
+			statement = connection.createStatement();
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS "+alias+", "+
+					COLLECTION_ALIAS+".attribute_value AS ATV WHERE "+alias+".collectionID = "+ec.getId()+
+					" AND ATV.eventID = "+alias+".id AND ATV.attributeID = "+orderAttribute.getId()+
+					" ORDER BY ATV.value ");
+			erset = new SLEXEventResultSet(this, rset, alias);
+		} catch (Exception e) {
+			e.printStackTrace();
+			closeStatement(statement);
+		}
+		
+		return erset;
 	}
 
 	protected Hashtable<SLEXAttribute, SLEXAttributeValue> getAttributeValuesForEvent(
@@ -1036,7 +1058,7 @@ public class SLEXStorage {
 							}
 						}
 						
-						SLEXDMKeyAttribute kat = this.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
+						this.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
 					}
 				}
 				
@@ -1063,7 +1085,7 @@ public class SLEXStorage {
 							}
 						}
 						
-						SLEXDMKeyAttribute kat = this.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
+						this.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
 						
 					}
 				}
@@ -1094,7 +1116,7 @@ public class SLEXStorage {
 							}
 						}
 						
-						SLEXDMKeyAttribute kat = this.createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
+						this.createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
 					}
 				}
 			}
@@ -1111,7 +1133,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+DATAMODEL_ALIAS+".class WHERE data_modelID = "+dm.getId());
-			crset = new SLEXDMClassResultSet(this, rset);
+			crset = new SLEXDMClassResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1126,7 +1148,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+DATAMODEL_ALIAS+".data_model");
-			dmrset = new SLEXDMDataModelResultSet(this, rset);
+			dmrset = new SLEXDMDataModelResultSet(this, rset, null);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1327,4 +1349,23 @@ public class SLEXStorage {
 		}
 		return katList;
 	}
+	
+	protected SLEXEventResultSet getEventsOfTrace(SLEXTrace t) {
+		 // TEST Check if this works
+		SLEXEventResultSet erset = null;
+		Statement statement = null;
+		try {
+			String alias = "E";
+			statement = connection.createStatement();
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS "+alias+", "+COLLECTION_ALIAS+".trace_has_event AS TE WHERE "+alias+".id = TE.eventID AND TE.traceID="+t.getId());
+			erset = new SLEXEventResultSet(this, rset, alias);
+		} catch (Exception e) {
+			e.printStackTrace();
+			closeStatement(statement);
+		}
+		
+		return erset; 
+	}
+
+	
 }

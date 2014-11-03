@@ -1,12 +1,11 @@
 package org.processmining.openslex;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class SLEXEventCollectionResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXEventCollectionResultSet(SLEXStorage storage, ResultSet rset) {
-		super(storage, rset);
+	protected SLEXEventCollectionResultSet(SLEXStorage storage, ResultSet rset, String alias) {
+		super(storage, rset, alias);
 	}
 	
 	public SLEXEventCollection getNext() {
@@ -14,8 +13,8 @@ public class SLEXEventCollectionResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				String name = this.rset.getString("name");
-				int id = this.rset.getInt("id");
+				String name = this.rset.getString(alias+"name");
+				int id = this.rset.getInt(alias+"id");
 				ec = new SLEXEventCollection(storage, name);
 				ec.setId(id);
 				ec.setDirty(false);
