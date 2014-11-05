@@ -4,8 +4,8 @@ import java.sql.ResultSet;
 
 public class SLEXDMDataModelResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXDMDataModelResultSet(SLEXStorage storage, ResultSet rset, String alias) {
-		super(storage, rset, alias);
+	protected SLEXDMDataModelResultSet(SLEXStorage storage, ResultSet rset) {
+		super(storage, rset);
 	}
 	
 	public SLEXDMDataModel getNext() {
@@ -13,8 +13,8 @@ public class SLEXDMDataModelResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				String name = this.rset.getString(alias+"name");
-				int id = this.rset.getInt(alias+"id");
+				String name = this.rset.getString("name");
+				int id = this.rset.getInt("id");
 				dm = new SLEXDMDataModel(storage);
 				dm.setName(name);
 				dm.setId(id);

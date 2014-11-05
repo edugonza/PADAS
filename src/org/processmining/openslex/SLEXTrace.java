@@ -26,7 +26,7 @@ public class SLEXTrace extends SLEXAbstractDatabaseObject {
 		this.id = id;
 	}
 	
-	protected void setPerspectiveId(String caseId) {
+	public void setCaseId(String caseId) {
 		this.caseId = caseId;
 		setDirty(true);
 	}
@@ -34,6 +34,10 @@ public class SLEXTrace extends SLEXAbstractDatabaseObject {
 	protected void setPerspectiveId(int perspectiveId) {
 		this.perspectiveId = perspectiveId;
 		setDirty(true);
+	}
+	
+	public boolean add(SLEXEvent e) {
+		return storage.addEventToTrace(this,e);
 	}
 	
 	@Override
@@ -49,5 +53,5 @@ public class SLEXTrace extends SLEXAbstractDatabaseObject {
 	public SLEXEventResultSet getEventsResultSet() {
 		return storage.getEventsOfTrace(this);
 	}
-	
+		
 }

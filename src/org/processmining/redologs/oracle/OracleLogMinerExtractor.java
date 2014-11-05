@@ -1,13 +1,9 @@
 package org.processmining.redologs.oracle;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -21,19 +17,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
-import org.deckfour.xes.in.XParser;
-import org.deckfour.xes.model.XAttribute;
-import org.deckfour.xes.model.XAttributeMap;
-import org.deckfour.xes.model.XEvent;
-import org.deckfour.xes.model.XLog;
-import org.deckfour.xes.model.XTrace;
-import org.deckfour.xes.model.impl.XAttributeLiteralImpl;
-import org.deckfour.xes.model.impl.XAttributeMapImpl;
-import org.deckfour.xes.model.impl.XEventImpl;
-import org.deckfour.xes.model.impl.XLogImpl;
-import org.deckfour.xes.model.impl.XTraceImpl;
-import org.deckfour.xes.out.XSerializer;
-import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXAttributeValue;
@@ -43,10 +26,6 @@ import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import au.com.bytecode.opencsv.CSVWriter;
 import oracle.ucp.UniversalConnectionPoolAdapter;
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
@@ -595,39 +574,4 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		OracleLogMinerExtractor extractor = new OracleLogMinerExtractor();
-//		if (extractor.connect()) {
-//			List<String> redoFiles = extractor.getRedoLogFiles();
-//			if (extractor.startLogMiner(redoFiles)) {
-//				List<TableInfo> tables = extractor.getTargetTables();
-//				
-//				XAttributeMap attributesLog = new XAttributeMapImpl();
-//				XAttributeMap attributesTrace = new XAttributeMapImpl();
-//				XLog log = new XLogImpl(attributesLog);
-//				XTrace trace = new XTraceImpl(attributesTrace);
-//				log.add(trace);
-//				
-//				for (TableInfo t: tables) {
-//					extractor.getTableColumns(t);
-//					extractor.getLogsForTableWithColumns(t,new File("result_"+t.name+".csv"),trace,false,true);
-//				}
-//				
-//				try {
-//					XSerializer serializer = new XesXmlSerializer();
-//					OutputStream xesOut = new FileOutputStream(new File("result"+".xes"));
-//					serializer.serialize(log, xesOut);
-//					xesOut.close();
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//				
-//				//extractor.executeQuery("SELECT OPERATION, TIMESTAMP, SQL_REDO, SQL_UNDO FROM V$LOGMNR_CONTENTS WHERE OPERATION = 'INSERT' AND TABLE_NAME='CONCERT'");
-//				//extractor.executeQuery("SELECT (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS NEW_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_NEW_CONCERT_ID, (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS OLD_VALUE_CONCERT_ID, (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'SAMPLEDB.CONCERT.CONCERT_ID')) AS COLUMN_PRESENT_OLD_CONCERT_ID, V$LOGMNR_CONTENTS.* FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='SAMPLEDB' AND TABLE_NAME='CONCERT'");
-//			}
-//			extractor.disconnect();
-//		} else {
-//			System.err.println("ERROR: connection failed");
-//		}
-//	}
 }

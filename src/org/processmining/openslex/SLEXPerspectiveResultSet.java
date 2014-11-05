@@ -4,8 +4,8 @@ import java.sql.ResultSet;
 
 public class SLEXPerspectiveResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXPerspectiveResultSet(SLEXStorage storage, ResultSet rset, String alias) {
-		super(storage, rset, alias);
+	protected SLEXPerspectiveResultSet(SLEXStorage storage, ResultSet rset) {
+		super(storage, rset);
 	}
 	
 	public SLEXPerspective getNext() {
@@ -13,9 +13,9 @@ public class SLEXPerspectiveResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				String name = this.rset.getString(alias+"name");
-				int id = this.rset.getInt(alias+"id");
-				int collectionId = this.rset.getInt(alias+"collectionID");
+				String name = this.rset.getString("name");
+				int id = this.rset.getInt("id");
+				int collectionId = this.rset.getInt("collectionID");
 				p = new SLEXPerspective(storage);
 				p.setCollectionId(collectionId);
 				p.setId(id);

@@ -1,6 +1,7 @@
 package org.processmining.redologs.common;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -137,6 +138,8 @@ public class TraceIDPattern {
 				}
 			}
 		}
+		Collections.sort(pa);
+		setDirty(false);
 	}
 	
 }

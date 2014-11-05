@@ -36,6 +36,10 @@ public class SLEXPerspective extends SLEXAbstractDatabaseObject {
 		setDirty(true);
 	}
 	
+	public SLEXTraceResultSet getTracesResultSet() {
+		return storage.getTracesOfPerspective(this);
+	}
+	
 	@Override
 	boolean insert(SLEXAbstractDatabaseObject p) {
 		return storage.insert((SLEXPerspective) p);
@@ -46,4 +50,13 @@ public class SLEXPerspective extends SLEXAbstractDatabaseObject {
 		return storage.update((SLEXPerspective) p);
 	}
 
+	public boolean remove(SLEXTrace t) {
+		// TEST removeTraceFromPerspective
+		return storage.removeTraceFromPerspective(this,t);
+	}
+
+	@Override
+	public String toString() {
+		return String.valueOf(this.getId());
+	}
 }

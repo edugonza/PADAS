@@ -4,8 +4,8 @@ import java.sql.ResultSet;
 
 public class SLEXEventCollectionResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXEventCollectionResultSet(SLEXStorage storage, ResultSet rset, String alias) {
-		super(storage, rset, alias);
+	protected SLEXEventCollectionResultSet(SLEXStorage storage, ResultSet rset) {
+		super(storage, rset);
 	}
 	
 	public SLEXEventCollection getNext() {
@@ -13,8 +13,8 @@ public class SLEXEventCollectionResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				String name = this.rset.getString(alias+"name");
-				int id = this.rset.getInt(alias+"id");
+				String name = this.rset.getString("name");
+				int id = this.rset.getInt("id");
 				ec = new SLEXEventCollection(storage, name);
 				ec.setId(id);
 				ec.setDirty(false);

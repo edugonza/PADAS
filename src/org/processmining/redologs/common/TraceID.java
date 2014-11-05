@@ -3,6 +3,7 @@ package org.processmining.redologs.common;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Vector;
 
 public class TraceID {
 	
@@ -46,5 +47,14 @@ public class TraceID {
 		}
 		
 		return false;
+	}
+
+	public String serialize() {
+		List<String> tidValues = new Vector<String>();
+		for (Column c: tp.getPAList()) {
+			tidValues.add(getValue(c));
+		}
+		
+		return tidValues.toString();
 	}
 }

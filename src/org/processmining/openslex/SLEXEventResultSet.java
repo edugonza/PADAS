@@ -6,8 +6,8 @@ public class SLEXEventResultSet extends SLEXAbstractResultSetObject {
 	
 	
 	
-	protected SLEXEventResultSet(SLEXStorage storage, ResultSet rset, String alias) {
-		super(storage, rset, alias);
+	protected SLEXEventResultSet(SLEXStorage storage, ResultSet rset) {
+		super(storage, rset);
 	}
 	
 	public SLEXEvent getNext() {
@@ -15,8 +15,8 @@ public class SLEXEventResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				int id = this.rset.getInt(alias+"id");
-				int collectionId = this.rset.getInt(alias+"collectionID");
+				int id = this.rset.getInt("id");
+				int collectionId = this.rset.getInt("collectionID");
 				ev = new SLEXEvent(storage);
 				ev.setId(id);
 				ev.setCollectionId(collectionId);

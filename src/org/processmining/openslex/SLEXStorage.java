@@ -898,7 +898,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".collection");
-			ecrset = new SLEXEventCollectionResultSet(this, rset, null);
+			ecrset = new SLEXEventCollectionResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -913,7 +913,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".perspective");
-			ecrset = new SLEXPerspectiveResultSet(this, rset, null);
+			ecrset = new SLEXPerspectiveResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -928,7 +928,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".perspective WHERE collectionID = "+ec.getId());
-			ecrset = new SLEXPerspectiveResultSet(this, rset, null);
+			ecrset = new SLEXPerspectiveResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -944,7 +944,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event WHERE collectionID = "+ec.getId());
-			erset = new SLEXEventResultSet(this, rset, null);
+			erset = new SLEXEventResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -960,13 +960,12 @@ public class SLEXStorage {
 		SLEXEventResultSet erset = null;
 		Statement statement = null;
 		try {
-			String alias = "E";
 			statement = connection.createStatement();
-			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS "+alias+", "+
-					COLLECTION_ALIAS+".attribute_value AS ATV WHERE "+alias+".collectionID = "+ec.getId()+
-					" AND ATV.eventID = "+alias+".id AND ATV.attributeID = "+orderAttribute.getId()+
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS E, "+
+					COLLECTION_ALIAS+".attribute_value AS ATV WHERE E.collectionID = "+ec.getId()+
+					" AND ATV.eventID = E.id AND ATV.attributeID = "+orderAttribute.getId()+
 					" ORDER BY ATV.value ");
-			erset = new SLEXEventResultSet(this, rset, alias);
+			erset = new SLEXEventResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1133,7 +1132,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+DATAMODEL_ALIAS+".class WHERE data_modelID = "+dm.getId());
-			crset = new SLEXDMClassResultSet(this, rset, null);
+			crset = new SLEXDMClassResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1148,7 +1147,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			ResultSet rset = statement.executeQuery("SELECT * FROM "+DATAMODEL_ALIAS+".data_model");
-			dmrset = new SLEXDMDataModelResultSet(this, rset, null);
+			dmrset = new SLEXDMDataModelResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1355,10 +1354,9 @@ public class SLEXStorage {
 		SLEXEventResultSet erset = null;
 		Statement statement = null;
 		try {
-			String alias = "E";
 			statement = connection.createStatement();
-			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS "+alias+", "+COLLECTION_ALIAS+".trace_has_event AS TE WHERE "+alias+".id = TE.eventID AND TE.traceID="+t.getId());
-			erset = new SLEXEventResultSet(this, rset, alias);
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS E, "+COLLECTION_ALIAS+".trace_has_event AS TE WHERE E.id = TE.eventID AND TE.traceID="+t.getId());
+			erset = new SLEXEventResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
 			closeStatement(statement);
@@ -1367,5 +1365,120 @@ public class SLEXStorage {
 		return erset; 
 	}
 
+	public SLEXTrace createTrace(int perspectiveId, String caseId) {
+		SLEXTrace t = new SLEXTrace(this);
+		t.setPerspectiveId(perspectiveId);
+		t.setCaseId(caseId);
+		if (isAutoCommitOnCreationEnabled()) {
+			t.commit();
+		}
+		return t;
+	}
+
+	public SLEXPerspective createPerspective(SLEXEventCollection evCol,
+			String name) {
+		// TEST creation of Perspective
+		SLEXPerspective p = new SLEXPerspective(this);
+		p.setCollectionId(evCol.getId());
+		p.setName(name);
+		if (isAutoCommitOnCreationEnabled()) {
+			p.commit();
+		}
+		return p;
+	}
+
+	public SLEXTrace cloneTrace(SLEXTrace t) {
+		// TEST cloneTrace
+		SLEXTrace ct = this.createTrace(t.getPerspectiveId(), t.getCaseId());		
+		
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			//statement.setQueryTimeout(30);
+			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID) "+
+							" SELECT '"+ct.getId()+"', eventID FROM "+COLLECTION_ALIAS+".trace_has_event "+
+							" WHERE traceID = '"+t.getId()+"' ");
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			closeStatement(statement);
+		}
+		
+		return ct;
+	}
+
+	protected boolean addEventToTrace(SLEXTrace t, SLEXEvent e) {
+		// TEST addEventToTrace
+		Statement statement = null;
+		boolean result = false;
+		try {
+			statement = connection.createStatement();
+			statement.setQueryTimeout(30);
+			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID) VALUES ('"+t.getId()+"','"+e.getId()+"')");
+			result = true;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			result = false;
+		} finally {
+			closeStatement(statement);
+		}
+		
+		return result;
+	}
+
+	private boolean removeEventsFromTrace(SLEXTrace t) {
+		// TEST removeEventsFromTrace
+		Statement statement = null;
+		boolean result = false;
+		try {
+			statement = connection.createStatement();
+			statement.setQueryTimeout(30);
+			statement.execute("DELETE FROM "+COLLECTION_ALIAS+".trace_has_event WHERE traceID = '"+t.getId()+"'");
+			result = true;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			result = false;
+		} finally {
+			closeStatement(statement);
+		}
+		
+		return result;
+	}
+	
+	protected boolean removeTraceFromPerspective(SLEXPerspective p,
+			SLEXTrace t) {
+		// TEST removeTraceFromPerspective
+		Statement statement = null;
+		boolean result = false;
+		try {
+			statement = connection.createStatement();
+			statement.setQueryTimeout(30);
+			statement.execute("DELETE FROM "+COLLECTION_ALIAS+".trace WHERE traceID = '"+t.getId()+"'");
+			result = removeEventsFromTrace(t);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			result = false;
+		} finally {
+			closeStatement(statement);
+		}
+		
+		return result;
+	}
+
+	protected SLEXTraceResultSet getTracesOfPerspective(
+			SLEXPerspective p) {
+		SLEXTraceResultSet trset = null;
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".trace WHERE perspectiveID = "+p.getId());
+			trset = new SLEXTraceResultSet(this, rset);
+		} catch (Exception e) {
+			e.printStackTrace();
+			closeStatement(statement);
+		}
+		
+		return trset; 
+	}
 	
 }

@@ -38,19 +38,12 @@ import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXAttributeMapper;
 import org.processmining.openslex.SLEXAttributeValue;
-import org.processmining.openslex.SLEXDMAttribute;
-import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventResultSet;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXTrace;
-import org.processmining.redologs.oracle.OracleRelationsExplorer;
-
-import com.thoughtworks.xstream.core.util.Base64Encoder;
-
-import edu.uci.ics.jung.graph.Graph;
 
 public class LogTraceSplitter {
 	
@@ -230,10 +223,29 @@ public class LogTraceSplitter {
 
 	}
 
-	public static SLEXAttributeMapper computeMapping(SLEXEventCollection ev, DataModel dm) {
-		SLEXAttributeMapper mapper = new SLEXAttributeMapper();
+	public static SLEXAttributeMapper computeMapping(SLEXEventCollection ev, List<TableInfo> tables) {
+		// TEST computeMapping
 		
-		// TODO computeMapping Implement
+		SLEXAttributeMapper mapper = null;
+		List<Column> unpaired = new Vector<>();
+		
+		try {
+			mapper = new SLEXAttributeMapper();
+			
+			for (TableInfo t: tables) {
+				for (Column c: t.columns) {
+					SLEXAttribute at = SLEXStorage.getInstance().findAttribute(t.name, c.name);
+					if (at != null) {
+						mapper.put(at, c);
+					} else {
+						unpaired.add(c);
+					}
+				}
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		return mapper;
 	}
@@ -379,81 +391,88 @@ public class LogTraceSplitter {
 	
 	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, Column orderField) {
 		// TEST Check if log splitting works
+		SLEXPerspective perspective = null;
+		try {
+			perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
 		
-		SLEXPerspective perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
+			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
 		
-		HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
+			TraceIDPatternElement root = tp.getRoot();
+			List<Column> rootCanonical = canonicalize(dm, tp, root);
 		
-		TraceIDPatternElement root = tp.getRoot();
-		List<Column> rootCanonical = canonicalize(dm, tp, root);
+			SLEXAttribute orderAt = m.map(orderField); // FIXME orderAt when no in map
+			SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAt);
+			SLEXEvent e = null;
 		
-		SLEXAttribute orderAt = m.map(orderField);
-		SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAt);
-		SLEXEvent e = null;
-		
-		while ((e = erset.getNext()) != null) {
-			//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);
-			List<SLEXTrace> tracesCAndR = new Vector<>();
-			TraceID eTID = generateTraceID(tp, m, e);
+			while ((e = erset.getNext()) != null) {
+				//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);
+				List<SLEXTrace> tracesCAndR = new Vector<>();
+				TraceID eTID = generateTraceID(tp, m, e);
 			
-			for (Entry<SLEXTrace,TraceID> te: tracesMap.entrySet()) {
-				if (compatibleTraces(te.getValue(),eTID)) {
-					if (relatedTraces(te.getValue(), eTID)) {
-						tracesCAndR.add(te.getKey());
+				for (Entry<SLEXTrace,TraceID> te: tracesMap.entrySet()) {
+					if (compatibleTraces(te.getValue(),eTID)) {
+						if (relatedTraces(te.getValue(), eTID)) {
+							tracesCAndR.add(te.getKey());
+						}
 					}
 				}
-			}
 			
-			if (tracesCAndR.isEmpty()) {
-				boolean containsRoot = true;
-				for (Column c: rootCanonical) {
-					if (eTID.getValue(c) == null) {
-						containsRoot = false;
-						break;
+				if (tracesCAndR.isEmpty()) {
+					boolean containsRoot = true;
+					for (Column c: rootCanonical) {
+						if (eTID.getValue(c) == null) {
+							containsRoot = false;
+							break;
+						}
 					}
-				}
 				
-				if (containsRoot) {
-					SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective,eTID);
-					t.add(e);
-					tracesMap.put(t, eTID);
-				}
-				
-			} else {
-				for (SLEXTrace t: tracesCAndR) {
-					TraceID tid = tracesMap.get(t);
-					TraceID tAndETID = generateTraceID(tp, tid, m, e);
-					if (tid.equals(tAndETID)) {
+					if (containsRoot) {
+						SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective.getId(),eTID.serialize());
 						t.add(e);
-					} else {
-						SLEXTrace t2 = SLEXStorage.getInstance().cloneTrace(t);
-						t2.setTraceID(tAndETID);
-						t2.add(e);
-						tracesMap.put(t2, tAndETID);
+						tracesMap.put(t, eTID);
+					}
+				
+				} else {
+					for (SLEXTrace t: tracesCAndR) {
+						TraceID tid = tracesMap.get(t);
+						TraceID tAndETID = generateTraceID(tp, tid, m, e);
+						if (tid.equals(tAndETID)) {
+							t.add(e);
+						} else {
+							SLEXTrace t2 = SLEXStorage.getInstance().cloneTrace(t);
+							t2.setCaseId(tAndETID.serialize());
+							t2.commit();
+							t2.add(e);
+							tracesMap.put(t2, tAndETID);
+						}
 					}
 				}
 			}
-		}
 		
-		Iterator<Entry<SLEXTrace, TraceID>> it = tracesMap.entrySet().iterator();
-		while (it.hasNext()) {
-			Entry<SLEXTrace, TraceID> te = it.next();
+			Iterator<Entry<SLEXTrace, TraceID>> it = tracesMap.entrySet().iterator();
+			while (it.hasNext()) {
+				Entry<SLEXTrace, TraceID> te = it.next();
 			
-			for (Entry<SLEXTrace,TraceID> te2: tracesMap.entrySet()) {
+				for (Entry<SLEXTrace,TraceID> te2: tracesMap.entrySet()) {
 				
-				if (!te.getValue().equals(te2.getValue())) {
+					if (!te.getValue().equals(te2.getValue())) {
 					
-					if (subtrace(te.getValue(), te2.getValue())) {
-						
-						it.remove();
-						break;
+						if (subtrace(te.getValue(), te2.getValue())) {
+							perspective.remove(te.getKey());
+							it.remove();
+							break;
+						}
 					}
-				}
 				
-			}
+				}
 			
+			}
+		
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
+		return perspective;
 	}
 
 }

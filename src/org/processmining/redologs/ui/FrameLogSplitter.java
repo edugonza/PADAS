@@ -20,6 +20,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.processmining.openslex.SLEXAttributeMapper;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.redologs.common.Column;
@@ -29,6 +30,7 @@ import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.common.Key;
 import org.processmining.redologs.common.LogTraceSplitter;
 import org.processmining.redologs.common.TableInfo;
+import org.processmining.redologs.common.TraceIDPattern;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
@@ -56,6 +58,7 @@ import java.awt.Insets;
 import java.awt.FlowLayout;
 import java.io.File;
 import java.io.IOException;
+import java.rmi.server.LogStream;
 import java.text.AttributedCharacterIterator;
 import java.util.List;
 import java.util.Vector;
@@ -71,6 +74,7 @@ import javax.swing.border.EtchedBorder;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+
 import javax.swing.ListSelectionModel;
 
 public class FrameLogSplitter extends CustomInternalFrame {
@@ -99,6 +103,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	
 	private Object selectedRoot = null;
 	private JTextField txtRootelement;
+	private TableInfo common_table = null;
 	
 //	public static FrameLogSplitter getInstance() {
 //		if (_instance == null) {
@@ -127,17 +132,25 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		this.setTitle(title);
 		
 		/**/
+		common_table = new TableInfo();
+		common_table.columns = new Vector<>();
+		common_table.name = "COMMON";
 		
 		EventAttributeColumn ec = new EventAttributeColumn();
 		ec.c = new Column();
 		ec.c.name = OracleLogMinerExtractor.COLUMN_CHANGES;
+		ec.c.table = common_table;
+		common_table.columns.add(ec.c);
 		DefaultMutableTreeNode nodeC = new DefaultMutableTreeNode(ec);
 		root.add(nodeC);
+		
 		
 		for (String c: OracleLogMinerExtractor.LOG_MINER_BASIC_FIELDS) {
 			EventAttributeColumn eac = new EventAttributeColumn();
 			eac.c = new Column();
 			eac.c.name = c;
+			eac.c.table = common_table;
+			common_table.columns.add(eac.c);
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode(eac);
 			root.add(node);
 		}
@@ -428,21 +441,46 @@ public class FrameLogSplitter extends CustomInternalFrame {
 					}
 				}
 				
-				final String timestampFieldName = textFieldTimestamp.getText();
-				final String sortFieldName = textFieldSort.getText();
-				final List<Object> traceIdFields = traceIdNamesSelected;
-				DefaultListModel<Object> listActivityModel = (DefaultListModel<Object>) listActivityNameFields.getModel();
-				final String[] activityFieldNames = new String[listActivityModel.getSize()];
-				
-				for (int i = 0; i < listActivityModel.getSize(); i++) {
-					activityFieldNames[i] = (String) listActivityModel.get(i);
+				//final String timestampFieldName = textFieldTimestamp.getText();
+				Column sortColumn = null;
+				if (sortSelected instanceof EventAttributeColumn) {
+					sortColumn = ((EventAttributeColumn) sortSelected).c;
+				} else {
+					sortColumn = new Column();
 				}
+				
+				final Column sortField = sortColumn;
+				
+				//final String sortFieldName = textFieldSort.getText();
+				final List<Object> traceIdFields = traceIdNamesSelected;
+				//DefaultListModel<Object> listActivityModel = (DefaultListModel<Object>) listActivityNameFields.getModel();
+				//final String[] activityFieldNames = new String[listActivityModel.getSize()];
+				
+				//for (int i = 0; i < listActivityModel.getSize(); i++) {
+				//	activityFieldNames[i] = (String) listActivityModel.get(i);
+				//}
 				
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
 				
 				final SLEXEventCollection evCol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
-				final Object mapping = null; // FIXME obtain mapping
+				
+				List<TableInfo> tables = new Vector<>();
+				tables.addAll(model.getTables());
+				tables.add(common_table);
+				
+				final SLEXAttributeMapper mapper = LogTraceSplitter.computeMapping(evCol, tables);
+				final TraceIDPattern tp = new TraceIDPattern(model); // TODO Complete TraceIDPattern constuction
+				
+				if (selectedRoot instanceof EventAttributeColumn) {
+					tp.setRoot(((EventAttributeColumn) selectedRoot).c);
+				}
+				
+				for (Object o: traceIdFields) {
+					if (o instanceof EventAttributeColumn) {
+						tp.add(((EventAttributeColumn)o).c);
+					}
+				}
 				
 				Thread logSplitThread = new Thread(new Runnable() {
 					@Override
@@ -451,11 +489,10 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
 						
-						//SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(outputLogName, evCol,model,mapping,traceIdFields,selectedRoot,sortFieldName,timestampFieldName,activityFieldNames);
+						SLEXPerspective perspective = LogTraceSplitter.splitLog(outputLogName, model, evCol, mapper, tp, sortField);
 						
-						//LogTraceSplitter.splitLog(logFile, model, traceIdFieldName, sortFieldName, timestampFieldName, activityFieldNames, splittedLogFile); // FIXME splitter split button
-						//SLEXPerspective splittedPerspective = LogTraceSplitter.splitLog(evCol,model,traceIdFieldName,sortFieldName,timestampFieldName,activityFieldNames);
-						//FramePerspectives.getInstance().addPerspective(splittedPerspective);
+						FramePerspectives.getInstance().addPerspective(perspective);
+						
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Splitted");
 					}

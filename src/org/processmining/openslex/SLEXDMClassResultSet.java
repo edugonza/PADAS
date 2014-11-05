@@ -4,8 +4,8 @@ import java.sql.ResultSet;
 
 public class SLEXDMClassResultSet extends SLEXAbstractResultSetObject {
 	
-	protected SLEXDMClassResultSet(SLEXStorage storage, ResultSet rset, String alias) {
-		super(storage, rset, alias);
+	protected SLEXDMClassResultSet(SLEXStorage storage, ResultSet rset) {
+		super(storage, rset);
 	}
 	
 	public SLEXDMClass getNext() {
@@ -13,10 +13,10 @@ public class SLEXDMClassResultSet extends SLEXAbstractResultSetObject {
 		try {
 			if (this.rset != null && this.rset.next()) {
 				
-				int id = this.rset.getInt(alias+"id");
-				int dataModelId = this.rset.getInt(alias+"data_modelID");
-				String name = this.rset.getString(alias+"name");
-				boolean common = this.rset.getBoolean(alias+"common");
+				int id = this.rset.getInt("id");
+				int dataModelId = this.rset.getInt("data_modelID");
+				String name = this.rset.getString("name");
+				boolean common = this.rset.getBoolean("common");
 				cl = new SLEXDMClass(storage,name,common,dataModelId);
 				cl.setId(id);
 				cl.retrieveAttributesAndKeys();
