@@ -47,7 +47,6 @@ public class SLEXEventCollection extends SLEXAbstractDatabaseObject {
 	}
 	
 	public SLEXEventResultSet getEventsResultSetOrderedBy(SLEXAttribute orderAttribute) {
-		// TEST ordering of events in collection
 		return storage.getEventsOfCollectionOrderedBy(this,orderAttribute);
 	}
 	

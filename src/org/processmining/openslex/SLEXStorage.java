@@ -33,7 +33,8 @@ public class SLEXStorage {
 	private static final String DATAMODEL_SCHEMA = "schemas"+File.separator+"datamodels.sql"; 
 	
 	public static final String COMMON_CLASS_NAME = "COMMON";
-	private static final String JOURNAL_MODE = "TRUNCATE";
+	private static final String JOURNAL_MODE = "MEMORY";
+	private static final String PRAGMA_SYNCHRONOUS_MODE = "OFF";
 	
 	private boolean collection_attached = false;
 	private boolean datamodel_attached = false;
@@ -168,6 +169,7 @@ public class SLEXStorage {
 		} finally {
 			closeStatement(statement);
 			setJournalMode(JOURNAL_MODE);
+			setSynchronousMode(PRAGMA_SYNCHRONOUS_MODE);
 		}
 		return result;
 	}
@@ -197,6 +199,26 @@ public class SLEXStorage {
 				statement = connection.createStatement();
 				statement.setQueryTimeout(30);
 				statement.execute("PRAGMA journal_mode = "+mode);
+				result = true;
+			} catch (Exception e) {
+				result = false;
+			} finally {
+				closeStatement(statement);
+			}
+			
+			return result;
+		}
+		return false;
+	}
+	
+	private boolean setSynchronousMode(String mode) {
+		if (mode != null) {
+			Statement statement = null;
+			boolean result = false;
+			try {
+				statement = connection.createStatement();
+				statement.setQueryTimeout(30);
+				statement.execute("PRAGMA synchronous = "+mode);
 				result = true;
 			} catch (Exception e) {
 				result = false;
@@ -956,7 +978,6 @@ public class SLEXStorage {
 	protected SLEXEventResultSet getEventsOfCollectionOrderedBy(
 			SLEXEventCollection ec,
 			SLEXAttribute orderAttribute) {
-		// TEST ordering of events in collection according to attribute
 		SLEXEventResultSet erset = null;
 		Statement statement = null;
 		try {
@@ -1350,7 +1371,6 @@ public class SLEXStorage {
 	}
 	
 	protected SLEXEventResultSet getEventsOfTrace(SLEXTrace t) {
-		 // TEST Check if this works
 		SLEXEventResultSet erset = null;
 		Statement statement = null;
 		try {
@@ -1377,7 +1397,6 @@ public class SLEXStorage {
 
 	public SLEXPerspective createPerspective(SLEXEventCollection evCol,
 			String name) {
-		// TEST creation of Perspective
 		SLEXPerspective p = new SLEXPerspective(this);
 		p.setCollectionId(evCol.getId());
 		p.setName(name);
@@ -1388,7 +1407,6 @@ public class SLEXStorage {
 	}
 
 	public SLEXTrace cloneTrace(SLEXTrace t) {
-		// TEST cloneTrace
 		SLEXTrace ct = this.createTrace(t.getPerspectiveId(), t.getCaseId());		
 		
 		Statement statement = null;
@@ -1408,7 +1426,6 @@ public class SLEXStorage {
 	}
 
 	protected boolean addEventToTrace(SLEXTrace t, SLEXEvent e) {
-		// TEST addEventToTrace
 		Statement statement = null;
 		boolean result = false;
 		try {
@@ -1427,7 +1444,6 @@ public class SLEXStorage {
 	}
 
 	private boolean removeEventsFromTrace(SLEXTrace t) {
-		// TEST removeEventsFromTrace
 		Statement statement = null;
 		boolean result = false;
 		try {
@@ -1447,13 +1463,12 @@ public class SLEXStorage {
 	
 	protected boolean removeTraceFromPerspective(SLEXPerspective p,
 			SLEXTrace t) {
-		// TEST removeTraceFromPerspective
 		Statement statement = null;
 		boolean result = false;
 		try {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(30);
-			statement.execute("DELETE FROM "+COLLECTION_ALIAS+".trace WHERE traceID = '"+t.getId()+"'");
+			statement.execute("DELETE FROM "+COLLECTION_ALIAS+".trace WHERE id = '"+t.getId()+"'");
 			result = removeEventsFromTrace(t);
 		} catch (Exception ex) {
 			ex.printStackTrace();

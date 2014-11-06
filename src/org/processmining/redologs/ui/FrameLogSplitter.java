@@ -442,7 +442,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				}
 				
 				//final String timestampFieldName = textFieldTimestamp.getText();
-				Column sortColumn = null;
+				Column sortColumn = null; // FIXME what if sort column is a key?
 				if (sortSelected instanceof EventAttributeColumn) {
 					sortColumn = ((EventAttributeColumn) sortSelected).c;
 				} else {
@@ -452,7 +452,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				final Column sortField = sortColumn;
 				
 				//final String sortFieldName = textFieldSort.getText();
-				final List<Object> traceIdFields = traceIdNamesSelected;
+				
 				//DefaultListModel<Object> listActivityModel = (DefaultListModel<Object>) listActivityNameFields.getModel();
 				//final String[] activityFieldNames = new String[listActivityModel.getSize()];
 				
@@ -470,15 +470,21 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				tables.add(common_table);
 				
 				final SLEXAttributeMapper mapper = LogTraceSplitter.computeMapping(evCol, tables);
-				final TraceIDPattern tp = new TraceIDPattern(model); // TODO Complete TraceIDPattern constuction
+				final TraceIDPattern tp = new TraceIDPattern(model);
 				
 				if (selectedRoot instanceof EventAttributeColumn) {
 					tp.setRoot(((EventAttributeColumn) selectedRoot).c);
+				} else if (selectedRoot instanceof Column) {
+					tp.setRoot((Column) selectedRoot);
+				} else if (selectedRoot instanceof Key) {
+					tp.setRoot((Key) selectedRoot);
 				}
 				
-				for (Object o: traceIdFields) {
-					if (o instanceof EventAttributeColumn) {
-						tp.add(((EventAttributeColumn)o).c);
+				for (GraphNode n: getTraceIdHierarchy()) {
+					if (n instanceof Column) {
+						tp.add((Column) n);
+					} else if (n instanceof Key) {
+						tp.add((Key) n);
 					}
 				}
 				
@@ -700,12 +706,10 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		model.removeAllElements();
 		listTraceIdNodes = new Vector<>();
 		for (GraphNode g: listSelectedNodes) {
-			if (g instanceof Key) {
+			if ((g instanceof Key) || (g instanceof Column)) {
 				model.addElement(g);
-			} else {
-				model.addElement(g);
-			}
-			listTraceIdNodes.add(g);
+				listTraceIdNodes.add(g);
+			}			
 		}
 	}
 

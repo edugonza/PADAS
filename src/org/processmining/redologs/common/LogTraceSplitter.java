@@ -224,7 +224,6 @@ public class LogTraceSplitter {
 	}
 
 	public static SLEXAttributeMapper computeMapping(SLEXEventCollection ev, List<TableInfo> tables) {
-		// TEST computeMapping
 		
 		SLEXAttributeMapper mapper = null;
 		List<Column> unpaired = new Vector<>();
@@ -321,7 +320,7 @@ public class LogTraceSplitter {
 			
 			if (tp.getPAList().contains(c_canonical)) {
 				String tva = newTID.getValue(c_canonical);
-				if (tva != null && tva != v) {
+				if (tva != null && !tva.equals(v)) {
 					return null;
 				} else {
 					newTID.setValue(c_canonical, v);
@@ -333,14 +332,13 @@ public class LogTraceSplitter {
 	}
 	
 	public static boolean compatibleTraces(TraceID tidA, TraceID tidB) { 
-		// TEST Test compatibleTraces
 		
 		for (Column ca: tidA.getPA()) {
 			String vB = tidB.getValue(ca);
 			if (vB != null) {
 				String vA = tidA.getValue(ca);
 				if (vA != null) {
-					if (vA != vB) {
+					if (!vA.equals(vB)) {
 						return false;
 					}
 				}
@@ -351,14 +349,13 @@ public class LogTraceSplitter {
 	}
 	
 	public static boolean relatedTraces(TraceID tidA, TraceID tidB) {
-		// TEST Test relatedTraces
 		
 		for (Column ca: tidA.getPA()) {
 			String vB = tidB.getValue(ca);
 			if (vB != null) {
 				String vA = tidA.getValue(ca);
 				if (vA != null) {
-					if (vA == vB) {
+					if (vA.equals(vB)) {
 						return true;
 					}
 				}
@@ -369,18 +366,21 @@ public class LogTraceSplitter {
 	}
 	
 	public static boolean supertrace(TraceID tidA, TraceID tidB) {
-		// TEST supertrace
 		
 		return subtrace(tidB,tidA);
 	}
 	
 	public static boolean subtrace(TraceID tidA, TraceID tidB) {
-		// TEST subtrace
 		
 		for (Column c: tidA.getPA()) {
 			String vA = tidA.getValue(c);
 			if (vA != null) {
-				if (tidB.getValue(c) != vA) {
+				String vB = tidB.getValue(c);
+				if (vB != null) {
+					if (!vB.equals(vA)) {
+						return false;
+					}
+				} else {
 					return false;
 				}
 			}
@@ -390,7 +390,6 @@ public class LogTraceSplitter {
 	}
 	
 	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, Column orderField) {
-		// TEST Check if log splitting works
 		SLEXPerspective perspective = null;
 		try {
 			perspective = SLEXStorage.getInstance().createPerspective(evCol,name);

@@ -197,12 +197,6 @@ public class OracleRelationsExplorer {
 		return res;
 	}
 	
-	public static DataModel loadDataModelFromSLEXDM(SLEXDMDataModel dm) {
-		DataModel model = new DataModel();
-		// TODO implement loading datamodel from slexdm
-		return model;
-	}
-	
 	public DataModel extractRelations() {
 		DataModel model = new DataModel();
 		

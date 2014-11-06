@@ -33,12 +33,11 @@ public class TraceID {
 	}
 	
 	public boolean equals(TraceID tid) {
-		// TEST comparison TraceIDs
 		
 		if (tp.equals(tid.tp)) {
 			if (tval.size() == tid.tval.size()) {
 				for (Entry<Column,String> e: tval.entrySet()) {
-					if (tid.tval.get(e.getKey()) != e.getValue()) {
+					if (!tid.tval.get(e.getKey()).equals(e.getValue())) {
 						return false;
 					}
 				}

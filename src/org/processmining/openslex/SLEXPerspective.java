@@ -51,7 +51,6 @@ public class SLEXPerspective extends SLEXAbstractDatabaseObject {
 	}
 
 	public boolean remove(SLEXTrace t) {
-		// TEST removeTraceFromPerspective
 		return storage.removeTraceFromPerspective(this,t);
 	}
 
