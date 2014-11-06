@@ -36,7 +36,6 @@ import org.deckfour.xes.model.impl.XTraceImpl;
 import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXAttribute;
-import org.processmining.openslex.SLEXAttributeMapper;
 import org.processmining.openslex.SLEXAttributeValue;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;

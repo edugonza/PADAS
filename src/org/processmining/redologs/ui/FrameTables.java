@@ -34,6 +34,7 @@ import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.SLEXDataModelExportImport;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.Config;
 import org.processmining.redologs.config.DatabaseConnectionData;
@@ -198,8 +199,7 @@ public class FrameTables extends CustomInternalFrame {
 									DataModel model = explorer
 											.extractRelations();
 									model.setName(modelName);
-									SLEXDMDataModel dm = SLEXStorage
-											.getInstance()
+									SLEXDMDataModel dm = SLEXDataModelExportImport
 											.saveDataModelToSLEXDM(model);
 									FrameDataModels.getInstance().addDataModel(
 											model);

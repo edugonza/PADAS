@@ -20,7 +20,6 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.processmining.openslex.SLEXAttributeMapper;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.redologs.common.Column;
@@ -29,6 +28,7 @@ import org.processmining.redologs.common.EventAttributeColumn;
 import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.common.Key;
 import org.processmining.redologs.common.LogTraceSplitter;
+import org.processmining.redologs.common.SLEXAttributeMapper;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.common.TraceIDPattern;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;

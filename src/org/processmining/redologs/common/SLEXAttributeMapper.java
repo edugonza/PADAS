@@ -1,8 +1,8 @@
-package org.processmining.openslex;
+package org.processmining.redologs.common;
 
 import java.util.HashMap;
 
-import org.processmining.redologs.common.Column;
+import org.processmining.openslex.SLEXAttribute;
 
 public class SLEXAttributeMapper {
 	

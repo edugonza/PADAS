@@ -20,6 +20,7 @@ import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXDMDataModelResultSet;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.SLEXDataModelExportImport;
 import org.processmining.redologs.common.TableInfo;
 
 public class FrameDataModels extends CustomInternalFrame {
@@ -69,7 +70,7 @@ public class FrameDataModels extends CustomInternalFrame {
 					.getDataModels();
 			SLEXDMDataModel dm = null;
 			while ((dm = rset.getNext()) != null) {
-				addDataModel(SLEXStorage.getInstance().loadDataModelFromSLEXDM(dm));
+				addDataModel(SLEXDataModelExportImport.loadDataModelFromSLEXDM(dm));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
