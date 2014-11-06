@@ -1377,7 +1377,7 @@ public class SLEXStorage {
 		Statement statement = null;
 		try {
 			statement = connection.createStatement();
-			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS E, "+COLLECTION_ALIAS+".trace_has_event AS TE WHERE E.id = TE.eventID AND TE.traceID="+t.getId());
+			ResultSet rset = statement.executeQuery("SELECT * FROM "+COLLECTION_ALIAS+".event AS E, "+COLLECTION_ALIAS+".trace_has_event AS TE WHERE E.id = TE.eventID AND TE.traceID='"+t.getId()+"' ORDER BY TE.ordering");
 			erset = new SLEXEventResultSet(this, rset);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1415,8 +1415,8 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			//statement.setQueryTimeout(30);
-			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID) "+
-							" SELECT '"+ct.getId()+"', eventID FROM "+COLLECTION_ALIAS+".trace_has_event "+
+			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID,ordering) "+
+							" SELECT '"+ct.getId()+"', eventID, ordering FROM "+COLLECTION_ALIAS+".trace_has_event "+
 							" WHERE traceID = '"+t.getId()+"' ");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1433,7 +1433,7 @@ public class SLEXStorage {
 		try {
 			statement = connection.createStatement();
 			statement.setQueryTimeout(30);
-			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID) VALUES ('"+t.getId()+"','"+e.getId()+"')");
+			statement.execute("INSERT INTO "+COLLECTION_ALIAS+".trace_has_event (traceID,eventID,ordering) VALUES ('"+t.getId()+"','"+e.getId()+"',(SELECT IFNULL(MAX(ordering), 0) + 1 FROM "+COLLECTION_ALIAS+".trace_has_event))");
 			result = true;
 		} catch (Exception ex) {
 			ex.printStackTrace();

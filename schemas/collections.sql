@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "trace" (
 CREATE TABLE IF NOT EXISTS "trace_has_event" (
     "traceID" INTEGER NOT NULL,
     "eventID" INTEGER NOT NULL,
+    "ordering" INTEGER NOT NULL,
     FOREIGN KEY ("traceID") REFERENCES "trace"("id"),
     FOREIGN KEY ("eventID") REFERENCES "event"("id"),
     PRIMARY KEY ("traceID","eventID")
