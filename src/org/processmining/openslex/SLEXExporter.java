@@ -25,7 +25,7 @@ public class SLEXExporter {
 		while ((t = trset.getNext()) != null) {
 			
 			XAttributeMap tAttrMap = xfactory.createAttributeMap();
-			tAttrMap.put("caseId", new XAttributeLiteralImpl("caseId", t.getCaseId()));
+			tAttrMap.put("caseId", new XAttributeLiteralImpl("concept:name", t.getCaseId()));
 			tAttrMap.put("Id", new XAttributeLiteralImpl("Id", String.valueOf(t.getId())));
 			XTrace xt = xfactory.createTrace(tAttrMap);
 			

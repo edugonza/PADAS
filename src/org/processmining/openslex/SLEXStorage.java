@@ -1245,14 +1245,16 @@ public class SLEXStorage {
 					uniqueKeys.put(k.name, k);
 				}
 				//
-				Key refers_to_key = null;
-				if (keysMap.containsKey(kdm.getRefersToKey())) {
-					refers_to_key = keysMap.get(kdm.getRefersToKey());
-				} else {
-					refers_to_key = new Key();
-					keysMap.put(kdm.getRefersToKey(), refers_to_key);
+				if (kdm.getType() == SLEXDMKey.FOREIGN_KEY) {
+					Key refers_to_key = null;
+					if (keysMap.containsKey(kdm.getRefersToKey())) {
+						refers_to_key = keysMap.get(kdm.getRefersToKey());
+					} else {
+						refers_to_key = new Key();
+						keysMap.put(kdm.getRefersToKey(), refers_to_key);
+					}
+					k.refers_to = refers_to_key;
 				}
-				k.refers_to = refers_to_key;
 				//
 				
 				k.fields = new Vector<>();
@@ -1266,7 +1268,7 @@ public class SLEXStorage {
 						int refers_to = kat.getRefersToId();
 						Column refers_to_c = null;
 						if (attributesToColumnMap.containsKey(refers_to)) {
-							refers_to_c = attributesToColumnMap.get(refers_to_c);
+							refers_to_c = attributesToColumnMap.get(refers_to);
 						} else {
 							refers_to_c = new Column();
 							attributesToColumnMap.put(refers_to, refers_to_c);
