@@ -2,6 +2,8 @@ package org.processmining.openslex;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -29,8 +31,8 @@ public class SLEXStorage {
 	private static final String COLLECTION_ALIAS = "collectionsdb";
 	private static final String DATAMODEL_ALIAS = "datamodelsdb";
 	
-	private static final String COLLECTION_SCHEMA = "schemas"+File.separator+"collections.sql";
-	private static final String DATAMODEL_SCHEMA = "schemas"+File.separator+"datamodels.sql"; 
+	private InputStream COLLECTION_SCHEMA_IN =  SLEXStorage.class.getResourceAsStream("/org/processmining/openslex/resources/collections.sql");
+	private InputStream DATAMODEL_SCHEMA_IN = SLEXStorage.class.getResourceAsStream("/org/processmining/openslex/resources/datamodels.sql");
 	
 	public static final String COMMON_CLASS_NAME = "COMMON";
 	private static final String JOURNAL_MODE = "MEMORY";
@@ -72,7 +74,7 @@ public class SLEXStorage {
 			if (fname == null) {
 				fname = STORAGE_COLLECTION;
 			}
-			if (attachDatabaseFile(fname,COLLECTION_ALIAS,COLLECTION_SCHEMA)) {
+			if (attachDatabaseFile(fname,COLLECTION_ALIAS,COLLECTION_SCHEMA_IN)) {
 				collection_attached = true;
 			}
 			return collection_attached;
@@ -90,7 +92,7 @@ public class SLEXStorage {
 			if (fname == null) {
 				fname = STORAGE_DATAMODEL;
 			}
-			if (attachDatabaseFile(fname,DATAMODEL_ALIAS,DATAMODEL_SCHEMA)) {
+			if (attachDatabaseFile(fname,DATAMODEL_ALIAS,DATAMODEL_SCHEMA_IN)) {
 				datamodel_attached = true;
 			}
 			return datamodel_attached;
@@ -99,14 +101,14 @@ public class SLEXStorage {
 		}
 	}
 	
-	private boolean checkSchema(String filename, String alias, String schema) {
+	private boolean checkSchema(String filename, String alias, InputStream schemaIn) {
 		
 		boolean result = false;
 		Connection connAux = null;
 		try {
 			connAux = DriverManager.getConnection("jdbc:sqlite:"+filename);
 			ScriptRunner scriptRunner = new ScriptRunner(connAux, false, false);
-			scriptRunner.runScript(new FileReader(schema));
+			scriptRunner.runScript(new InputStreamReader(schemaIn));
 			result = true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -144,7 +146,7 @@ public class SLEXStorage {
 		}
 	}
 	
-	private boolean attachDatabaseFile(String filename, String alias, String schema) {
+	private boolean attachDatabaseFile(String filename, String alias, InputStream schemaIn) {
 		Statement statement = null;
 		boolean result = false;
 		try {
@@ -154,7 +156,7 @@ public class SLEXStorage {
 				f.createNewFile();
 			}
 			
-			if (checkSchema(filename,alias,schema)) {
+			if (checkSchema(filename,alias,schemaIn)) {
 			
 				statement = connection.createStatement();
 				statement.setQueryTimeout(30);
