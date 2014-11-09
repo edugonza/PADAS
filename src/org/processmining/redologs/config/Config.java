@@ -40,6 +40,9 @@ public class Config {
 		File configFile = new File(CONFIG_FILE);
 		BufferedReader reader;
 		try {
+			if (!configFile.exists()) {
+				save();
+			}
 			reader = new BufferedReader(new FileReader(configFile));
 			_instance = gson.fromJson(reader, this.getClass());
 			reader.close();
