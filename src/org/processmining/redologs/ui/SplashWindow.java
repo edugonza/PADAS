@@ -1,8 +1,6 @@
 package org.processmining.redologs.ui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -12,12 +10,16 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 
 public class SplashWindow extends JWindow {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6433690018936176703L;
+
 	private Thread splashThread;
 	
 	private Image bi;

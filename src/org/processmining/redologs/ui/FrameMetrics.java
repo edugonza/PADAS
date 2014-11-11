@@ -3,10 +3,7 @@ package org.processmining.redologs.ui;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-
 import javax.swing.JButton;
-import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -16,10 +13,7 @@ import javax.swing.table.DefaultTableModel;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.redologs.common.DataModel;
-import org.processmining.redologs.common.FieldNameCanoniser;
 import org.processmining.redologs.common.LogTraceSplitter;
-import org.processmining.redologs.common.RelationResult;
-import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
 public class FrameMetrics extends CustomInternalFrame {
 

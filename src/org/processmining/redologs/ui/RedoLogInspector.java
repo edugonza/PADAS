@@ -21,15 +21,11 @@ import java.awt.event.ActionEvent;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.config.Config;
-import org.processmining.redologs.config.DatabaseConnectionData;
-
 import java.awt.event.ActionListener;
 import java.awt.Toolkit;
-
 import javax.swing.JPanel;
 import javax.swing.JDesktopPane;
 import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
 
 public class RedoLogInspector {
 
@@ -37,8 +33,6 @@ public class RedoLogInspector {
 	private JFrame frmRedologInspector;
 	private JDesktopPane desktopPane;
 	
-	private JComboBox<DatabaseConnectionData> comboBox;
-
 	/**
 	 * Launch the application.
 	 */
@@ -116,7 +110,7 @@ public class RedoLogInspector {
 		
 		try {
 			
-			SLEXStorage logStorage = SLEXStorage.getInstance();
+			SLEXStorage.getInstance();
 			
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
