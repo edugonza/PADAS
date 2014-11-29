@@ -274,6 +274,9 @@ public class FrameTables extends CustomInternalFrame {
 									progressBar_1.setValue((progress*100)/total);
 									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
+										extractor.disconnect();
+										extractor.connect();
+										extractor.startLogMiner(redoFiles);
 										//for (TableInfo t : tables) {
 										TableInfo t = tables.get(it);
 										progress++;

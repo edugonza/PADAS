@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -263,12 +264,13 @@ public class LogTraceSplitter {
 					if (k.type == Key.FOREIGN_KEY) {
 						if (tp.containsKey(k)) {
 							if (tp.containsKey(k.refers_to)) {
-								r.add(k.refers_to_column.get(c));
+								r = (Vector<Column>) canonicalize(dm,tp,new TraceIDPatternElement(k.refers_to_column.get(c)));
+								//r.add(k.refers_to_column.get(c));
 								existsK = true;
 							}
 						}
 					}
-					break;
+//					break;
 				}
 			}
 			if (!existsK) {
@@ -319,7 +321,7 @@ public class LogTraceSplitter {
 			
 			if (tp.getPAList().contains(c_canonical)) {
 				String tva = newTID.getValue(c_canonical);
-				if (tva != null && !tva.equals(v)) {
+				if (tva != null && v != null && !tva.equals(v)) {
 					return null;
 				} else {
 					newTID.setValue(c_canonical, v);
@@ -388,30 +390,82 @@ public class LogTraceSplitter {
 		return true;
 	}
 	
-	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, Column orderField) {
+	private static void addTraceToRelatedMap(SLEXTrace trace, TraceID tid, HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap) {
+		// TEST
+		for (Column cpa: tid.getPA()) {
+			if (tid.getValue(cpa) != null) {
+				HashMap<String,HashSet<SLEXTrace>> cpaMap = relatedMap.get(cpa);
+				String v = tid.getValue(cpa);
+				if (cpaMap.containsKey(v)) {
+					cpaMap.get(v).add(trace);
+				} else {
+					HashSet<SLEXTrace> tset = new HashSet<>();
+					tset.add(trace);
+					cpaMap.put(v, tset);
+				}
+			}
+		}
+	}
+	
+	private static HashSet<SLEXTrace> getRelatedTracesFromMap(TraceID tid, HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap) {
+		// TEST
+		HashSet<SLEXTrace> relatedTraces = new HashSet<>();
+		
+		for (Column cpa: tid.getPA()) {
+			if (tid.getValue(cpa) != null) {
+				HashMap<String,HashSet<SLEXTrace>> cpaMap = relatedMap.get(cpa);
+				String v = tid.getValue(cpa);
+				if (cpaMap.containsKey(v)) {
+					for (SLEXTrace t: cpaMap.get(v)) {
+						relatedTraces.add(t);
+					}
+				}
+			}
+		}
+		
+		return relatedTraces;
+	}
+	
+	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
 		try {
+			SLEXStorage.getInstance().setAutoCommit(false);
+			int i = 0;
+			int MAX_ITERATIONS_PER_COMMIT = 100;
+			
 			perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
 		
 			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
+			List<SLEXTrace> subtracesList = new Vector<>();
 		
+			HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = new HashMap<>();
+			
+			for (Column cpa: tp.getPAList()) {
+				relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
+			}
+			
 			TraceIDPatternElement root = tp.getRoot();
 			List<Column> rootCanonical = canonicalize(dm, tp, root);
-		
-			SLEXAttribute orderAt = m.map(orderField); // FIXME orderAt when no in map
-			SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAt);
+					
+			List<SLEXAttribute> orderAtts = new Vector<>();
+			for (Column ordC: orderFields) {
+				orderAtts.add(m.map(ordC));
+			}
+			//m.map(orderField); // FIXME orderAt when no in map
+			SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAtts);
 			SLEXEvent e = null;
-		
+			
+			int events = 0;
+			int traces = 0;
+			
 			while ((e = erset.getNext()) != null) {
 				//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);
 				List<SLEXTrace> tracesCAndR = new Vector<>();
 				TraceID eTID = generateTraceID(tp, m, e);
-			
-				for (Entry<SLEXTrace,TraceID> te: tracesMap.entrySet()) {
-					if (compatibleTraces(te.getValue(),eTID)) {
-						if (relatedTraces(te.getValue(), eTID)) {
-							tracesCAndR.add(te.getKey());
-						}
+				
+				for (SLEXTrace t: getRelatedTracesFromMap(eTID,relatedMap)) {
+					if (compatibleTraces(tracesMap.get(t),eTID)) {
+						tracesCAndR.add(t);
 					}
 				}
 			
@@ -428,6 +482,12 @@ public class LogTraceSplitter {
 						SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective.getId(),eTID.serialize());
 						t.add(e);
 						tracesMap.put(t, eTID);
+						
+						addTraceToRelatedMap(t,eTID,relatedMap);
+						
+						traces++;
+						phandler.refreshValue("Traces", String.valueOf(traces));
+						i++;
 					}
 				
 				} else {
@@ -442,32 +502,55 @@ public class LogTraceSplitter {
 							t2.commit();
 							t2.add(e);
 							tracesMap.put(t2, tAndETID);
+							
+							addTraceToRelatedMap(t2,tAndETID,relatedMap);
+							
+							subtracesList.add(t);
+							
+							traces++;
+							phandler.refreshValue("Traces", String.valueOf(traces));
 						}
+						
+						i++;
 					}
+				}
+				
+				events++;
+				phandler.refreshValue("Events", String.valueOf(events));
+				
+				if (i >= MAX_ITERATIONS_PER_COMMIT) {
+					SLEXStorage.getInstance().commit();
+					i=0;
 				}
 			}
 		
-			Iterator<Entry<SLEXTrace, TraceID>> it = tracesMap.entrySet().iterator();
-			while (it.hasNext()) {
-				Entry<SLEXTrace, TraceID> te = it.next();
-			
-				for (Entry<SLEXTrace,TraceID> te2: tracesMap.entrySet()) {
+			SLEXStorage.getInstance().commit();
+			int removedTraces = 0;
+			int totalToRemove = subtracesList.size();
+			//System.out.println("To Remove: ");
+			for (SLEXTrace t: subtracesList) {
+				//System.out.print(t.getId()+" , ");
+				perspective.remove(t);
+				removedTraces++;
+				phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces)+" / "+String.valueOf(totalToRemove));
 				
-					if (!te.getValue().equals(te2.getValue())) {
-					
-						if (subtrace(te.getValue(), te2.getValue())) {
-							perspective.remove(te.getKey());
-							it.remove();
-							break;
-						}
-					}
-				
+				i++;
+				if (i >= MAX_ITERATIONS_PER_COMMIT) {
+					SLEXStorage.getInstance().commit();
+					i=0;
 				}
-			
 			}
+			SLEXStorage.getInstance().commit();
 		
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				SLEXStorage.getInstance().commit();
+				SLEXStorage.getInstance().setAutoCommit(true);
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return perspective;

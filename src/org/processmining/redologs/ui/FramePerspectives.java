@@ -21,6 +21,19 @@ import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXPerspectiveResultSet;
 import org.processmining.openslex.SLEXStorage;
 
+import com.sun.java.swing.plaf.windows.WindowsBorders.ProgressBarBorder;
+
+import javax.swing.BoxLayout;
+
+import java.awt.GridLayout;
+import java.awt.FlowLayout;
+
+import javax.swing.JProgressBar;
+
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+
 public class FramePerspectives extends CustomInternalFrame {
 
 	/**
@@ -30,6 +43,7 @@ public class FramePerspectives extends CustomInternalFrame {
 	private JTable table_logs;
 	private DefaultTableModel model_table;
 	private static FramePerspectives _instance;
+	private JProgressBar progressBar;
 	
 	public static FramePerspectives getInstance() {
 		if (_instance == null) {
@@ -102,25 +116,45 @@ public class FramePerspectives extends CustomInternalFrame {
 		JButton btnExportLog = new JButton("Export");
 		btnExportLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					SLEXPerspective p = getPerspectiveFromSelector();
+				final JFileChooser fc = new JFileChooser();
+				int returnVal = fc.showSaveDialog(FramePerspectives.this);
 				
-					JFileChooser fc = new JFileChooser();
-					int returnVal = fc.showSaveDialog(FramePerspectives.this);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					Thread exportLogThread = new Thread(new Runnable() {
+					
+						@Override
+						public void run() {
+							try {
+								File file = fc.getSelectedFile();
+								
+								progressBar.setIndeterminate(true);
+								progressBar.setStringPainted(true);
+								progressBar.setString("Exporting...");
+								
+								SLEXPerspective p = getPerspectiveFromSelector();
+								XLog xlog = SLEXExporter.exportPerspectiveToXLog(p);
+								XesXmlSerializer serializer = new XesXmlSerializer();
+								BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+								serializer.serialize(xlog, out);
+								out.close();
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							} finally {
+								progressBar.setIndeterminate(false);
+								progressBar.setString("Exported");
+							}
+						}
+					});
 				
-					if (returnVal == JFileChooser.APPROVE_OPTION) {
-						File file = fc.getSelectedFile();
-						XLog xlog = SLEXExporter.exportPerspectiveToXLog(p);
-						XesXmlSerializer serializer = new XesXmlSerializer();
-						BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-						serializer.serialize(xlog, out);
-						out.close();
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
+					exportLogThread.start();
+
 				}
 			}
 		});
-		panel_4.add(btnExportLog);
+		panel_4.setLayout(new BorderLayout(5, 5));
+		panel_4.add(btnExportLog, BorderLayout.NORTH);
+		
+		progressBar = new JProgressBar();
+		panel_4.add(progressBar, BorderLayout.CENTER);
 	}
 }

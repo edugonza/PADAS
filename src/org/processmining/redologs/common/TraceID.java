@@ -37,8 +37,16 @@ public class TraceID {
 		if (tp.equals(tid.tp)) {
 			if (tval.size() == tid.tval.size()) {
 				for (Entry<Column,String> e: tval.entrySet()) {
-					if (!tid.tval.get(e.getKey()).equals(e.getValue())) {
-						return false;
+					String val1 = tid.tval.get(e.getKey());
+					String val2 = e.getValue();
+					if (val1 == null || val2 == null) {
+						if (val1 != val2) {
+							return false;
+						}
+					} else {
+						if (!val1.equals(val2)) {
+							return false;
+						}
 					}
 				}
 				return true;
@@ -48,6 +56,12 @@ public class TraceID {
 		return false;
 	}
 
+	@Override
+	public int hashCode() {
+		String aux = tp.hashCode()+"#"+tval.hashCode();
+		return aux.hashCode();
+	}
+	
 	public String serialize() {
 		List<String> tidValues = new Vector<String>();
 		for (Column c: tp.getPAList()) {

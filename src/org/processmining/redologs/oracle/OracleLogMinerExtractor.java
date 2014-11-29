@@ -47,7 +47,7 @@ public class OracleLogMinerExtractor {
 	private Connection con;
 	private Properties prop;
 	private List<TableInfo> targetTables;
-	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID"};
+	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID","RS_ID","SSN"};
 	public static final String COLUMN_CHANGES = "COLUMN_CHANGES";
 	private static final String COLUMN_CHANGE_NONE = "1";
 	private static final String COLUMN_CHANGE_UPDATED = "4";
@@ -299,6 +299,9 @@ public class OracleLogMinerExtractor {
 	
 	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses) {
 		try {
+			SLEXStorage.getInstance().setAutoCommit(false);
+			int i = 0;
+			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
 			Hashtable<String,Map<String, String>> records = new Hashtable<>();
 			
@@ -439,6 +442,11 @@ public class OracleLogMinerExtractor {
 						records.get(rowid).clear();
 					}
 
+					i++;
+					if (i >= MAX_ITERATIONS_PER_COMMIT) {
+						SLEXStorage.getInstance().commit();
+						i=0;
+					}
 
 				}
 			}
@@ -447,6 +455,12 @@ public class OracleLogMinerExtractor {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				SLEXStorage.getInstance().setAutoCommit(true);
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -536,7 +550,7 @@ public class OracleLogMinerExtractor {
 			i++;
 		}
 		
-		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN DESC";
+		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN,SSN DESC";
 		
 		ResultSet res = null;
 		
