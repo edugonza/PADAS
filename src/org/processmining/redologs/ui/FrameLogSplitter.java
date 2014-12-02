@@ -149,6 +149,14 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		DefaultMutableTreeNode nodeC = new DefaultMutableTreeNode(ec);
 		root.add(nodeC);
 		
+		EventAttributeColumn ec2 = new EventAttributeColumn();
+		ec2.c = new Column();
+		ec2.c.name = OracleLogMinerExtractor.COLUMN_ORDER;
+		ec2.c.table = common_table;
+		common_table.columns.add(ec2.c);
+		DefaultMutableTreeNode nodeC2 = new DefaultMutableTreeNode(ec2);
+		root.add(nodeC2);
+		
 		
 		for (String c: OracleLogMinerExtractor.LOG_MINER_BASIC_FIELDS) {
 			EventAttributeColumn eac = new EventAttributeColumn();

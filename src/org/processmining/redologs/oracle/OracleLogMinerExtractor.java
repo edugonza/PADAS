@@ -49,6 +49,7 @@ public class OracleLogMinerExtractor {
 	private List<TableInfo> targetTables;
 	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID","RS_ID","SSN"};
 	public static final String COLUMN_CHANGES = "COLUMN_CHANGES";
+	public static final String COLUMN_ORDER = "ORDER";
 	private static final String COLUMN_CHANGE_NONE = "1";
 	private static final String COLUMN_CHANGE_UPDATED = "4";
 	private static final String COLUMN_CHANGE_TO_NULL = "2";
@@ -210,8 +211,8 @@ public class OracleLogMinerExtractor {
 			
 			stm.execute("begin DBMS_LOGMNR.START_LOGMNR("
 					+" OPTIONS => "
-					+" DBMS_LOGMNR.DICT_FROM_ONLINE_CATALOG + "
-					+" DBMS_LOGMNR.COMMITTED_DATA_ONLY  "
+					+" DBMS_LOGMNR.DICT_FROM_ONLINE_CATALOG "
+//					+" + DBMS_LOGMNR.COMMITTED_DATA_ONLY  "
 					+" ); end;");
 			
 			return true;
@@ -293,11 +294,11 @@ public class OracleLogMinerExtractor {
 		}
 	}
 	
-	public void saveResultSet(TableInfo t,Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, File outCSVFile, SLEXEventCollection eventCollection, boolean computeEventClasses) {
-			saveResultSetNewToOld(t, aliasTable, res, eventCollection, computeEventClasses);
+	public void saveResultSet(TableInfo t,Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, File outCSVFile, SLEXEventCollection eventCollection, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
+			saveResultSetNewToOld(t, aliasTable, res, eventCollection, computeEventClasses,orderIds);
 	}
 	
-	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses) {
+	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
 		try {
 			SLEXStorage.getInstance().setAutoCommit(false);
 			int i = 0;
@@ -310,6 +311,8 @@ public class OracleLogMinerExtractor {
 			int rowIdColNum = res.findColumn("ROW_ID");
 			int operationColNum = res.findColumn("OPERATION");
 			int scnTimestampColNum = res.findColumn("SCN_TIMESTAMP");
+			int ssnColNum = res.findColumn("SSN");
+			int rs_idColNum = res.findColumn("RS_ID");
 			
 			int numAttributes = (aliasTable.size() / 4) + scnTimestampColNum + 1;
 			
@@ -320,6 +323,7 @@ public class OracleLogMinerExtractor {
 			
 			//headers[0] = COLUMN_CHANGES;
 			attributeNames[0] = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
+			SLEXAttribute orderAttribute = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME, COLUMN_ORDER, true);
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
 				String colName = meta.getColumnName(j);
@@ -342,6 +346,8 @@ public class OracleLogMinerExtractor {
 			String old_present = "";
 			String rowid = "";
 			String operation = "";
+			String ssn = "";
+			String rs_id = "";
 			
 			while (res.next() && !stopExtraction) {
 				SLEXEvent event = SLEXStorage.getInstance().createEvent(eventCollection.getId());
@@ -358,6 +364,11 @@ public class OracleLogMinerExtractor {
 				/**/
 				rowid = line[rowIdColNum];
 				operation = line[operationColNum];
+				ssn = line[ssnColNum];
+				rs_id = line[rs_idColNum];
+				
+				SLEXStorage.getInstance().createAttributeValue(orderAttribute.getId(), event.getId(), String.valueOf(orderIds.get(ssn+"#"+rs_id)));
+				
 				/**/
 				
 				if (operation.equalsIgnoreCase("INSERT")
@@ -493,7 +504,52 @@ public class OracleLogMinerExtractor {
 		public String name = null;
 	}
 	
-	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses) {
+	public HashMap<String,Integer> getOrderOfLogs(List<TableInfo> tables) {
+		
+		HashMap<String,Integer> idsOrderMap = new HashMap<>();
+		
+		String query = "SELECT SSN,RS_ID FROM V$LOGMNR_CONTENTS WHERE TABLE_NAME IN (";
+		
+		String comma = "";
+		for (TableInfo t: tables) {
+			query += comma+"'"+t.name+"'";
+			comma = ",";
+		}
+		
+		query += ")";
+		
+		ResultSet res = null;
+		
+		try {
+			Statement stm = con.createStatement();
+			res = stm.executeQuery(query);
+
+			int order = 0;
+			while (res.next()) {
+				String ssn = res.getString(1);
+				String rs_id = res.getString(2);
+				order++;
+				idsOrderMap.put(ssn+"#"+rs_id, order);
+			}
+
+		} catch (SQLException e) {
+			System.out.println("Error: "+query);
+			e.printStackTrace();
+		}
+		
+		if (res != null) {
+			try {
+				res.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return idsOrderMap;
+		
+	}
+	
+	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
 		String query = "SELECT ";
 		
 		if (allRedoFields) {
@@ -550,7 +606,7 @@ public class OracleLogMinerExtractor {
 			i++;
 		}
 		
-		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN,SSN DESC";
+		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN DESC";
 		
 		ResultSet res = null;
 		
@@ -562,7 +618,7 @@ public class OracleLogMinerExtractor {
 //				printResultSet(res);
 //			} else {
 				
-				saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses);
+				saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses,orderIds);
 //			}
 			
 			//res.close();

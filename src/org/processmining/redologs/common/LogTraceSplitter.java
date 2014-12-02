@@ -44,6 +44,8 @@ import org.processmining.openslex.SLEXEventResultSet;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXTrace;
+import org.processmining.redologs.dag.DAG;
+import org.processmining.redologs.dag.DAGNode;
 
 public class LogTraceSplitter {
 	
@@ -373,6 +375,11 @@ public class LogTraceSplitter {
 	
 	public static boolean subtrace(TraceID tidA, TraceID tidB) {
 		
+		if (tidA == null) {
+			return true; 
+		} else if (tidB == null) {
+			return false;
+		}
 		for (Column c: tidA.getPA()) {
 			String vA = tidA.getValue(c);
 			if (vA != null) {
@@ -426,6 +433,152 @@ public class LogTraceSplitter {
 		return relatedTraces;
 	}
 	
+	
+	private static final int NODE_IS_UNK = 0;
+	private static final int NODE_IS_SUB = 1;
+	private static final int NODE_IS_SUP = -1;
+	private static final int NODE_IS_NOP = 2;
+	
+	public static int checkTracesInDAG(TraceID tnewId, SLEXTrace tnew, SLEXTrace tb,			
+			HashMap<SLEXTrace,TraceID> tracesMap,
+			HashMap<SLEXTrace,Integer> explorationMap,
+			DAG<SLEXTrace> subtraceDAG) {
+		
+		int tbi = 3;
+		if (explorationMap.containsKey(tb)) {
+			tbi = explorationMap.get(tb);
+		} else {
+			tbi = NODE_IS_UNK;
+		}
+		if (tb != null) {
+			if (tnew.getId() == tb.getId()) {
+				tbi = NODE_IS_SUB;
+				explorationMap.put(tb,tbi);
+			}
+		}
+		if (tbi == NODE_IS_SUB || tbi == NODE_IS_SUP || tbi == NODE_IS_NOP) {
+			return tbi;
+		} else if (tbi == NODE_IS_UNK) {
+			TraceID tbId = tracesMap.get(tb);
+			boolean nSUBb = false;
+			boolean nSUPb = false;
+			if (subtrace(tnewId,tbId)) {
+				nSUBb = true;
+			}
+			if (supertrace(tnewId,tbId)) {
+				nSUPb = true;
+			}
+			
+			if (nSUBb && nSUPb) {
+				// Find out if it is super or sub trace looking at the events
+				if (tnew.getNumberEvents() > tb.getNumberEvents()) {
+					nSUPb = true;
+					nSUBb = false;
+				} else {
+					nSUPb = false;
+					nSUBb = true;
+				}
+			}
+			
+			if (nSUPb) {
+				// tnew is supertrace of tb
+				tbi = NODE_IS_SUB;
+				explorationMap.put(tb,tbi);
+				
+				boolean children_nop = true;
+				List<DAGNode<SLEXTrace>> children = new Vector<>();
+				for (DAGNode<SLEXTrace> c: subtraceDAG.getNode(tb).getChildren()) {
+					children.add(c);
+				}
+				for (DAGNode<SLEXTrace> c: children) {
+					if (checkTracesInDAG(tnewId, tnew, c.getValue(), tracesMap, explorationMap, subtraceDAG) != NODE_IS_NOP) {
+						children_nop = false;
+					}
+				}
+				if (children_nop) {
+					// tnew is a child of tb
+					subtraceDAG.addChild(subtraceDAG.getNode(tb), tnew);
+				}
+			} else if (nSUBb) {
+				// tnew is subtrace of tb
+				tbi = NODE_IS_SUP;
+				explorationMap.put(tb,tbi);
+				boolean children_nop = true;
+				List<DAGNode<SLEXTrace>> parents = new Vector<>();
+				for (DAGNode<SLEXTrace> p: subtraceDAG.getNode(tb).getParents()) {
+					parents.add(p);
+				}
+				for (DAGNode<SLEXTrace> p: parents) {
+					int r = checkTracesInDAG(tnewId, tnew, p.getValue(), tracesMap, explorationMap, subtraceDAG);
+					if (r != NODE_IS_NOP) {
+						children_nop = false;
+					}
+					if (r == NODE_IS_SUB) {
+						// tnew is a child of p and parent of tb
+						// remove p as parent of tb
+						subtraceDAG.removeParent(subtraceDAG.getNode(tb),p);
+						subtraceDAG.addChild(p,tnew);
+						subtraceDAG.addParent(subtraceDAG.getNode(tb), tnew);
+					}
+				}
+				if (children_nop) {
+					// tnew is parent of tb and child of root
+					subtraceDAG.addChild(subtraceDAG.getRoot(), tnew);
+					subtraceDAG.addParent(subtraceDAG.getNode(tb), tnew);
+				}
+			} else {
+				tbi = NODE_IS_NOP;
+				explorationMap.put(tb,tbi);
+			}
+			
+			return tbi;
+		} else {
+			// WRONG!!
+			System.err.println("ERROR");
+		}
+		
+		return 3;
+	}
+	
+	public static void addTraceToDAG(DAG<SLEXTrace> subtraceDAG,
+			HashMap<Column, HashMap<String, HashSet<SLEXTrace>>> relatedMap,
+			HashMap<SLEXTrace,TraceID> tracesMap,
+			SLEXTrace tnew, TraceID tnewId) {
+		/**/
+		// tnew could be sub or super trace of any of his compatible and related traces
+		HashSet<SLEXTrace> t2CAndR = new HashSet<>();
+		HashMap<SLEXTrace,Integer> explorationMap = new HashMap<>();
+		
+		for (SLEXTrace tb: getRelatedTracesFromMap(tnewId,relatedMap)) {
+			TraceID tbId = tracesMap.get(tb);
+			if (compatibleTraces(tbId,tnewId)) {
+				t2CAndR.add(tb);
+				explorationMap.put(tb,NODE_IS_UNK);
+			}
+		}
+		
+		t2CAndR.remove(tnew);
+		boolean no_sub_or_sup = true;
+		for (SLEXTrace tb: t2CAndR) {
+			int r = checkTracesInDAG(tnewId, tnew, tb, tracesMap, explorationMap,subtraceDAG);
+			if (r == NODE_IS_SUB || r == NODE_IS_SUP) {
+				no_sub_or_sup = false;
+			} else if (r != NODE_IS_NOP) {
+				System.err.println("ERROR");
+			}
+		}
+		
+		if (no_sub_or_sup) {
+			subtraceDAG.addChild(subtraceDAG.getRoot(),tnew);
+		}
+		
+		DAGNode<SLEXTrace> n = subtraceDAG.getNode(tnew);
+		if (n == null) {
+			System.err.println("ERROR");
+		}
+		/**/
+	}
+	
 	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
 		try {
@@ -434,9 +587,14 @@ public class LogTraceSplitter {
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
 			perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
+			
+			/**/
+			SLEXTrace nullTrace = null;
+			DAG<SLEXTrace> subtraceDAG = new DAG<>(nullTrace);
+			/**/
 		
 			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
-			List<SLEXTrace> subtracesList = new Vector<>();
+			//List<SLEXTrace> subtracesList = new Vector<>();
 		
 			HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = new HashMap<>();
 			
@@ -459,7 +617,7 @@ public class LogTraceSplitter {
 			int traces = 0;
 			
 			while ((e = erset.getNext()) != null) {
-				//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);
+				//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);				
 				List<SLEXTrace> tracesCAndR = new Vector<>();
 				TraceID eTID = generateTraceID(tp, m, e);
 				
@@ -485,6 +643,12 @@ public class LogTraceSplitter {
 						
 						addTraceToRelatedMap(t,eTID,relatedMap);
 						
+						/**/
+						// No trace is compatible and related => no trace is sub or super trace of t 
+						// Therefore, we add it as a child of root						
+						subtraceDAG.addChild(subtraceDAG.getRoot(),t);
+						/**/
+						
 						traces++;
 						phandler.refreshValue("Traces", String.valueOf(traces));
 						i++;
@@ -505,7 +669,9 @@ public class LogTraceSplitter {
 							
 							addTraceToRelatedMap(t2,tAndETID,relatedMap);
 							
-							subtracesList.add(t);
+							//subtracesList.add(t);
+							
+							addTraceToDAG(subtraceDAG,relatedMap,tracesMap,t2,tAndETID);
 							
 							traces++;
 							phandler.refreshValue("Traces", String.valueOf(traces));
@@ -524,22 +690,40 @@ public class LogTraceSplitter {
 				}
 			}
 		
+//			SLEXStorage.getInstance().commit();
+//			int removedTraces = 0;
+//			int totalToRemove = subtracesList.size();
+//			//System.out.println("To Remove: ");
+//			for (SLEXTrace t: subtracesList) {
+//				//System.out.print(t.getId()+" , ");
+//				perspective.remove(t);
+//				removedTraces++;
+//				phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces)+" / "+String.valueOf(totalToRemove));
+//				
+//				i++;
+//				if (i >= MAX_ITERATIONS_PER_COMMIT) {
+//					SLEXStorage.getInstance().commit();
+//					i=0;
+//				}
+//			}
+//			SLEXStorage.getInstance().commit();
+			
 			SLEXStorage.getInstance().commit();
 			int removedTraces = 0;
-			int totalToRemove = subtracesList.size();
-			//System.out.println("To Remove: ");
-			for (SLEXTrace t: subtracesList) {
-				//System.out.print(t.getId()+" , ");
-				perspective.remove(t);
-				removedTraces++;
-				phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces)+" / "+String.valueOf(totalToRemove));
-				
-				i++;
-				if (i >= MAX_ITERATIONS_PER_COMMIT) {
-					SLEXStorage.getInstance().commit();
-					i=0;
+			for (SLEXTrace t: tracesMap.keySet()) {
+				if (!subtraceDAG.getNode(t).getChildren().isEmpty()) {
+					perspective.remove(t);
+					removedTraces++;
+					phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
+					
+					i++;
+					if (i >= MAX_ITERATIONS_PER_COMMIT) {
+						SLEXStorage.getInstance().commit();
+						i=0;
+					}
 				}
 			}
+			
 			SLEXStorage.getInstance().commit();
 		
 		} catch (Exception e) {

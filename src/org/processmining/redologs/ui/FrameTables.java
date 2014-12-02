@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -273,6 +274,9 @@ public class FrameTables extends CustomInternalFrame {
 									int progress = 0;
 									progressBar_1.setValue((progress*100)/total);
 									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
+									
+									HashMap<String,Integer> orderIds = extractor.getOrderOfLogs(tables);
+									
 									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
 										extractor.disconnect();
 										extractor.connect();
@@ -284,8 +288,9 @@ public class FrameTables extends CustomInternalFrame {
 											extractor.getTableColumns(t);
 										}
 										System.out.println("Table: "+t.name);
+										
 										extractor.getLogsForTableWithColumns(t,
-												null, eventCollection, false, true);
+												null, eventCollection, false, true,orderIds);
 										progressBar_1.setValue((progress*100)/total);
 										progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									}
