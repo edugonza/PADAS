@@ -627,34 +627,33 @@ public class LogTraceSplitter {
 					}
 				}
 			
-				if (tracesCAndR.isEmpty()) {
-					boolean containsRoot = true;
-					for (Column c: rootCanonical) {
-						if (eTID.getValue(c) == null) {
-							containsRoot = false;
-							break;
-						}
+				boolean containsRoot = true;
+				for (Column c: rootCanonical) {
+					if (eTID.getValue(c) == null) {
+						containsRoot = false;
+						break;
 					}
+				}
 				
-					if (containsRoot) {
-						SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective.getId(),eTID.serialize());
-						t.add(e);
-						tracesMap.put(t, eTID);
-						
-						addTraceToRelatedMap(t,eTID,relatedMap);
-						
-						/**/
-						// No trace is compatible and related => no trace is sub or super trace of t 
-						// Therefore, we add it as a child of root						
-						subtraceDAG.addChild(subtraceDAG.getRoot(),t);
-						/**/
-						
-						traces++;
-						phandler.refreshValue("Traces", String.valueOf(traces));
-						i++;
-					}
+				if (containsRoot) {
+					SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective.getId(),eTID.serialize());
+					t.add(e);
+					tracesMap.put(t, eTID);
+					
+					addTraceToRelatedMap(t,eTID,relatedMap);
+					
+					/**/
+					// No trace is compatible and related => no trace is sub or super trace of t 
+					// Therefore, we add it as a child of root						
+					subtraceDAG.addChild(subtraceDAG.getRoot(),t);
+					/**/
+					
+					traces++;
+					phandler.refreshValue("Traces", String.valueOf(traces));
+					i++;
+				}
 				
-				} else {
+				if (!tracesCAndR.isEmpty()) {
 					for (SLEXTrace t: tracesCAndR) {
 						TraceID tid = tracesMap.get(t);
 						TraceID tAndETID = generateTraceID(tp, tid, m, e);
