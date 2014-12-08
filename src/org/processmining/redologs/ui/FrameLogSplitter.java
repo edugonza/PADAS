@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -53,6 +54,7 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
+import java.awt.Dialog;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -61,6 +63,8 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.server.LogStream;
 import java.text.AttributedCharacterIterator;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -72,6 +76,8 @@ import java.awt.Component;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -85,18 +91,13 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	 */
 	private static final long serialVersionUID = -7078418810402851925L;
 	
-	//private static FrameLogSplitter _instance;
 	private JTree tree;
 	private DefaultTreeModel tree_model;
 	private DefaultMutableTreeNode root;
 	private DataModel model = null;
-	private JTextField textFieldTimestamp;
 	private JList<Object> listSortField;
-	private JList<Object> listActivityNameFields;
 	private JList<Object> listTraceIdFields;
 	
-	private Object timeStampSelected = null;
-	private List<Object> activityNamesSelected = new Vector<>();
 	private List<Object> orderNamesSelected = new Vector<>();
 	private List<Object> traceIdNamesSelected = new Vector<>();
 
@@ -108,26 +109,19 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private JLabel processedEventsLabel;
 	private JLabel generatedTracesLabel;
 	private JLabel removedTracesLabel;
+	private HistogramPanel histogramPanel;
+	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 	
-//	public static FrameLogSplitter getInstance() {
-//		if (_instance == null) {
-//			_instance = new FrameLogSplitter();
-//		}
-//		return _instance;
-//	}
+	private JLabel lblStartdatevalue = null;
+	private JLabel lblEnddatevalue = null;
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
-			textFieldTimestamp.setText("");
-			DefaultListModel listModel = (DefaultListModel) listActivityNameFields.getModel();
-			listModel.removeAllElements();
 			DefaultListModel list2Model = (DefaultListModel) listTraceIdFields.getModel();
 			list2Model.removeAllElements();
 			DefaultListModel list3Model = (DefaultListModel) listSortField.getModel();
 			list3Model.removeAllElements();
-			timeStampSelected = null;
 			traceIdNamesSelected = new Vector<>();
-			activityNamesSelected = new Vector<>();
 			orderNamesSelected = new Vector<>();
 		}
 		this.model = model;
@@ -185,21 +179,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			}
 			
 			for (Column c: t.columns) {
-//				EventAttributeColumn ecN = new EventAttributeColumn();
-//				ecN.c = new Column();
-//				ecN.c.name = c;
-//				ecN.c.table = t;
-//				ecN.type = EventAttributeColumn.VALUE_NEW;
-//				
-//				EventAttributeColumn ecO = new EventAttributeColumn();
-//				ecO.c = new Column();
-//				ecO.c.name = c;
-//				ecO.c.table = t;
-//				ecO.type = EventAttributeColumn.VALUE_OLD;				
-//				
-//				tableNode.add(new DefaultMutableTreeNode(ecN));
-//				tableNode.add(new DefaultMutableTreeNode(ecO));
-				
 				EventAttributeColumn ect = new EventAttributeColumn();
 				ect.c = c;
 				ect.type = 0;
@@ -209,24 +188,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			
 		}
 		tree.repaint();
-	}
-	
-//	private DataModel getSelectedDataModel() {
-//		Object selected = tree.getLastSelectedPathComponent();
-//		
-//		if (selected != null) {
-//			if (selected instanceof DefaultMutableTreeNode) {
-//				Object selectedObj = ((DefaultMutableTreeNode) selected).getUserObject();
-//				if (selectedObj instanceof DataModel) {
-//					return (DataModel) selectedObj;
-//				}
-//			}
-//		}
-//		return null;
-//	}
-	
-	
-	
+	}	
 	
 	private static class TransferableDataModelElement implements Transferable {
 
@@ -298,7 +260,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private class ListTransferHandler extends TransferHandler {
 		
 		public static final int TRACEID_HANDLER = 1;
-		public static final int ACTIVITY_HANDLER = 2;
 		public static final int ORDER_HANDLER = 3;
 		
 		private int type = 0;
@@ -340,8 +301,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		        			listTraceIdNodes.add(((EventAttributeColumn) data).c);
 		        		}
 		        	}
-		        } else if (type == ACTIVITY_HANDLER) {
-		        	activityNamesSelected.add(data);
 		        } else if (type == ORDER_HANDLER) {
 		        	orderNamesSelected.add(data);
 		        }
@@ -390,12 +349,13 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	public FrameLogSplitter() {
 		super("Log Splitter");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(350, 280, 660, 486);
+		setBounds(715, 30, 820, 670);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
 		
 		tree = new JTree();
+		tree.setVisibleRowCount(15);
 		root = new DefaultMutableTreeNode("Fields");
 		tree_model = new DefaultTreeModel(root);
 		tree.setModel(tree_model);
@@ -413,7 +373,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1);
 		
-		JButton btnLoad = new JButton("Load Data Model");
+		final JButton btnLoad = new JButton("Load Data Model & Event Collection");
 		panel_1.add(btnLoad);
 		
 		JButton btnSplitLog = new JButton("Split Log");
@@ -444,27 +404,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		
 		btnSplitLog.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
-				String aux = null;
-				
-				if (timeStampSelected != null) {
-					if (timeStampSelected instanceof Key) {
-						
-					} else if (timeStampSelected instanceof EventAttributeColumn) {
-						//aux = timeStampSelected.
-					} else {
-						aux = timeStampSelected.toString();
-					}
-				}
-				
-				//final String timestampFieldName = textFieldTimestamp.getText();
-//				Column sortColumn = null; // FIXME what if sort column is a key?
-//				if (sortSelected instanceof EventAttributeColumn) {
-//					sortColumn = ((EventAttributeColumn) sortSelected).c;
-//				} else {
-//					sortColumn = new Column();
-//				}
-				
+								
 				final List<Column> sortFields = new Vector<>();
 				for (int i = 0; i < orderNamesSelected.size(); i++) {
 					if (orderNamesSelected.get(i) instanceof EventAttributeColumn) {
@@ -473,16 +413,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						sortFields.add((Column) orderNamesSelected.get(i));
 					}
 				}
-				
-				
-				//final String sortFieldName = textFieldSort.getText();
-				
-				//DefaultListModel<Object> listActivityModel = (DefaultListModel<Object>) listActivityNameFields.getModel();
-				//final String[] activityFieldNames = new String[listActivityModel.getSize()];
-				
-				//for (int i = 0; i < listActivityModel.getSize(); i++) {
-				//	activityFieldNames[i] = (String) listActivityModel.get(i);
-				//}
 				
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
@@ -526,6 +456,9 @@ public class FrameLogSplitter extends CustomInternalFrame {
 					}
 				};
 				
+				final String startDate = lblStartdatevalue.getText();
+				final String endDate = lblEnddatevalue.getText();
+				
 				Thread logSplitThread = new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -533,7 +466,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
 						
-						SLEXPerspective perspective = LogTraceSplitter.splitLog(outputLogName, model, evCol, mapper, tp, sortFields,progressHandler);
+						SLEXPerspective perspective = LogTraceSplitter.splitLog(outputLogName, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
 						
 						FramePerspectives.getInstance().addPerspective(perspective);
 						
@@ -547,9 +480,26 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		});
 		btnLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
-				if (model != null) {
-					FrameLogSplitter.this.setDataModel(model);
+				final DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
+				final SLEXEventCollection ec = FrameEventCollections.getInstance().getEventCollectionFromSelector();
+				if (model != null && ec != null) {
+					Thread loadThread = new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							progressBar.setStringPainted(true);
+							progressBar.setString("Loading...");
+							progressBar.setIndeterminate(true);
+							FrameLogSplitter.this.setDataModel(model);
+							histogramPanel.setData(ec,dateFormat);
+							progressBar.setIndeterminate(false);
+							progressBar.setString("Loaded");
+						}
+					});
+					loadThread.start();
+					
+				} else {
+					JOptionPane.showMessageDialog(FrameLogSplitter.this, "Data Model or Event Collection not selected");
 				}
 			}
 		});
@@ -562,52 +512,13 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_3.add(panel_side);
 		GridBagLayout gbl_panel_side = new GridBagLayout();
 		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[] {40, 40, 100, 100, 40, 40, 40, 40, 30, 0};
+		gbl_panel_side.rowHeights = new int[] {60, 100, 40, 30, 30, 30, 30, 30, 0};
 		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
-		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
 		panel_side.setLayout(gbl_panel_side);
 		
-		JLabel lblNewLabel = new JLabel("Timestamp");
-		GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
-		gbc_lblNewLabel.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblNewLabel.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewLabel.gridx = 0;
-		gbc_lblNewLabel.gridy = 0;
-		panel_side.add(lblNewLabel, gbc_lblNewLabel);
-		
-		textFieldTimestamp = new JTextField();
-		textFieldTimestamp.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				textFieldTimestamp.setText("");
-				timeStampSelected = null;
-			}
-		});
-		textFieldTimestamp.setDropMode(DropMode.INSERT);
-		textFieldTimestamp.setTransferHandler(new TextFieldTransferHandler() {
-			@Override
-			public void setData(Object data) {
-				timeStampSelected = data;
-			}
-		});
-		textFieldTimestamp.setEditable(false);
-		GridBagConstraints gbc_textFieldTimestamp = new GridBagConstraints();
-		gbc_textFieldTimestamp.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textFieldTimestamp.insets = new Insets(0, 0, 5, 0);
-		gbc_textFieldTimestamp.gridx = 1;
-		gbc_textFieldTimestamp.gridy = 0;
-		panel_side.add(textFieldTimestamp, gbc_textFieldTimestamp);
-		textFieldTimestamp.setColumns(10);
-		
-		JLabel lblNewLabel_1 = new JLabel("Order");
-		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
-		gbc_lblNewLabel_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblNewLabel_1.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewLabel_1.gridx = 0;
-		gbc_lblNewLabel_1.gridy = 1;
-		panel_side.add(lblNewLabel_1, gbc_lblNewLabel_1);
-		
 		listSortField = new JList<>();
+		listSortField.setVisibleRowCount(3);
 		listSortField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -622,6 +533,14 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				}
 			}
 		});
+		
+		JLabel lblNewLabel_1 = new JLabel("Order");
+		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
+		gbc_lblNewLabel_1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblNewLabel_1.insets = new Insets(0, 5, 5, 5);
+		gbc_lblNewLabel_1.gridx = 0;
+		gbc_lblNewLabel_1.gridy = 0;
+		panel_side.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		listSortField.setModel(new DefaultListModel<>());
 		listSortField.setDropMode(DropMode.INSERT);
 		listSortField.setTransferHandler(new ListTransferHandler(ListTransferHandler.ORDER_HANDLER));
@@ -631,56 +550,12 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbc_scrollPane_0.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPane_0.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane_0.gridx = 1;
-		gbc_scrollPane_0.gridy = 1;
+		gbc_scrollPane_0.gridy = 0;
 		panel_side.add(scrollPane_0, gbc_scrollPane_0);
-		
-		JLabel lblActivityNames = new JLabel("Activity Names");
-		GridBagConstraints gbc_lblActivityNames = new GridBagConstraints();
-		gbc_lblActivityNames.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblActivityNames.insets = new Insets(0, 5, 5, 5);
-		gbc_lblActivityNames.gridx = 0;
-		gbc_lblActivityNames.gridy = 2;
-		panel_side.add(lblActivityNames, gbc_lblActivityNames);
 		GridBagConstraints gbc_listActivityNameFields = new GridBagConstraints();
 		gbc_listActivityNameFields.insets = new Insets(0, 0, 5, 0);
 		gbc_listActivityNameFields.gridx = 1;
 		gbc_listActivityNameFields.gridy = 2;
-		
-		listActivityNameFields = new JList<>();
-		
-		listActivityNameFields.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode()==KeyEvent.VK_DELETE) {
-					int selected = listActivityNameFields.getSelectedIndex();
-					if (selected > -1) {
-						DefaultListModel model = (DefaultListModel) listActivityNameFields.getModel();
-						Object selectedObj = model.get(selected);
-						activityNamesSelected.remove(selectedObj);
-						model.remove(selected);
-					}
-				}
-			}
-		});
-		listActivityNameFields.setModel(new DefaultListModel<>());
-		listActivityNameFields.setDropMode(DropMode.INSERT);
-		listActivityNameFields.setTransferHandler(new ListTransferHandler(ListTransferHandler.ACTIVITY_HANDLER));
-		
-		JScrollPane scrollPane_1 = new JScrollPane(listActivityNameFields);
-		GridBagConstraints gbc_scrollPane_1 = new GridBagConstraints();
-		gbc_scrollPane_1.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane_1.gridx = 1;
-		gbc_scrollPane_1.gridy = 2;
-		panel_side.add(scrollPane_1, gbc_scrollPane_1);
-		
-		JLabel lblNewLabel_2 = new JLabel("TraceId");
-		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
-		gbc_lblNewLabel_2.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblNewLabel_2.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewLabel_2.gridx = 0;
-		gbc_lblNewLabel_2.gridy = 3;
-		panel_side.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		
 		listTraceIdFields = new JList<>();
 		listTraceIdFields.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -705,12 +580,20 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			}
 		});
 		
+		JLabel lblNewLabel_2 = new JLabel("TraceId");
+		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
+		gbc_lblNewLabel_2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblNewLabel_2.insets = new Insets(0, 5, 5, 5);
+		gbc_lblNewLabel_2.gridx = 0;
+		gbc_lblNewLabel_2.gridy = 1;
+		panel_side.add(lblNewLabel_2, gbc_lblNewLabel_2);
+		
 		JScrollPane scrollPane_2 = new JScrollPane(listTraceIdFields);
 		GridBagConstraints gbc_textFieldTraceId = new GridBagConstraints();
 		gbc_textFieldTraceId.fill = GridBagConstraints.BOTH;
 		gbc_textFieldTraceId.insets = new Insets(0, 0, 5, 0);
 		gbc_textFieldTraceId.gridx = 1;
-		gbc_textFieldTraceId.gridy = 3;
+		gbc_textFieldTraceId.gridy = 1;
 		panel_side.add(scrollPane_2, gbc_textFieldTraceId);		
 		
 		JButton btnSelectRootTraceid = new JButton("Select Root");
@@ -723,7 +606,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		GridBagConstraints gbc_btnSelectRootTraceid = new GridBagConstraints();
 		gbc_btnSelectRootTraceid.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectRootTraceid.gridx = 0;
-		gbc_btnSelectRootTraceid.gridy = 4;
+		gbc_btnSelectRootTraceid.gridy = 2;
 		panel_side.add(btnSelectRootTraceid, gbc_btnSelectRootTraceid);
 		
 		txtRootelement = new JTextField();
@@ -732,7 +615,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbc_txtRootelement.insets = new Insets(0, 0, 5, 0);
 		gbc_txtRootelement.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtRootelement.gridx = 1;
-		gbc_txtRootelement.gridy = 4;
+		gbc_txtRootelement.gridy = 2;
 		panel_side.add(txtRootelement, gbc_txtRootelement);
 		txtRootelement.setColumns(10);
 		
@@ -740,43 +623,100 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		GridBagConstraints gbc_lblProcessedEvents = new GridBagConstraints();
 		gbc_lblProcessedEvents.insets = new Insets(0, 0, 5, 5);
 		gbc_lblProcessedEvents.gridx = 0;
-		gbc_lblProcessedEvents.gridy = 5;
+		gbc_lblProcessedEvents.gridy = 3;
 		panel_side.add(lblProcessedEvents, gbc_lblProcessedEvents);
 		
 		processedEventsLabel = new JLabel("0");
 		GridBagConstraints gbc_processedEventsLabel = new GridBagConstraints();
 		gbc_processedEventsLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_processedEventsLabel.gridx = 1;
-		gbc_processedEventsLabel.gridy = 5;
+		gbc_processedEventsLabel.gridy = 3;
 		panel_side.add(processedEventsLabel, gbc_processedEventsLabel);
 		
 		JLabel lblGeneratedTraces = new JLabel("Generated Traces");
 		GridBagConstraints gbc_lblGeneratedTraces = new GridBagConstraints();
 		gbc_lblGeneratedTraces.insets = new Insets(0, 0, 5, 5);
 		gbc_lblGeneratedTraces.gridx = 0;
-		gbc_lblGeneratedTraces.gridy = 6;
+		gbc_lblGeneratedTraces.gridy = 4;
 		panel_side.add(lblGeneratedTraces, gbc_lblGeneratedTraces);
 		
 		generatedTracesLabel = new JLabel("0");
 		GridBagConstraints gbc_generatedTracesLabel = new GridBagConstraints();
 		gbc_generatedTracesLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_generatedTracesLabel.gridx = 1;
-		gbc_generatedTracesLabel.gridy = 6;
+		gbc_generatedTracesLabel.gridy = 4;
 		panel_side.add(generatedTracesLabel, gbc_generatedTracesLabel);
 		
 		JLabel lblRemovedTraces = new JLabel("Removed Traces");
 		GridBagConstraints gbc_lblRemovedTraces = new GridBagConstraints();
 		gbc_lblRemovedTraces.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemovedTraces.gridx = 0;
-		gbc_lblRemovedTraces.gridy = 7;
+		gbc_lblRemovedTraces.gridy = 5;
 		panel_side.add(lblRemovedTraces, gbc_lblRemovedTraces);
 		
 		removedTracesLabel = new JLabel("0");
 		GridBagConstraints gbc_removedTracesLabel = new GridBagConstraints();
 		gbc_removedTracesLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_removedTracesLabel.gridx = 1;
-		gbc_removedTracesLabel.gridy = 7;
+		gbc_removedTracesLabel.gridy = 5;
 		panel_side.add(removedTracesLabel, gbc_removedTracesLabel);
+		
+		JLabel lblStartDate = new JLabel("Start Date");
+		GridBagConstraints gbc_lblStartDate = new GridBagConstraints();
+		gbc_lblStartDate.insets = new Insets(0, 0, 5, 5);
+		gbc_lblStartDate.gridx = 0;
+		gbc_lblStartDate.gridy = 6;
+		panel_side.add(lblStartDate, gbc_lblStartDate);
+		
+		lblStartdatevalue = new JLabel("");
+		GridBagConstraints gbc_lblStartdatevalue = new GridBagConstraints();
+		gbc_lblStartdatevalue.insets = new Insets(0, 0, 5, 0);
+		gbc_lblStartdatevalue.gridx = 1;
+		gbc_lblStartdatevalue.gridy = 6;
+		panel_side.add(lblStartdatevalue, gbc_lblStartdatevalue);
+		
+		JLabel lblEndDate = new JLabel("End Date");
+		GridBagConstraints gbc_lblEndDate = new GridBagConstraints();
+		gbc_lblEndDate.insets = new Insets(0, 0, 5, 5);
+		gbc_lblEndDate.gridx = 0;
+		gbc_lblEndDate.gridy = 7;
+		panel_side.add(lblEndDate, gbc_lblEndDate);
+		
+		lblEnddatevalue = new JLabel("");
+		GridBagConstraints gbc_lblEnddatevalue = new GridBagConstraints();
+		gbc_lblEnddatevalue.insets = new Insets(0, 0, 5, 0);
+		gbc_lblEnddatevalue.gridx = 1;
+		gbc_lblEnddatevalue.gridy = 7;
+		panel_side.add(lblEnddatevalue, gbc_lblEnddatevalue);
+		
+		JPanel panel_4 = new JPanel();
+		GridBagLayout gbl_panel_4 = new GridBagLayout();
+		gbl_panel_4.columnWidths = new int[] {0};
+		gbl_panel_4.rowHeights = new int[] {5, 60, 5};
+		gbl_panel_4.columnWeights = new double[]{1.0};
+		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, 0.0};
+		panel_4.setLayout(gbl_panel_4);
+		getContentPane().add(panel_4, BorderLayout.SOUTH);
+		histogramPanel = new HistogramPanel();
+		GridBagLayout gridBagLayout = (GridBagLayout) histogramPanel.getLayout();
+		gridBagLayout.rowHeights = new int[] {30, 0, 30};
+		GridBagConstraints gbc_histogramPanel = new GridBagConstraints();
+		gbc_histogramPanel.anchor = GridBagConstraints.NORTH;
+		gbc_histogramPanel.fill = GridBagConstraints.BOTH;
+		gbc_histogramPanel.gridx = 0;
+		gbc_histogramPanel.gridy = 1;
+		panel_4.add(histogramPanel, gbc_histogramPanel);
+		
+		histogramPanel.addDateRangeChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				Date[] dates = histogramPanel.getSelectedRange();
+				lblStartdatevalue.setText(dateFormat.format(dates[0]));
+				lblEnddatevalue.setText(dateFormat.format(dates[1]));
+			}
+			
+		});
 		
 	}
 

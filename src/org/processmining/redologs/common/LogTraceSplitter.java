@@ -579,7 +579,7 @@ public class LogTraceSplitter {
 		/**/
 	}
 	
-	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, ProgressHandler phandler) {
+	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, String startDate, String endDate, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
 		try {
 			SLEXStorage.getInstance().setAutoCommit(false);
@@ -610,7 +610,13 @@ public class LogTraceSplitter {
 				orderAtts.add(m.map(ordC));
 			}
 			//m.map(orderField); // FIXME orderAt when no in map
-			SLEXEventResultSet erset = evCol.getEventsResultSetOrderedBy(orderAtts);
+			
+			SLEXEventResultSet erset = null;
+			if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+				erset = evCol.getEventsResultSetBetweenDatesOrderedBy(orderAtts,startDate,endDate);
+			} else {
+				erset = evCol.getEventsResultSetOrderedBy(orderAtts);
+			}
 			SLEXEvent e = null;
 			
 			int events = 0;
