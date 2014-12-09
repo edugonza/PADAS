@@ -648,11 +648,15 @@ public class LogTraceSplitter {
 					
 					addTraceToRelatedMap(t,eTID,relatedMap);
 					
-					/**/
-					// No trace is compatible and related => no trace is sub or super trace of t 
-					// Therefore, we add it as a child of root						
-					subtraceDAG.addChild(subtraceDAG.getRoot(),t);
-					/**/
+					if (tracesCAndR.isEmpty()) {
+						/**/
+						// No trace is compatible and related => no trace is sub or super trace of t 
+						// Therefore, we add it as a child of root
+						subtraceDAG.addChild(subtraceDAG.getRoot(),t);
+						/**/
+					} else {
+						addTraceToDAG(subtraceDAG,relatedMap,tracesMap,t,eTID);
+					}
 					
 					traces++;
 					phandler.refreshValue("Traces", String.valueOf(traces));
