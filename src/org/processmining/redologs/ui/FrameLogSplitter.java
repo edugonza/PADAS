@@ -473,7 +473,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Split");
 					}
-				});
+				},"LogSplitThread");
 				
 				logSplitThread.start();
 			}

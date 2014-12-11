@@ -43,6 +43,7 @@ public class DAGThread extends Thread {
 	private TraceIDPattern tp = null;
 	
 	public DAGThread(TraceIDPattern tp) {
+		super("DAGThread");
 		this.tp = tp;
 		for (Column cpa: tp.getPAList()) {
 			relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
