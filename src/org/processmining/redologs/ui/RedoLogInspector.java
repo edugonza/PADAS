@@ -57,14 +57,7 @@ public class RedoLogInspector {
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
-//					SplashWindow splash = new SplashWindow(
-//							//SplashWindow.class.getResource("/org/processmining/redologs/resources/200px-Icon-inspector.svg.png"),
-//							//SplashWindow.class.getResource("/org/processmining/redologs/resources/redolog-inspector.png"),
-//							SplashWindow.class.getResource("/org/processmining/redologs/resources/r.png"),
-//							null, 3000);
-//					splash.setAlwaysOnTop(true);
-					
+				try {					
 					AboutDialog about = new AboutDialog();
 					about.setVisible(true);
 				} catch (Exception e) {
@@ -128,7 +121,7 @@ public class RedoLogInspector {
 		frmRedologInspector = new JFrame();
 		frmRedologInspector.setTitle("RedoLog Inspector"+" v"+Constants.VERSION);
 		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/r.png")));
-		frmRedologInspector.setBounds(100, 100, 887, 700);
+		frmRedologInspector.setBounds(100, 100, 1111, 829);
 		frmRedologInspector.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmRedologInspector.setLocationRelativeTo(null);
 		
@@ -164,36 +157,36 @@ public class RedoLogInspector {
 		});
 		mnNewMenu.add(mntmNewMenuItem_1);
 		
-		JMenu mnNewMenu_1 = new JMenu("Edit");
-		menuBar.add(mnNewMenu_1);
-		
-		JMenu mnView = new JMenu("View");
-		menuBar.add(mnView);
+//		JMenu mnNewMenu_1 = new JMenu("Edit");
+//		menuBar.add(mnNewMenu_1);
+//		
+//		JMenu mnView = new JMenu("View");
+//		menuBar.add(mnView);
 		
 		JMenu mnTools = new JMenu("Tools");
 		menuBar.add(mnTools);
 		
-		JMenuItem mntmMetrics = new JMenuItem("Metrics");
-		mntmMetrics.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				FrameMetrics metrics = new FrameMetrics();
-				desktopPane.add(metrics);
-				metrics.setVisible(true);
-				metrics.setFocusable(true);
-			}
-		});
-		mnTools.add(mntmMetrics);
+//		JMenuItem mntmMetrics = new JMenuItem("Metrics");
+//		mntmMetrics.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				FrameMetrics metrics = new FrameMetrics();
+//				desktopPane.add(metrics);
+//				metrics.setVisible(true);
+//				metrics.setFocusable(true);
+//			}
+//		});
+//		mnTools.add(mntmMetrics);
 		
-		JMenuItem mntmRelationsGraph = new JMenuItem("Relations Graph");
-		mntmRelationsGraph.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				FrameRelationsGraph relations = new FrameRelationsGraph();
-				desktopPane.add(relations);
-				relations.setVisible(true);
-				relations.setFocusable(true);
-			}
-		});
-		mnTools.add(mntmRelationsGraph);
+//		JMenuItem mntmRelationsGraph = new JMenuItem("Relations Graph");
+//		mntmRelationsGraph.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				FrameRelationsGraph relations = new FrameRelationsGraph();
+//				desktopPane.add(relations);
+//				relations.setVisible(true);
+//				relations.setFocusable(true);
+//			}
+//		});
+//		mnTools.add(mntmRelationsGraph);
 		
 		JMenuItem mntmLogSplitter = new JMenuItem("Log Splitter");
 		mntmLogSplitter.addActionListener(new ActionListener() {

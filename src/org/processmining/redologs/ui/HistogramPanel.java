@@ -78,7 +78,10 @@ public class HistogramPanel extends JPanel {
 		gbc_cpanel.gridy = 1;
 		add(cpanel, gbc_cpanel);
 		cpanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		cpanel.setMinimumDrawHeight(60);
+		cpanel.setMinimumDrawHeight(30);
+		cpanel.setMinimumDrawWidth(30);
+		cpanel.setMaximumDrawHeight(4000);
+		cpanel.setMaximumDrawWidth(4000);		
 		
 		setSize(400,150);
 		

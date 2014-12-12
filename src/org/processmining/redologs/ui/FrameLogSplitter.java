@@ -114,6 +114,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	
 	private JLabel lblStartdatevalue = null;
 	private JLabel lblEnddatevalue = null;
+	private SLEXEventCollection eventCollection;
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
@@ -125,10 +126,8 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			orderNamesSelected = new Vector<>();
 		}
 		this.model = model;
-		String title = "Log Splitter - Data Model: "+model.getName();
 		root.setUserObject("Fields: "+model.getName());
 		root.removeAllChildren();
-		this.setTitle(title);
 		
 		/**/
 		common_table = new TableInfo();
@@ -187,6 +186,8 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			}
 			
 		}
+		
+		tree.expandPath(tree.getPathForRow(0));
 		tree.repaint();
 	}	
 	
@@ -417,7 +418,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
 				
-				final SLEXEventCollection evCol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
+				final SLEXEventCollection evCol = eventCollection;
 				
 				List<TableInfo> tables = new Vector<>();
 				tables.addAll(model.getTables());
@@ -482,6 +483,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				final DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
 				final SLEXEventCollection ec = FrameEventCollections.getInstance().getEventCollectionFromSelector();
+				eventCollection = ec;
 				if (model != null && ec != null) {
 					Thread loadThread = new Thread(new Runnable() {
 						
@@ -490,6 +492,8 @@ public class FrameLogSplitter extends CustomInternalFrame {
 							progressBar.setStringPainted(true);
 							progressBar.setString("Loading...");
 							progressBar.setIndeterminate(true);
+							String title = "Log Splitter - Event Collection: "+ec.getName()+" - Data Model: "+model.getName();
+							FrameLogSplitter.this.setTitle(title);
 							FrameLogSplitter.this.setDataModel(model);
 							histogramPanel.setData(ec,dateFormat);
 							progressBar.setIndeterminate(false);
@@ -692,14 +696,14 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		JPanel panel_4 = new JPanel();
 		GridBagLayout gbl_panel_4 = new GridBagLayout();
 		gbl_panel_4.columnWidths = new int[] {0};
-		gbl_panel_4.rowHeights = new int[] {5, 60, 5};
+		gbl_panel_4.rowHeights = new int[] {5, 60, 0};
 		gbl_panel_4.columnWeights = new double[]{1.0};
 		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, 0.0};
 		panel_4.setLayout(gbl_panel_4);
 		getContentPane().add(panel_4, BorderLayout.SOUTH);
 		histogramPanel = new HistogramPanel();
 		GridBagLayout gridBagLayout = (GridBagLayout) histogramPanel.getLayout();
-		gridBagLayout.rowHeights = new int[] {30, 0, 30};
+		gridBagLayout.rowHeights = new int[] {0, 0, 0};
 		GridBagConstraints gbc_histogramPanel = new GridBagConstraints();
 		gbc_histogramPanel.anchor = GridBagConstraints.NORTH;
 		gbc_histogramPanel.fill = GridBagConstraints.BOTH;

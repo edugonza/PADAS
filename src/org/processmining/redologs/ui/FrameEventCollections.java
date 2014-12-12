@@ -100,11 +100,11 @@ public class FrameEventCollections extends CustomInternalFrame {
 		JButton btnMetrics = new JButton("Show metrics");
 		btnMetrics.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				FrameMetrics fmetrics = new FrameMetrics();
+				FrameMetrics fmetrics = new FrameMetrics(getEventCollectionFromSelector(),null);
 				RedoLogInspector.getInstance().addFrame(fmetrics);
 				fmetrics.setVisible(true);
 				fmetrics.setFocusable(true);
-				fmetrics.calculateMetrics(getEventCollectionFromSelector(), null); // FIXME calculate metrics according to data model
+				//fmetrics.calculateMetrics(getEventCollectionFromSelector(), null); // FIXME calculate metrics according to data model
 			}
 		});
 		panel_4.add(btnMetrics);

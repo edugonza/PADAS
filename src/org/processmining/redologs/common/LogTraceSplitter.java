@@ -140,11 +140,11 @@ public class LogTraceSplitter {
 	}
 	
 	
-	public static Object[][] computeMetrics(SLEXEventCollection collection, DataModel model) {
+	public static Object[][] computeMetrics(SLEXEventCollection collection, DataModel model, String startDate, String endDate) {
 		try {
 			Hashtable<SLEXAttribute,HashMap<String,Integer>> attributesValuesCount = new Hashtable<>();
 			Object[][] results = null;
-			SLEXEventResultSet erset = collection.getEventsResultSet();
+			SLEXEventResultSet erset = collection.getEventsResultSetBetweenDatesOrderedBy(null, startDate, endDate); //getEventsResultSet();
 			SLEXEvent ev = null;
 			while ((ev = erset.getNext()) != null) {
 				Hashtable<SLEXAttribute, SLEXAttributeValue> attributeValues = ev.getAttributeValues();

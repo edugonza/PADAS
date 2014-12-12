@@ -86,9 +86,9 @@ public class FramePerspectives extends CustomInternalFrame {
 		this.setResizable(true);
 		this.setMaximizable(true);
 		this.setIconifiable(true);
-		this.setBounds(350, 41, 310, 121);
+		this.setBounds(350, 41, 310, 331);
 		
-		final String[] perspectiveTableColumnNames = new String[] {"Id","Name","Collection ID"};
+		final String[] perspectiveTableColumnNames = new String[] {"Id","Name","Event Collection"};
 		//table_2 = new JTable(new String[0][0] ,logsTableColumnNames);
 		model_table = new DefaultTableModel(new Object[0][0] ,perspectiveTableColumnNames) {
 			/**
@@ -102,6 +102,10 @@ public class FramePerspectives extends CustomInternalFrame {
 			}
 		};
 		table_logs = new JTable(model_table);
+		//table_logs.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		table_logs.getColumnModel().getColumn(0).setPreferredWidth(8);;
+		table_logs.getColumnModel().getColumn(1).setPreferredWidth(table_logs.getColumnModel().getTotalColumnWidth()-8-8);;
+		table_logs.getColumnModel().getColumn(2).setPreferredWidth(8);;
 		table_logs.setAutoCreateRowSorter(true);
 		table_logs.setFillsViewportHeight(true);
 		
