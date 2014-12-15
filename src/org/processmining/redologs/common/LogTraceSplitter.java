@@ -235,7 +235,7 @@ public class LogTraceSplitter {
 			
 			for (TableInfo t: tables) {
 				for (Column c: t.columns) {
-					SLEXAttribute at = SLEXStorage.getInstance().findAttribute(t.name, c.name);
+					SLEXAttribute at = ev.getStorage().findAttribute(t.name, c.name);
 					if (at != null) {
 						mapper.put(at, c);
 					} else {
@@ -440,11 +440,11 @@ public class LogTraceSplitter {
 		SLEXPerspective perspective = null;
 		DAGThread dagThread = new DAGThread(tp);
 		try {
-			SLEXStorage.getInstance().setAutoCommit(false);
+			evCol.getStorage().setAutoCommit(false);
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
-			perspective = SLEXStorage.getInstance().createPerspective(evCol,name);
+			perspective = evCol.getStorage().createPerspective(evCol,name);
 			
 			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
 		
@@ -496,7 +496,7 @@ public class LogTraceSplitter {
 				}
 				
 				if (containsRoot) {
-					SLEXTrace t = SLEXStorage.getInstance().createTrace(perspective.getId(),eTID.serialize());
+					SLEXTrace t = evCol.getStorage().createTrace(perspective.getId(),eTID.serialize());
 					t.add(e);
 					tracesMap.put(t, eTID);
 					
@@ -527,7 +527,7 @@ public class LogTraceSplitter {
 						if (tid.equals(tAndETID)) {
 							t.add(e);
 						} else {
-							SLEXTrace t2 = SLEXStorage.getInstance().cloneTrace(t);
+							SLEXTrace t2 = evCol.getStorage().cloneTrace(t);
 							t2.setCaseId(tAndETID.serialize());
 							t2.commit();
 							t2.add(e);
@@ -550,14 +550,14 @@ public class LogTraceSplitter {
 				phandler.refreshValue("Events", String.valueOf(events));
 				
 				if (i >= MAX_ITERATIONS_PER_COMMIT) {
-					SLEXStorage.getInstance().commit();
+					evCol.getStorage().commit();
 					i=0;
 				}
 			}
 			
 			dagThread.addTask(DAGThread.FINISH, null, null);
 			
-			SLEXStorage.getInstance().commit();
+			evCol.getStorage().commit();
 			
 			dagThread.join();
 			
@@ -570,24 +570,20 @@ public class LogTraceSplitter {
 					
 					i++;
 					if (i >= MAX_ITERATIONS_PER_COMMIT) {
-						SLEXStorage.getInstance().commit();
+						evCol.getStorage().commit();
 						i=0;
 					}
 				}
 			}
 			
-			SLEXStorage.getInstance().commit();
+			evCol.getStorage().commit();
 		
 		} catch (Exception e) {
 			e.printStackTrace();
 			dagThread.interrupt();
 		} finally {
-			try {
-				SLEXStorage.getInstance().commit();
-				SLEXStorage.getInstance().setAutoCommit(true);
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
+			evCol.getStorage().commit();
+			evCol.getStorage().setAutoCommit(true);
 		}
 		
 		return perspective;

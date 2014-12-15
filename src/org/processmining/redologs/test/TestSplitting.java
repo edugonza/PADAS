@@ -8,7 +8,7 @@ import org.processmining.openslex.SLEXStorage;
 public class TestSplitting {
 	public static void main(String[] args) {
 		try {
-			SLEXStorage storage = SLEXStorage.getInstance();
+			SLEXStorage storage = new SLEXStorage();
 			SLEXEventCollection evCol = storage.createEventCollection("Test");
 			
 			SLEXAttribute scn_Attr = storage.findOrCreateAttribute("COMMON", "SCN", true);

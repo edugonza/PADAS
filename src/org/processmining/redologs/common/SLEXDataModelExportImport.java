@@ -17,10 +17,10 @@ import org.processmining.openslex.SLEXStorage;
 
 public class SLEXDataModelExportImport {
 
-	public static SLEXDMDataModel saveDataModelToSLEXDM(DataModel model) {
+	public static SLEXDMDataModel saveDataModelToSLEXDM(SLEXStorage storage, DataModel model) {
 		SLEXDMDataModel dm = null;
 		try {
-			dm = SLEXStorage.getInstance().createDMDataModel(model.getName());
+			dm = storage.createDMDataModel(model.getName());
 			
 			HashMap<TableInfo,SLEXDMClass> classesTable = new HashMap<>();
 			HashMap<Column,SLEXDMAttribute> attributesTable = new HashMap<>();
@@ -29,12 +29,12 @@ public class SLEXDataModelExportImport {
 			if (model != null) {
 				for (TableInfo t : model.getTables()) {
 					// For every t create a Class and link to dm
-					SLEXDMClass cl = SLEXStorage.getInstance().createDMClass(dm.getId(), t.name, false);
+					SLEXDMClass cl = storage.createDMClass(dm.getId(), t.name, false);
 					classesTable.put(t, cl);
 					
 					for (Column c : t.columns) {
 						// For every c create an Attribute linked to Class
-						SLEXDMAttribute at = SLEXStorage.getInstance().createDMAttribute(cl.getId(), c.name, false);
+						SLEXDMAttribute at = storage.createDMAttribute(cl.getId(), c.name, false);
 						attributesTable.put(c, at);
 					}
 				}
@@ -42,7 +42,7 @@ public class SLEXDataModelExportImport {
 				for (Key k : model.getPrimaryKeys().values()) {
 					// For every PK k create a Key
 					SLEXDMClass cl = classesTable.get(k.table);
-					SLEXDMKey key = SLEXStorage.getInstance().createDMKey(cl.getId(),k.name,SLEXDMKey.PRIMARY_KEY,SLEXDMKey.REFERS_TO_NULL);
+					SLEXDMKey key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.PRIMARY_KEY,SLEXDMKey.REFERS_TO_NULL);
 					keysTable.put(k, key);
 					
 					for (Column c : k.fields) {
@@ -62,14 +62,14 @@ public class SLEXDataModelExportImport {
 							}
 						}
 						
-						SLEXStorage.getInstance().createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
+						storage.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
 					}
 				}
 				
 				for (Key k : model.getUniqueKeys().values()) {
 					// For every UK k create a Key
 					SLEXDMClass cl = classesTable.get(k.table);
-					SLEXDMKey key = SLEXStorage.getInstance().createDMKey(cl.getId(),k.name,SLEXDMKey.UNIQUE_KEY,SLEXDMKey.REFERS_TO_NULL);
+					SLEXDMKey key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.UNIQUE_KEY,SLEXDMKey.REFERS_TO_NULL);
 					keysTable.put(k, key);
 					
 					for (Column c : k.fields) {
@@ -89,7 +89,7 @@ public class SLEXDataModelExportImport {
 							}
 						}
 						
-						SLEXStorage.getInstance().createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
+						storage.createDMKeyAttribute(key.getId(),at.getId(),SLEXDMKeyAttribute.REFERS_TO_NULL,position);
 						
 					}
 				}
@@ -98,7 +98,7 @@ public class SLEXDataModelExportImport {
 					// For every FK k create a Key
 					SLEXDMClass cl = classesTable.get(k.table);
 					SLEXDMKey refers_to_key = keysTable.get(k.refers_to);
-					SLEXDMKey key = SLEXStorage.getInstance().createDMKey(cl.getId(),k.name,SLEXDMKey.FOREIGN_KEY,refers_to_key.getId());
+					SLEXDMKey key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.FOREIGN_KEY,refers_to_key.getId());
 					keysTable.put(k, key);
 					
 					for (Column c : k.fields) {
@@ -120,7 +120,7 @@ public class SLEXDataModelExportImport {
 							}
 						}
 						
-						SLEXStorage.getInstance().createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
+						storage.createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
 					}
 				}
 			}
@@ -134,12 +134,7 @@ public class SLEXDataModelExportImport {
 	
 	public static DataModel loadDataModelFromSLEXDM(SLEXDMDataModel dm) {
 		SLEXStorage storage = null;
-		try {
-			storage = SLEXStorage.getInstance();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+		storage = dm.getStorage();
 		
 		DataModel model = new DataModel();
 		model.setName(dm.getName());

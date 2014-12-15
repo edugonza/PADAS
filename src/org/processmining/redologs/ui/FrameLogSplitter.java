@@ -1,6 +1,5 @@
 package org.processmining.redologs.ui;
 
-import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 
 import java.awt.BorderLayout;
@@ -15,14 +14,11 @@ import javax.swing.JButton;
 import javax.swing.TransferHandler;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXPerspective;
+import org.processmining.openslex.SLEXStorage;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.EventAttributeColumn;
@@ -34,35 +30,21 @@ import org.processmining.redologs.common.SLEXAttributeMapper;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.common.TraceIDPattern;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
-import org.processmining.redologs.oracle.OracleRelationsExplorer;
 
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-
 import javax.swing.BoxLayout;
-
-import java.awt.GridLayout;
-
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-import java.awt.Dialog;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
-import java.awt.FlowLayout;
-import java.io.File;
 import java.io.IOException;
-import java.rmi.server.LogStream;
-import java.text.AttributedCharacterIterator;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -73,9 +55,6 @@ import javax.swing.JProgressBar;
 
 import java.awt.Component;
 
-import javax.swing.border.BevelBorder;
-import javax.swing.border.SoftBevelBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -115,6 +94,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private JLabel lblStartdatevalue = null;
 	private JLabel lblEnddatevalue = null;
 	private SLEXEventCollection eventCollection;
+	private SLEXStorage storage;
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
@@ -479,23 +459,31 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				logSplitThread.start();
 			}
 		});
+		
 		btnLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				final DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
-				final SLEXEventCollection ec = FrameEventCollections.getInstance().getEventCollectionFromSelector();
-				eventCollection = ec;
-				if (model != null && ec != null) {
+				final SLEXEventCollection evcol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
+				
+				if (model != null && evcol != null) {
 					Thread loadThread = new Thread(new Runnable() {
 						
 						@Override
 						public void run() {
+							
+							try {
+								storage = new SLEXStorage();
+							} catch (ClassNotFoundException e1) {
+								e1.printStackTrace();
+							}
+							eventCollection = storage.getEventCollection(evcol.getId());
 							progressBar.setStringPainted(true);
 							progressBar.setString("Loading...");
 							progressBar.setIndeterminate(true);
-							String title = "Log Splitter - Event Collection: "+ec.getName()+" - Data Model: "+model.getName();
+							String title = "Log Splitter - Event Collection: "+eventCollection.getName()+" - Data Model: "+model.getName();
 							FrameLogSplitter.this.setTitle(title);
 							FrameLogSplitter.this.setDataModel(model);
-							histogramPanel.setData(ec,dateFormat);
+							histogramPanel.setData(eventCollection,dateFormat);
 							progressBar.setIndeterminate(false);
 							progressBar.setString("Loaded");
 						}

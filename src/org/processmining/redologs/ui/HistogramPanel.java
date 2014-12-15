@@ -126,10 +126,10 @@ public class HistogramPanel extends JPanel {
 		try {
 			List<SLEXAttribute> orderAttributes = new Vector<>();
 			//orderAttributes
-			orderAttributes.add(SLEXStorage.getInstance().findAttribute("COMMON", "ORDER"));
+			orderAttributes.add(ec.getStorage().findAttribute("COMMON", "ORDER"));
 			SLEXEventResultSet erset = ec.getEventsResultSetOrderedBy(orderAttributes);
 			SLEXEvent e = null;
-			SLEXAttribute timeStampAttr = SLEXStorage.getInstance().findAttribute("COMMON", "TIMESTAMP");
+			SLEXAttribute timeStampAttr = ec.getStorage().findAttribute("COMMON", "TIMESTAMP");
 			//DateFormat.
 			while ((e = erset.getNext()) != null) {
 				Hashtable<SLEXAttribute, SLEXAttributeValue> attributes = e.getAttributeValues();

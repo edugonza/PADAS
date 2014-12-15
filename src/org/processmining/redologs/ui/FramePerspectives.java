@@ -67,10 +67,9 @@ public class FramePerspectives extends CustomInternalFrame {
 		model_table.addRow(new Object[] {perspective,perspective.getName(),perspective.getCollectionId()});
 	}
 	
-	private void queryPerspectives() {
+	public void queryPerspectives(SLEXStorage storage) {
 		try {
-			SLEXPerspectiveResultSet prset = SLEXStorage.getInstance()
-					.getPerspectives();
+			SLEXPerspectiveResultSet prset = storage.getPerspectives();
 			SLEXPerspective p = null;
 			while ((p = prset.getNext()) != null) {
 				addPerspective(p);
@@ -111,8 +110,6 @@ public class FramePerspectives extends CustomInternalFrame {
 		
 		JScrollPane scrollPane_2 = new JScrollPane(table_logs);
 		this.getContentPane().add(scrollPane_2, BorderLayout.CENTER);
-		
-		queryPerspectives();
 		
 		JPanel panel_4 = new JPanel();
 		this.getContentPane().add(panel_4, BorderLayout.NORTH);

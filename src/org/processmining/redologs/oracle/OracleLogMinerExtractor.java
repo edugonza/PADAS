@@ -299,8 +299,9 @@ public class OracleLogMinerExtractor {
 	}
 	
 	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
+		SLEXStorage storage = eventCollection.getStorage();
 		try {
-			SLEXStorage.getInstance().setAutoCommit(false);
+			storage.setAutoCommit(false);
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
@@ -322,8 +323,8 @@ public class OracleLogMinerExtractor {
 			String[] line = new String[meta.getColumnCount()+1];
 			
 			//headers[0] = COLUMN_CHANGES;
-			attributeNames[0] = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
-			SLEXAttribute orderAttribute = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME, COLUMN_ORDER, true);
+			attributeNames[0] = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
+			SLEXAttribute orderAttribute = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME, COLUMN_ORDER, true);
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
 				String colName = meta.getColumnName(j);
@@ -333,7 +334,7 @@ public class OracleLogMinerExtractor {
 					//attributeNames[j] = LogStorage.getInstance().createAttribute(t.name,ac.name,false);
 				} else {
 					//headers[j] = meta.getColumnName(j);
-					attributeNames[j] = SLEXStorage.getInstance().findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
+					attributeNames[j] = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
 				}
 			}
 			
@@ -350,14 +351,14 @@ public class OracleLogMinerExtractor {
 			String rs_id = "";
 			
 			while (res.next() && !stopExtraction) {
-				SLEXEvent event = SLEXStorage.getInstance().createEvent(eventCollection.getId());
+				SLEXEvent event = storage.createEvent(eventCollection.getId());
 				
 				SLEXAttributeValue[] attributeValues = new SLEXAttributeValue[numAttributes];
 				
 				for (int c = 1; c <= meta.getColumnCount(); c++) {
 					line[c] = res.getString(c);
 					if (c <= scnTimestampColNum) {
-						attributeValues[c] = SLEXStorage.getInstance().createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
+						attributeValues[c] = storage.createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
 					}
 				}
 				
@@ -367,7 +368,7 @@ public class OracleLogMinerExtractor {
 				ssn = line[ssnColNum];
 				rs_id = line[rs_idColNum];
 				
-				SLEXStorage.getInstance().createAttributeValue(orderAttribute.getId(), event.getId(), String.valueOf(orderIds.get(ssn+"#"+rs_id)));
+				storage.createAttributeValue(orderAttribute.getId(), event.getId(), String.valueOf(orderIds.get(ssn+"#"+rs_id)));
 				
 				/**/
 				
@@ -440,14 +441,14 @@ public class OracleLogMinerExtractor {
 						}
 						
 						/**/
-						attributeNames[c+scnTimestampColNum+1] = SLEXStorage.getInstance().findOrCreateAttribute(t.name,headers[(4*c)+scnTimestampColNum+1],false);
+						attributeNames[c+scnTimestampColNum+1] = storage.findOrCreateAttribute(t.name,headers[(4*c)+scnTimestampColNum+1],false);
 						attributeValues[c+scnTimestampColNum+1] = 
-								SLEXStorage.getInstance().createAttributeValue(attributeNames[c+scnTimestampColNum+1].getId(), event.getId(), line[(4*c)+scnTimestampColNum+1]);
+								storage.createAttributeValue(attributeNames[c+scnTimestampColNum+1].getId(), event.getId(), line[(4*c)+scnTimestampColNum+1]);
 						/**/
 					}
 
 					line[0] = column_changes;
-					attributeValues[0] = SLEXStorage.getInstance().createAttributeValue(attributeNames[0].getId(), event.getId(), column_changes);
+					attributeValues[0] = storage.createAttributeValue(attributeNames[0].getId(), event.getId(), column_changes);
 
 					if (operation.equalsIgnoreCase("INSERT")) {
 						records.get(rowid).clear();
@@ -455,7 +456,7 @@ public class OracleLogMinerExtractor {
 
 					i++;
 					if (i >= MAX_ITERATIONS_PER_COMMIT) {
-						SLEXStorage.getInstance().commit();
+						storage.commit();
 						i=0;
 					}
 
@@ -467,11 +468,7 @@ public class OracleLogMinerExtractor {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			try {
-				SLEXStorage.getInstance().setAutoCommit(true);
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
+			storage.setAutoCommit(true);
 		}
 	}
 	

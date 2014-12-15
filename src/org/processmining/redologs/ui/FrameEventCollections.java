@@ -51,9 +51,9 @@ public class FrameEventCollections extends CustomInternalFrame {
 		model_table.addRow(new Object[] {ec,ec.getName()});
 	}
 	
-	private void queryEventCollections() {
+	public void queryEventCollections(SLEXStorage storage) {
 		try {
-			SLEXEventCollectionResultSet evcrset = SLEXStorage.getInstance()
+			SLEXEventCollectionResultSet evcrset = storage
 					.getEventCollections();
 			SLEXEventCollection ec = null;
 			while ((ec = evcrset.getNext()) != null) {
@@ -94,8 +94,6 @@ public class FrameEventCollections extends CustomInternalFrame {
 		
 		JPanel panel_4 = new JPanel();
 		this.getContentPane().add(panel_4, BorderLayout.NORTH);
-		
-		queryEventCollections();
 		
 		JButton btnMetrics = new JButton("Show metrics");
 		btnMetrics.addActionListener(new ActionListener() {

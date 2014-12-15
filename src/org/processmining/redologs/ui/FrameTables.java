@@ -57,12 +57,17 @@ public class FrameTables extends CustomInternalFrame {
 	
 	private OracleLogMinerExtractor extractor = null;
 	private boolean stopExtractor = false;
-
+	private SLEXStorage storage = null;
+	
 	public static FrameTables getInstance() {
 		if (_instance == null) {
 			_instance = new FrameTables();
 		}
 		return _instance;
+	}
+	
+	public void setStorage(SLEXStorage storage) {
+		this.storage = storage;
 	}
 	
 	public void stopExtractor() {
@@ -201,7 +206,7 @@ public class FrameTables extends CustomInternalFrame {
 											.extractRelations();
 									model.setName(modelName);
 									SLEXDMDataModel dm = SLEXDataModelExportImport
-											.saveDataModelToSLEXDM(model);
+											.saveDataModelToSLEXDM(storage,model);
 									FrameDataModels.getInstance().addDataModel(
 											model);
 									explorer.disconnect();
@@ -263,7 +268,7 @@ public class FrameTables extends CustomInternalFrame {
 									SLEXEventCollection eventCollection = null;
 									
 									try {
-										eventCollection = SLEXStorage.getInstance().createEventCollection(logName);
+										eventCollection = storage.createEventCollection(logName);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}

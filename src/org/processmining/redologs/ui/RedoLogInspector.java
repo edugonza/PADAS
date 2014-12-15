@@ -33,6 +33,8 @@ public class RedoLogInspector {
 	private JFrame frmRedologInspector;
 	private JDesktopPane desktopPane;
 	
+	private SLEXStorage storage = null;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -103,7 +105,11 @@ public class RedoLogInspector {
 		
 		try {
 			
-			SLEXStorage.getInstance();
+			this.storage = new SLEXStorage();
+			FrameTables.getInstance().setStorage(storage);
+			FrameEventCollections.getInstance().queryEventCollections(storage);
+			FrameDataModels.getInstance().obtainDataModelsFromDB(storage);
+			FramePerspectives.getInstance().queryPerspectives(storage);
 			
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -148,7 +154,7 @@ public class RedoLogInspector {
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					SLEXStorage.getInstance().disconnect();
+					storage.disconnect();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}

@@ -1,6 +1,5 @@
 package org.processmining.redologs.ui;
 
-import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 
 import java.awt.BorderLayout;
@@ -11,9 +10,6 @@ import javax.swing.JButton;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.processmining.openslex.SLEXDMDataModel;
@@ -64,10 +60,9 @@ public class FrameDataModels extends CustomInternalFrame {
 		return null;
 	}
 	
-	private void obtainDataModelsFromDB() {
+	public void obtainDataModelsFromDB(SLEXStorage storage) {
 		try {
-			SLEXDMDataModelResultSet rset = SLEXStorage.getInstance()
-					.getDataModels();
+			SLEXDMDataModelResultSet rset = storage.getDataModels();
 			SLEXDMDataModel dm = null;
 			while ((dm = rset.getNext()) != null) {
 				addDataModel(SLEXDataModelExportImport.loadDataModelFromSLEXDM(dm));
@@ -100,6 +95,5 @@ public class FrameDataModels extends CustomInternalFrame {
 		JButton btnLoad = new JButton("Load");
 		panel.add(btnLoad);
 		
-		obtainDataModelsFromDB();
 	}	
 }
