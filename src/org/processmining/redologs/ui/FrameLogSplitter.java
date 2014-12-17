@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -19,6 +20,8 @@ import javax.swing.tree.TreeSelectionModel;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXStorageCollection;
+import org.processmining.openslex.SLEXStorageImpl;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.EventAttributeColumn;
@@ -87,6 +90,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private TableInfo common_table = null;
 	private JLabel processedEventsLabel;
 	private JLabel generatedTracesLabel;
+	private JLabel dagTasksLabel;
 	private JLabel removedTracesLabel;
 	private HistogramPanel histogramPanel;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -94,7 +98,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private JLabel lblStartdatevalue = null;
 	private JLabel lblEnddatevalue = null;
 	private SLEXEventCollection eventCollection;
-	private SLEXStorage storage;
+	private SLEXStorageCollection storage;
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
@@ -424,16 +428,23 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				}
 				
 				final ProgressHandler progressHandler = new ProgressHandler() {
-					public void refreshValue(String key, String value) {
-						if (key != null) {
-							if (key.compareTo("Traces") == 0) {
-								generatedTracesLabel.setText(value);
-							} else if (key.compareTo("Events") == 0) {
-								processedEventsLabel.setText(value);
-							} else if (key.compareTo("RemovedTraces") == 0) {
-								removedTracesLabel.setText(value);
+					public void refreshValue(final String key, final String value) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+
+								if (key != null) {
+									if (key.compareTo("Traces") == 0) {
+										generatedTracesLabel.setText(value);
+									} else if (key.compareTo("Events") == 0) {
+										processedEventsLabel.setText(value);
+									} else if (key.compareTo("RemovedTraces") == 0) {
+										removedTracesLabel.setText(value);
+									} else if (key.compareTo("DAGTasks") == 0) {
+										dagTasksLabel.setText(value);
+									}
+								}
 							}
-						}
+						});
 					}
 				};
 				
@@ -472,8 +483,8 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						public void run() {
 							
 							try {
-								storage = new SLEXStorage();
-							} catch (ClassNotFoundException e1) {
+								storage = new SLEXStorageImpl(evcol.getStorage().getPath(),evcol.getStorage().getFilename(),evcol.getStorage().getType());
+							} catch (Exception e1) {
 								e1.printStackTrace();
 							}
 							eventCollection = storage.getEventCollection(evcol.getId());
@@ -504,9 +515,9 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_3.add(panel_side);
 		GridBagLayout gbl_panel_side = new GridBagLayout();
 		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[] {60, 100, 40, 30, 30, 30, 30, 30, 0};
+		gbl_panel_side.rowHeights = new int[] {60, 100, 40, 30, 30, 30, 30, 30, 30, 0};
 		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
-		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
 		panel_side.setLayout(gbl_panel_side);
 		
 		listSortField = new JList<>();
@@ -643,42 +654,56 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		GridBagConstraints gbc_lblRemovedTraces = new GridBagConstraints();
 		gbc_lblRemovedTraces.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemovedTraces.gridx = 0;
-		gbc_lblRemovedTraces.gridy = 5;
+		gbc_lblRemovedTraces.gridy = 6;
 		panel_side.add(lblRemovedTraces, gbc_lblRemovedTraces);
 		
 		removedTracesLabel = new JLabel("0");
 		GridBagConstraints gbc_removedTracesLabel = new GridBagConstraints();
 		gbc_removedTracesLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_removedTracesLabel.gridx = 1;
-		gbc_removedTracesLabel.gridy = 5;
+		gbc_removedTracesLabel.gridy = 6;
 		panel_side.add(removedTracesLabel, gbc_removedTracesLabel);
+		
+		JLabel lbldagTasks = new JLabel("DAG Tasks");
+		GridBagConstraints gbc_lbldagTasks = new GridBagConstraints();
+		gbc_lbldagTasks.insets = new Insets(0, 0, 5, 5);
+		gbc_lbldagTasks.gridx = 0;
+		gbc_lbldagTasks.gridy = 5;
+		panel_side.add(lbldagTasks, gbc_lbldagTasks);
+		
+		dagTasksLabel = new JLabel("0");
+		GridBagConstraints gbc_dagTasksLabel = new GridBagConstraints();
+		gbc_dagTasksLabel.insets = new Insets(0, 0, 5, 0);
+		gbc_dagTasksLabel.gridx = 1;
+		gbc_dagTasksLabel.gridy = 5;
+		panel_side.add(dagTasksLabel, gbc_dagTasksLabel);
 		
 		JLabel lblStartDate = new JLabel("Start Date");
 		GridBagConstraints gbc_lblStartDate = new GridBagConstraints();
 		gbc_lblStartDate.insets = new Insets(0, 0, 5, 5);
 		gbc_lblStartDate.gridx = 0;
-		gbc_lblStartDate.gridy = 6;
+		gbc_lblStartDate.gridy = 7;
 		panel_side.add(lblStartDate, gbc_lblStartDate);
 		
 		lblStartdatevalue = new JLabel("");
 		GridBagConstraints gbc_lblStartdatevalue = new GridBagConstraints();
 		gbc_lblStartdatevalue.insets = new Insets(0, 0, 5, 0);
 		gbc_lblStartdatevalue.gridx = 1;
-		gbc_lblStartdatevalue.gridy = 6;
+		gbc_lblStartdatevalue.gridy = 7;
 		panel_side.add(lblStartdatevalue, gbc_lblStartdatevalue);
 		
 		JLabel lblEndDate = new JLabel("End Date");
 		GridBagConstraints gbc_lblEndDate = new GridBagConstraints();
 		gbc_lblEndDate.insets = new Insets(0, 0, 5, 5);
 		gbc_lblEndDate.gridx = 0;
-		gbc_lblEndDate.gridy = 7;
+		gbc_lblEndDate.gridy = 8;
 		panel_side.add(lblEndDate, gbc_lblEndDate);
 		
 		lblEnddatevalue = new JLabel("");
 		GridBagConstraints gbc_lblEnddatevalue = new GridBagConstraints();
 		gbc_lblEnddatevalue.insets = new Insets(0, 0, 5, 0);
 		gbc_lblEnddatevalue.gridx = 1;
-		gbc_lblEnddatevalue.gridy = 7;
+		gbc_lblEnddatevalue.gridy = 8;
 		panel_side.add(lblEnddatevalue, gbc_lblEnddatevalue);
 		
 		JPanel panel_4 = new JPanel();

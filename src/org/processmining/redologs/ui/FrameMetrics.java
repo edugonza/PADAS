@@ -15,6 +15,8 @@ import javax.swing.table.DefaultTableModel;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXStorageCollection;
+import org.processmining.openslex.SLEXStorageImpl;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.LogTraceSplitter;
 
@@ -127,10 +129,10 @@ public class FrameMetrics extends CustomInternalFrame {
 	
 	public FrameMetrics(final SLEXEventCollection evc, final DataModel model) {
 		super("Metrics");
-		SLEXStorage storage = null;
+		SLEXStorageCollection storage = null;
 		try {
-			storage = new SLEXStorage();
-		} catch (ClassNotFoundException e1) {
+			storage = new SLEXStorageImpl(evc.getStorage().getPath(),evc.getStorage().getFilename(),evc.getStorage().getType());
+		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 		

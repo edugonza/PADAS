@@ -13,11 +13,11 @@ import org.processmining.openslex.SLEXDMClassResultSet;
 import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXDMKey;
 import org.processmining.openslex.SLEXDMKeyAttribute;
-import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXStorageDataModel;
 
 public class SLEXDataModelExportImport {
 
-	public static SLEXDMDataModel saveDataModelToSLEXDM(SLEXStorage storage, DataModel model) {
+	public static SLEXDMDataModel saveDataModelToSLEXDM(SLEXStorageDataModel storage, DataModel model) {
 		SLEXDMDataModel dm = null;
 		try {
 			dm = storage.createDMDataModel(model.getName());
@@ -133,8 +133,7 @@ public class SLEXDataModelExportImport {
 	
 	
 	public static DataModel loadDataModelFromSLEXDM(SLEXDMDataModel dm) {
-		SLEXStorage storage = null;
-		storage = dm.getStorage();
+		SLEXStorageDataModel storage = dm.getStorage();
 		
 		DataModel model = new DataModel();
 		model.setName(dm.getName());

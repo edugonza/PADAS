@@ -13,9 +13,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventCollectionResultSet;
+import org.processmining.openslex.SLEXStorageCollection;
 
 import edu.uci.ics.jung.algorithms.metrics.Metrics;
 
@@ -51,18 +51,18 @@ public class FrameEventCollections extends CustomInternalFrame {
 		model_table.addRow(new Object[] {ec,ec.getName()});
 	}
 	
-	public void queryEventCollections(SLEXStorage storage) {
-		try {
-			SLEXEventCollectionResultSet evcrset = storage
-					.getEventCollections();
-			SLEXEventCollection ec = null;
-			while ((ec = evcrset.getNext()) != null) {
-				addEventCollection(ec);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	public void queryEventCollections(SLEXStorageCollection storage) {
+//		try {
+//			SLEXEventCollectionResultSet evcrset = storage
+//					.getEventCollections();
+//			SLEXEventCollection ec = null;
+//			while ((ec = evcrset.getNext()) != null) {
+//				addEventCollection(ec);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	private FrameEventCollections() {
 		super("Event collections");

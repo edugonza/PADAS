@@ -41,6 +41,7 @@ import org.processmining.openslex.SLEXAttributeValue;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventResultSet;
+import org.processmining.openslex.SLEXFactory;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXTrace;
@@ -438,13 +439,15 @@ public class LogTraceSplitter {
 	
 	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, String startDate, String endDate, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
-		DAGThread dagThread = new DAGThread(tp);
+		DAGThread dagThread = new DAGThread(tp,phandler);
 		try {
-			evCol.getStorage().setAutoCommit(false);
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
-			perspective = evCol.getStorage().createPerspective(evCol,name);
+			perspective = SLEXFactory.createStoragePerspective().createPerspective(evCol, name);
+			//perspective = evCol.getStorage().createPerspective(evCol,name);
+			
+			perspective.getStorage().setAutoCommit(false);
 			
 			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
 		
@@ -496,23 +499,21 @@ public class LogTraceSplitter {
 				}
 				
 				if (containsRoot) {
-					SLEXTrace t = evCol.getStorage().createTrace(perspective.getId(),eTID.serialize());
+					SLEXTrace t = perspective.getStorage().createTrace(perspective.getId(),eTID.serialize());
 					t.add(e);
 					tracesMap.put(t, eTID);
 					
 					addTraceToRelatedMap(t,eTID,relatedMap);
-					dagThread.addTask(DAGThread.ADD_TO_MAP,t,eTID);
+					dagThread.addTask(DAGThread.ADD_TO_MAP,t,eTID,1);
 					
 					if (tracesCAndR.isEmpty()) {
 						/**/
 						// No trace is compatible and related => no trace is sub or super trace of t 
 						// Therefore, we add it as a child of root
-						dagThread.addTask(DAGThread.ADD_CHILD_TO_ROOT,t,eTID);
-						//subtraceDAG.addChild(subtraceDAG.getRoot(),t);
+						dagThread.addTask(DAGThread.ADD_CHILD_TO_ROOT,t,eTID,null);
 						/**/
 					} else {
-						dagThread.addTask(DAGThread.ADD_TO_DAG,t,eTID);
-						//addTraceToDAG(subtraceDAG,relatedMap,tracesMap,t,eTID);
+						dagThread.addTask(DAGThread.ADD_TO_DAG,t,eTID,null);
 					}
 					
 					traces++;
@@ -526,18 +527,19 @@ public class LogTraceSplitter {
 						TraceID tAndETID = generateTraceID(tp, tid, m, e);
 						if (tid.equals(tAndETID)) {
 							t.add(e);
+							dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t,tAndETID,1);
 						} else {
-							SLEXTrace t2 = evCol.getStorage().cloneTrace(t);
+							int n = t.getNumberEvents();
+							SLEXTrace t2 = perspective.getStorage().cloneTrace(t);
 							t2.setCaseId(tAndETID.serialize());
 							t2.commit();
 							t2.add(e);
 							tracesMap.put(t2, tAndETID);
 						
 							addTraceToRelatedMap(t2,tAndETID,relatedMap);
-							dagThread.addTask(DAGThread.ADD_TO_MAP,t2,tAndETID);
-						
-							dagThread.addTask(DAGThread.ADD_TO_DAG,t2,tAndETID);
-							//addTraceToDAG(subtraceDAG,relatedMap,tracesMap,t2,tAndETID);
+							dagThread.addTask(DAGThread.ADD_TO_MAP,t2,tAndETID,n);
+							dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t2,tAndETID,1);
+							dagThread.addTask(DAGThread.ADD_TO_DAG,t2,tAndETID,null);
 						
 							traces++;
 							phandler.refreshValue("Traces", String.valueOf(traces));
@@ -550,14 +552,14 @@ public class LogTraceSplitter {
 				phandler.refreshValue("Events", String.valueOf(events));
 				
 				if (i >= MAX_ITERATIONS_PER_COMMIT) {
-					evCol.getStorage().commit();
+					perspective.getStorage().commit();
 					i=0;
 				}
 			}
 			
-			dagThread.addTask(DAGThread.FINISH, null, null);
+			dagThread.addTask(DAGThread.FINISH, null, null, null);
 			
-			evCol.getStorage().commit();
+			perspective.getStorage().commit();
 			
 			dagThread.join();
 			
@@ -570,20 +572,20 @@ public class LogTraceSplitter {
 					
 					i++;
 					if (i >= MAX_ITERATIONS_PER_COMMIT) {
-						evCol.getStorage().commit();
+						perspective.getStorage().commit();
 						i=0;
 					}
 				}
 			}
 			
-			evCol.getStorage().commit();
+			perspective.getStorage().commit();
 		
 		} catch (Exception e) {
 			e.printStackTrace();
 			dagThread.interrupt();
 		} finally {
-			evCol.getStorage().commit();
-			evCol.getStorage().setAutoCommit(true);
+			perspective.getStorage().commit();
+			perspective.getStorage().setAutoCommit(true);
 		}
 		
 		return perspective;

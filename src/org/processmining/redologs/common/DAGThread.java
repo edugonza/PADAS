@@ -17,18 +17,21 @@ public class DAGThread extends Thread {
 		int action;
 		SLEXTrace t;
 		TraceID tid;
+		Integer v;
 		
-		public DAGTask(int a, SLEXTrace t, TraceID tid) {
+		public DAGTask(int a, SLEXTrace t, TraceID tid, Integer v) {
 			this.action = a;
 			this.t = t;
 			this.tid = tid;
+			this.v = v;
 		}
 	}
 	
 	public static final int ADD_CHILD_TO_ROOT = 0;
 	public static final int ADD_TO_MAP = 1;
 	public static final int ADD_TO_DAG = 2;
-	public static final int FINISH = 3;
+	public static final int ADD_EVENTS_TO_TRACE = 3;
+	public static final int FINISH = 4;
 	
 	private boolean stop = false;
 	
@@ -37,21 +40,24 @@ public class DAGThread extends Thread {
 	private Queue<DAGTask> tasksQueue = new LinkedList<>();
 	
 	private HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
+	private HashMap<SLEXTrace,Integer> tracesEventsNumMap = new HashMap<>();
 	
 	private HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = new HashMap<>();
 	
 	private TraceIDPattern tp = null;
+	private ProgressHandler phandler = null;
 	
-	public DAGThread(TraceIDPattern tp) {
+	public DAGThread(TraceIDPattern tp, ProgressHandler phandler) {
 		super("DAGThread");
 		this.tp = tp;
+		this.phandler = phandler;
 		for (Column cpa: tp.getPAList()) {
 			relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
 		}
 	}
 	
-	public void addTask(int action, SLEXTrace t, TraceID tid) {
-		DAGTask task = new DAGTask(action,t,tid);
+	public void addTask(int action, SLEXTrace t, TraceID tid, Integer v) {
+		DAGTask task = new DAGTask(action,t,tid,v);
 		synchronized (tasksQueue) {
 			tasksQueue.offer(task);
 			tasksQueue.notify();
@@ -75,6 +81,8 @@ public class DAGThread extends Thread {
 	@Override
 	public void run() {
 		try {
+			int taskcounter = 0;
+			int taskspending = 0;
 			while (!stop) {
 				DAGTask task = null;
 				synchronized (tasksQueue) {
@@ -82,6 +90,8 @@ public class DAGThread extends Thread {
 						task = tasksQueue.poll();
 						if (task == null) {
 							tasksQueue.wait(5000);
+						} else {
+							taskspending = tasksQueue.size();
 						}
 					}
 				}
@@ -93,10 +103,16 @@ public class DAGThread extends Thread {
 						break;
 					case ADD_TO_MAP:
 						tracesMap.put(task.t, task.tid);
+						tracesEventsNumMap.put(task.t, task.v);
 						LogTraceSplitter.addTraceToRelatedMap(task.t,task.tid,relatedMap);
 						break;
 					case ADD_TO_DAG:
-						addTraceToDAG(subtraceDAG,relatedMap,tracesMap,task.t,task.tid);
+						addTraceToDAG(subtraceDAG,relatedMap,tracesMap,tracesEventsNumMap,task.t,task.tid);
+						break;
+					case ADD_EVENTS_TO_TRACE:
+						int n = tracesEventsNumMap.get(task.t);
+						n+=task.v;
+						tracesEventsNumMap.put(task.t, n);
 						break;
 					case FINISH:
 						stopThread();
@@ -106,6 +122,9 @@ public class DAGThread extends Thread {
 						break;
 					}
 				}
+				
+				taskcounter++;
+				phandler.refreshValue("DAGTasks", "Done: "+String.valueOf(taskcounter)+" Pending: "+taskspending);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -119,6 +138,7 @@ public class DAGThread extends Thread {
 	
 	public static int checkTracesInDAG(TraceID tnewId, SLEXTrace tnew, SLEXTrace tb,			
 			HashMap<SLEXTrace,TraceID> tracesMap,
+			HashMap<SLEXTrace,Integer> tracesEventNumMap,
 			HashMap<SLEXTrace,Integer> explorationMap,
 			DAG<SLEXTrace> subtraceDAG) {
 		
@@ -149,7 +169,9 @@ public class DAGThread extends Thread {
 			
 			if (nSUBb && nSUPb) {
 				// Find out if it is super or sub trace looking at the events
-				if (tnew.getNumberEvents() > tb.getNumberEvents()) {
+				int tnewN = tracesEventNumMap.get(tnew);
+				int tbN = tracesEventNumMap.get(tb);
+				if (tnewN > tbN) {
 					nSUPb = true;
 					nSUBb = false;
 				} else {
@@ -169,7 +191,7 @@ public class DAGThread extends Thread {
 					children.add(c);
 				}
 				for (DAGNode<SLEXTrace> c: children) {
-					if (checkTracesInDAG(tnewId, tnew, c.getValue(), tracesMap, explorationMap, subtraceDAG) != NODE_IS_NOP) {
+					if (checkTracesInDAG(tnewId, tnew, c.getValue(), tracesMap,tracesEventNumMap, explorationMap, subtraceDAG) != NODE_IS_NOP) {
 						children_nop = false;
 					}
 				}
@@ -187,7 +209,7 @@ public class DAGThread extends Thread {
 					parents.add(p);
 				}
 				for (DAGNode<SLEXTrace> p: parents) {
-					int r = checkTracesInDAG(tnewId, tnew, p.getValue(), tracesMap, explorationMap, subtraceDAG);
+					int r = checkTracesInDAG(tnewId, tnew, p.getValue(), tracesMap,tracesEventNumMap, explorationMap, subtraceDAG);
 					if (r != NODE_IS_NOP) {
 						children_nop = false;
 					}
@@ -221,6 +243,7 @@ public class DAGThread extends Thread {
 	public static void addTraceToDAG(DAG<SLEXTrace> subtraceDAG,
 			HashMap<Column, HashMap<String, HashSet<SLEXTrace>>> relatedMap,
 			HashMap<SLEXTrace,TraceID> tracesMap,
+			HashMap<SLEXTrace,Integer> tracesEventsNumMap,
 			SLEXTrace tnew, TraceID tnewId) {
 		/**/
 		// tnew could be sub or super trace of any of his compatible and related traces
@@ -238,7 +261,7 @@ public class DAGThread extends Thread {
 		t2CAndR.remove(tnew);
 		boolean no_sub_or_sup = true;
 		for (SLEXTrace tb: t2CAndR) {
-			int r = checkTracesInDAG(tnewId, tnew, tb, tracesMap, explorationMap,subtraceDAG);
+			int r = checkTracesInDAG(tnewId, tnew, tb, tracesMap, tracesEventsNumMap, explorationMap,subtraceDAG);
 			if (r == NODE_IS_SUB || r == NODE_IS_SUP) {
 				no_sub_or_sup = false;
 			} else if (r != NODE_IS_NOP) {

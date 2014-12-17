@@ -1,14 +1,18 @@
 package org.processmining.redologs.test;
 
+import java.io.File;
+
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
-import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXFactory;
+import org.processmining.openslex.SLEXStorageCollection;
 
 public class TestSplitting {
 	public static void main(String[] args) {
 		try {
-			SLEXStorage storage = new SLEXStorage();
+			File f = new File("data"+File.pathSeparator+"collectiondb"+SLEXStorageCollection.COLLECTION_FILE_EXTENSION);
+			SLEXStorageCollection storage = SLEXFactory.createStorageCollection();
 			SLEXEventCollection evCol = storage.createEventCollection("Test");
 			
 			SLEXAttribute scn_Attr = storage.findOrCreateAttribute("COMMON", "SCN", true);

@@ -19,7 +19,7 @@ import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXExporter;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXPerspectiveResultSet;
-import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXStoragePerspective;
 
 import com.sun.java.swing.plaf.windows.WindowsBorders.ProgressBarBorder;
 
@@ -67,17 +67,17 @@ public class FramePerspectives extends CustomInternalFrame {
 		model_table.addRow(new Object[] {perspective,perspective.getName(),perspective.getCollectionId()});
 	}
 	
-	public void queryPerspectives(SLEXStorage storage) {
-		try {
-			SLEXPerspectiveResultSet prset = storage.getPerspectives();
-			SLEXPerspective p = null;
-			while ((p = prset.getNext()) != null) {
-				addPerspective(p);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	public void queryPerspectives(SLEXStoragePerspective storage) {
+//		try {
+//			SLEXPerspectiveResultSet prset = storage.getPerspectives();
+//			SLEXPerspective p = null;
+//			while ((p = prset.getNext()) != null) {
+//				addPerspective(p);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	private FramePerspectives() {
 		super("Perspectives");

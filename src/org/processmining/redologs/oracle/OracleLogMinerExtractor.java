@@ -17,11 +17,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
-import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXAttributeValue;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
+import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
@@ -299,7 +299,7 @@ public class OracleLogMinerExtractor {
 	}
 	
 	private void saveResultSetNewToOld(TableInfo t, Hashtable<String,AliasColumnNameType> aliasTable, ResultSet res, SLEXEventCollection eventCollection, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
-		SLEXStorage storage = eventCollection.getStorage();
+		SLEXStorageCollection storage = eventCollection.getStorage();
 		try {
 			storage.setAutoCommit(false);
 			int i = 0;
@@ -323,8 +323,8 @@ public class OracleLogMinerExtractor {
 			String[] line = new String[meta.getColumnCount()+1];
 			
 			//headers[0] = COLUMN_CHANGES;
-			attributeNames[0] = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
-			SLEXAttribute orderAttribute = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME, COLUMN_ORDER, true);
+			attributeNames[0] = storage.findOrCreateAttribute(SLEXStorageCollection.COMMON_CLASS_NAME,COLUMN_CHANGES,true);
+			SLEXAttribute orderAttribute = storage.findOrCreateAttribute(SLEXStorageCollection.COMMON_CLASS_NAME, COLUMN_ORDER, true);
 			
 			for (int j = 1; j <= meta.getColumnCount(); j++) {
 				String colName = meta.getColumnName(j);
@@ -334,7 +334,7 @@ public class OracleLogMinerExtractor {
 					//attributeNames[j] = LogStorage.getInstance().createAttribute(t.name,ac.name,false);
 				} else {
 					//headers[j] = meta.getColumnName(j);
-					attributeNames[j] = storage.findOrCreateAttribute(SLEXStorage.COMMON_CLASS_NAME,meta.getColumnName(j),true);
+					attributeNames[j] = storage.findOrCreateAttribute(SLEXStorageCollection.COMMON_CLASS_NAME,meta.getColumnName(j),true);
 				}
 			}
 			

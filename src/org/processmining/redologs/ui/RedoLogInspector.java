@@ -18,11 +18,28 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import java.awt.event.ActionEvent;
 
+import org.processmining.openslex.SLEXDMDataModel;
+import org.processmining.openslex.SLEXDMDataModelResultSet;
+import org.processmining.openslex.SLEXEventCollection;
+import org.processmining.openslex.SLEXEventCollectionResultSet;
+import org.processmining.openslex.SLEXPerspective;
+import org.processmining.openslex.SLEXPerspectiveResultSet;
 import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXStorageCollection;
+import org.processmining.openslex.SLEXStorageDataModel;
+import org.processmining.openslex.SLEXStorageImpl;
+import org.processmining.openslex.SLEXStoragePerspective;
 import org.processmining.redologs.common.Constants;
+import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.SLEXDataModelExportImport;
 import org.processmining.redologs.config.Config;
+
 import java.awt.event.ActionListener;
 import java.awt.Toolkit;
+import java.io.File;
+import java.util.List;
+import java.util.Vector;
+
 import javax.swing.JPanel;
 import javax.swing.JDesktopPane;
 import javax.swing.BoxLayout;
@@ -33,7 +50,23 @@ public class RedoLogInspector {
 	private JFrame frmRedologInspector;
 	private JDesktopPane desktopPane;
 	
-	private SLEXStorage storage = null;
+	List<SLEXStorageCollection> colStorages = new Vector<>();
+	List<SLEXStoragePerspective> perStorages = new Vector<>();
+	List<SLEXStorageDataModel> dmStorages = new Vector<>();
+	
+	public void closeStorages() {
+		for (SLEXStorageCollection st: colStorages) {
+			st.disconnect();
+		}
+		for (SLEXStoragePerspective st: perStorages) {
+			st.disconnect();
+		}
+		for (SLEXStorageDataModel st: dmStorages) {
+			st.disconnect();
+		}
+	}
+	
+	//private SLEXStorage storage = null;
 	
 	/**
 	 * Launch the application.
@@ -104,12 +137,56 @@ public class RedoLogInspector {
 		initialize();
 		
 		try {
+			String dir = "data";
+			File dataDir = new File(dir);
+			if (!dataDir.exists()) {
+				dataDir.mkdirs();
+			}
+			File[] filesInData = dataDir.listFiles();
+			for (File f: filesInData) {
+				if (!f.isDirectory()) {
+					if (f.getName().endsWith(SLEXStorage.COLLECTION_FILE_EXTENSION)) {
+						SLEXStorageCollection st = new SLEXStorageImpl(dir,f.getName(),SLEXStorage.TYPE_COLLECTION);
+						colStorages.add(st);
+					} else if (f.getName().endsWith(SLEXStorage.DATAMODEL_FILE_EXTENSION)) {
+						SLEXStorageDataModel st = new SLEXStorageImpl(dir,f.getName(),SLEXStorage.TYPE_DATAMODEL);
+						dmStorages.add(st);
+					} else if (f.getName().endsWith(SLEXStorage.PERSPECTIVE_FILE_EXTENSION)) {
+						SLEXStoragePerspective st = new SLEXStorageImpl(dir,f.getName(),SLEXStorage.TYPE_PERSPECTIVE);
+						perStorages.add(st);
+					}
+				}
+			}
 			
-			this.storage = new SLEXStorage();
-			FrameTables.getInstance().setStorage(storage);
-			FrameEventCollections.getInstance().queryEventCollections(storage);
-			FrameDataModels.getInstance().obtainDataModelsFromDB(storage);
-			FramePerspectives.getInstance().queryPerspectives(storage);
+			FrameTables.getInstance();			
+			
+			for (SLEXStorageCollection st: colStorages) {
+				SLEXEventCollectionResultSet ecrset = st.getEventCollections();
+				SLEXEventCollection ec = null;
+				while ((ec = ecrset.getNext()) != null) {
+					FrameEventCollections.getInstance().addEventCollection(ec);
+				}
+				ecrset.close();
+			}
+			
+			for (SLEXStoragePerspective st: perStorages) {
+				SLEXPerspectiveResultSet prset = st.getPerspectives();
+				SLEXPerspective p = null;
+				while ((p = prset.getNext()) != null) {
+					FramePerspectives.getInstance().addPerspective(p);
+				}
+				prset.close();
+			}
+			
+			for (SLEXStorageDataModel st: dmStorages) {
+				SLEXDMDataModelResultSet dmrset = st.getDataModels();
+				SLEXDMDataModel sdm = null;
+				while ((sdm = dmrset.getNext()) != null) {
+					DataModel dm = SLEXDataModelExportImport.loadDataModelFromSLEXDM(sdm);
+					FrameDataModels.getInstance().addDataModel(dm);
+				}
+				dmrset.close();
+			}
 			
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -154,7 +231,7 @@ public class RedoLogInspector {
 		mntmNewMenuItem_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					storage.disconnect();
+					closeStorages();
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}

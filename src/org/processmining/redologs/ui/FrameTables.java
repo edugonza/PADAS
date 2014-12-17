@@ -33,7 +33,7 @@ import org.deckfour.xes.out.XSerializer;
 import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEventCollection;
-import org.processmining.openslex.SLEXStorage;
+import org.processmining.openslex.SLEXFactory;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.SLEXDataModelExportImport;
 import org.processmining.redologs.common.TableInfo;
@@ -57,7 +57,7 @@ public class FrameTables extends CustomInternalFrame {
 	
 	private OracleLogMinerExtractor extractor = null;
 	private boolean stopExtractor = false;
-	private SLEXStorage storage = null;
+//	private SLEXStorageInterface storage = null;
 	
 	public static FrameTables getInstance() {
 		if (_instance == null) {
@@ -66,9 +66,9 @@ public class FrameTables extends CustomInternalFrame {
 		return _instance;
 	}
 	
-	public void setStorage(SLEXStorage storage) {
-		this.storage = storage;
-	}
+//	public void setStorage(SLEXStorageInterface storage) {
+//		this.storage = storage;
+//	}
 	
 	public void stopExtractor() {
 		this.stopExtractor = true;
@@ -206,7 +206,7 @@ public class FrameTables extends CustomInternalFrame {
 											.extractRelations();
 									model.setName(modelName);
 									SLEXDMDataModel dm = SLEXDataModelExportImport
-											.saveDataModelToSLEXDM(storage,model);
+											.saveDataModelToSLEXDM(SLEXFactory.createStorageDataModel(),model);
 									FrameDataModels.getInstance().addDataModel(
 											model);
 									explorer.disconnect();
@@ -268,7 +268,7 @@ public class FrameTables extends CustomInternalFrame {
 									SLEXEventCollection eventCollection = null;
 									
 									try {
-										eventCollection = storage.createEventCollection(logName);
+										eventCollection = SLEXFactory.createStorageCollection().createEventCollection(logName);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
