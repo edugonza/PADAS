@@ -59,6 +59,8 @@ public class FrameTables extends CustomInternalFrame {
 	private boolean stopExtractor = false;
 //	private SLEXStorageInterface storage = null;
 	
+	private SLEXFactory slexFactory = null;
+	
 	public static FrameTables getInstance() {
 		if (_instance == null) {
 			_instance = new FrameTables();
@@ -95,8 +97,11 @@ public class FrameTables extends CustomInternalFrame {
 		return (DatabaseConnectionData) comboBoxConnections.getSelectedItem();
 	}
 	
-	private FrameTables() {
+	private FrameTables() {		
 		super("Tables list");
+		
+		slexFactory = new SLEXFactory(null);
+		
 		this.setClosable(false);
 		this.setResizable(true);
 		this.setMaximizable(true);
@@ -206,7 +211,7 @@ public class FrameTables extends CustomInternalFrame {
 											.extractRelations();
 									model.setName(modelName);
 									SLEXDMDataModel dm = SLEXDataModelExportImport
-											.saveDataModelToSLEXDM(SLEXFactory.createStorageDataModel(),model);
+											.saveDataModelToSLEXDM(slexFactory.createStorageDataModel(),model);
 									FrameDataModels.getInstance().addDataModel(
 											model);
 									explorer.disconnect();
@@ -268,7 +273,7 @@ public class FrameTables extends CustomInternalFrame {
 									SLEXEventCollection eventCollection = null;
 									
 									try {
-										eventCollection = SLEXFactory.createStorageCollection().createEventCollection(logName);
+										eventCollection = slexFactory.createStorageCollection().createEventCollection(logName);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}

@@ -444,7 +444,9 @@ public class LogTraceSplitter {
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
-			perspective = SLEXFactory.createStoragePerspective().createPerspective(evCol, name);
+			SLEXFactory slexFactory = new SLEXFactory(null);
+			
+			perspective = slexFactory.createStoragePerspective().createPerspective(evCol, name);
 			//perspective = evCol.getStorage().createPerspective(evCol,name);
 			
 			perspective.getStorage().setAutoCommit(false);
