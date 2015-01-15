@@ -171,7 +171,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			
 		}
 		
-		tree.expandPath(tree.getPathForRow(0));
+		//tree.expandPath(tree.getPathForRow(0));
 		tree.repaint();
 	}	
 	

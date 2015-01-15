@@ -439,15 +439,15 @@ public class LogTraceSplitter {
 	
 	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, String startDate, String endDate, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
-		DAGThread dagThread = new DAGThread(tp,phandler);
+		//DAGThread dagThread = new DAGThread(tp,phandler);
 		try {
+			long startTimeSplitting = System.currentTimeMillis();
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
 			SLEXFactory slexFactory = new SLEXFactory(null);
 			
 			perspective = slexFactory.createStoragePerspective().createPerspective(evCol, name);
-			//perspective = evCol.getStorage().createPerspective(evCol,name);
 			
 			perspective.getStorage().setAutoCommit(false);
 			
@@ -459,7 +459,8 @@ public class LogTraceSplitter {
 				relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
 			}
 			
-			dagThread.start();
+			//dagThread.start();
+			HashSet<SLEXTrace> originClonedTraces = new HashSet<>();
 			
 			TraceIDPatternElement root = tp.getRoot();
 			List<Column> rootCanonical = canonicalize(dm, tp, root);
@@ -482,7 +483,6 @@ public class LogTraceSplitter {
 			int traces = 0;
 			
 			while ((e = erset.getNext()) != null) {
-				//List<SLEXTrace> traces = filterCompatibleAndRelated(tracesMap,e);				
 				List<SLEXTrace> tracesCAndR = new Vector<>();
 				TraceID eTID = generateTraceID(tp, m, e);
 				
@@ -506,17 +506,17 @@ public class LogTraceSplitter {
 					tracesMap.put(t, eTID);
 					
 					addTraceToRelatedMap(t,eTID,relatedMap);
-					dagThread.addTask(DAGThread.ADD_TO_MAP,t,eTID,1);
+					//dagThread.addTask(DAGThread.ADD_TO_MAP,t,eTID,1);
 					
-					if (tracesCAndR.isEmpty()) {
+					//if (tracesCAndR.isEmpty()) {
 						/**/
 						// No trace is compatible and related => no trace is sub or super trace of t 
 						// Therefore, we add it as a child of root
-						dagThread.addTask(DAGThread.ADD_CHILD_TO_ROOT,t,eTID,null);
+						//dagThread.addTask(DAGThread.ADD_CHILD_TO_ROOT,t,eTID,null);
 						/**/
-					} else {
-						dagThread.addTask(DAGThread.ADD_TO_DAG,t,eTID,null);
-					}
+					//} else {
+						//dagThread.addTask(DAGThread.ADD_TO_DAG,t,eTID,null);
+					//}
 					
 					traces++;
 					phandler.refreshValue("Traces", String.valueOf(traces));
@@ -529,19 +529,21 @@ public class LogTraceSplitter {
 						TraceID tAndETID = generateTraceID(tp, tid, m, e);
 						if (tid.equals(tAndETID)) {
 							t.add(e);
-							dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t,tAndETID,1);
+							//dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t,tAndETID,1);
 						} else {
-							int n = t.getNumberEvents();
+							//int n = t.getNumberEvents();
 							SLEXTrace t2 = perspective.getStorage().cloneTrace(t);
 							t2.setCaseId(tAndETID.serialize());
 							t2.commit();
 							t2.add(e);
 							tracesMap.put(t2, tAndETID);
 						
+							originClonedTraces.add(t);
+							
 							addTraceToRelatedMap(t2,tAndETID,relatedMap);
-							dagThread.addTask(DAGThread.ADD_TO_MAP,t2,tAndETID,n);
-							dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t2,tAndETID,1);
-							dagThread.addTask(DAGThread.ADD_TO_DAG,t2,tAndETID,null);
+							//dagThread.addTask(DAGThread.ADD_TO_MAP,t2,tAndETID,n);
+							//dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t2,tAndETID,1);
+							//dagThread.addTask(DAGThread.ADD_TO_DAG,t2,tAndETID,null);
 						
 							traces++;
 							phandler.refreshValue("Traces", String.valueOf(traces));
@@ -559,15 +561,35 @@ public class LogTraceSplitter {
 				}
 			}
 			
-			dagThread.addTask(DAGThread.FINISH, null, null, null);
+			//dagThread.addTask(DAGThread.FINISH, null, null, null);
 			
 			perspective.getStorage().commit();
 			
-			dagThread.join();
+			//dagThread.join();
+			
+			long endTimeSplitting = System.currentTimeMillis();
+			
+			long durationSplitting = endTimeSplitting - startTimeSplitting;
+			
+			System.out.println("Splitting time: "+Utils.printTime(durationSplitting));
+			System.out.println("originClonedTraces elements: "+originClonedTraces.size());
+			long startTimeCleanup = System.currentTimeMillis();
 			
 			int removedTraces = 0;
 			for (SLEXTrace t: tracesMap.keySet()) {
-				if (!dagThread.getDAG().getNode(t).getChildren().isEmpty()) {
+//				if (!dagThread.getDAG().getNode(t).getChildren().isEmpty()) {
+//					perspective.remove(t);
+//					removedTraces++;
+//					phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
+//					
+//					i++;
+//					if (i >= MAX_ITERATIONS_PER_COMMIT) {
+//						perspective.getStorage().commit();
+//						i=0;
+//					}
+//				}
+				
+				if (originClonedTraces.contains(t)) {
 					perspective.remove(t);
 					removedTraces++;
 					phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
@@ -577,14 +599,42 @@ public class LogTraceSplitter {
 						perspective.getStorage().commit();
 						i=0;
 					}
+				} else {
+				
+					TraceID tid = tracesMap.get(t);
+					HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMap(tid, relatedMap);
+					relatedTraces.remove(t);
+					for (SLEXTrace t2: relatedTraces) {
+						if (!originClonedTraces.contains(t2)) {
+							if (subtrace(tid, tracesMap.get(t2))) {
+								perspective.remove(t);
+								removedTraces++;
+								phandler.refreshValue("RemovedTraces",
+										String.valueOf(removedTraces));
+
+								i++;
+								if (i >= MAX_ITERATIONS_PER_COMMIT) {
+									perspective.getStorage().commit();
+									i = 0;
+								}
+								break;
+							}
+						}
+					}
 				}
 			}
 			
 			perspective.getStorage().commit();
 		
+			long endTimeCleanup = System.currentTimeMillis();
+			
+			long durationCleanup = endTimeCleanup - startTimeCleanup;
+			
+			System.out.println("Cleanup time: "+Utils.printTime(durationCleanup));
+			
 		} catch (Exception e) {
 			e.printStackTrace();
-			dagThread.interrupt();
+			//dagThread.interrupt();
 		} finally {
 			perspective.getStorage().commit();
 			perspective.getStorage().setAutoCommit(true);

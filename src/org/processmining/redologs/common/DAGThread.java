@@ -252,7 +252,7 @@ public class DAGThread extends Thread {
 		
 		for (SLEXTrace tb: LogTraceSplitter.getRelatedTracesFromMap(tnewId,relatedMap)) {
 			TraceID tbId = tracesMap.get(tb);
-			if (LogTraceSplitter.compatibleTraces(tbId,tnewId)) {
+			if (LogTraceSplitter.compatibleTraces(tbId,tnewId)) { // FIXME
 				t2CAndR.add(tb);
 				explorationMap.put(tb,NODE_IS_UNK);
 			}
