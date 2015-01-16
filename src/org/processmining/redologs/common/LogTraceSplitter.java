@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
@@ -434,10 +436,22 @@ public class LogTraceSplitter {
 		return relatedTraces;
 	}
 	
+	protected static HashSet<SLEXTrace> getRelatedTracesFromMaps(TraceID tid, List<HashMap<Column,HashMap<String,HashSet<SLEXTrace>>>> relatedMaps) {
+		// TEST
+		
+		HashSet<SLEXTrace> totalRelatedTraces = new HashSet<>();
+		
+		for (HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap: relatedMaps) {
+			HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMap(tid,relatedMap);
+			totalRelatedTraces.addAll(relatedTraces);
+		}
+		
+		return totalRelatedTraces;
+	}
 	
 	
 	
-	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, SLEXAttributeMapper m, TraceIDPattern tp, List<Column> orderFields, String startDate, String endDate, ProgressHandler phandler) {
+	public static SLEXPerspective splitLog(String name, DataModel dm, SLEXEventCollection evCol, final SLEXAttributeMapper m, final TraceIDPattern tp, List<Column> orderFields, String startDate, String endDate, ProgressHandler phandler) {
 		SLEXPerspective perspective = null;
 		//DAGThread dagThread = new DAGThread(tp,phandler);
 		try {
@@ -445,27 +459,28 @@ public class LogTraceSplitter {
 			int i = 0;
 			int MAX_ITERATIONS_PER_COMMIT = 100;
 			
+			int events = 0;
+			int traces = 0;
+			
 			SLEXFactory slexFactory = new SLEXFactory(null);
 			
 			perspective = slexFactory.createStoragePerspective().createPerspective(evCol, name);
+			final SLEXPerspective perspectiveF = perspective;
+			
+			final HashMap<SLEXTrace,List<Integer>> tempTraceEventsMap = new HashMap<>();
 			
 			perspective.getStorage().setAutoCommit(false);
+			perspective.getStorage().setAutoCommitOnCreation(false);
 			
-			HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
-		
-			HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = new HashMap<>();
-			
-			for (Column cpa: tp.getPAList()) {
-				relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
-			}
+			final HashMap<SLEXTrace,TraceID> tracesMap = new HashMap<>();
 			
 			//dagThread.start();
-			HashSet<SLEXTrace> originClonedTraces = new HashSet<>();
+			final HashSet<SLEXTrace> originClonedTraces = new HashSet<>();
 			
 			TraceIDPatternElement root = tp.getRoot();
 			List<Column> rootCanonical = canonicalize(dm, tp, root);
 					
-			List<SLEXAttribute> orderAtts = new Vector<>();
+			List<SLEXAttribute> orderAtts = new ArrayList<>();
 			for (Column ordC: orderFields) {
 				orderAtts.add(m.map(ordC));
 			}
@@ -479,17 +494,226 @@ public class LogTraceSplitter {
 			}
 			SLEXEvent e = null;
 			
-			int events = 0;
-			int traces = 0;
+			/**/			
+			class CompatibleTask implements Task {
+				
+				public SLEXTrace[] relatedTraces = null;
+				public int start = 0;
+				public int end = 0;
+				public TraceID eTID = null;
+				public List<SLEXTrace> tracesC = null;
+				
+				@Override
+				public void doTask() {
+					tracesC = new  ArrayList<>();
+					int i = start;
+					while (i < end) {
+						SLEXTrace t = relatedTraces[i];
+						TraceID tid = tracesMap.get(t);
+						if (compatibleTraces(tid,eTID)) {
+							tracesC.add(t);
+						}
+						i++;
+					}
+				}
+			}
+			
+			class SplitTask implements Task {
+				
+				public List<List<SLEXTrace>> tracesRandC = null;
+				public int start = 0;
+				public int end = 0;
+				//public TraceID eTID = null;
+				public SLEXEvent e = null;
+				int traces = 0;
+				public HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = null;
+				public IdDispenser idd = null;
+				
+				@Override
+				public void doTask() {
+					traces = 0;
+					int i = 0;
+					int j = start;
+					List<SLEXTrace> l = tracesRandC.get(i);
+					int pre = 0;
+					while (j < end) {
+						if ( (j - pre) < l.size()) {
+							SLEXTrace t = l.get((j-pre));
+							/**/							
+							
+							TraceID tid = null;
+							synchronized (tracesMap) {
+								tid = tracesMap.get(t);
+							}
+							TraceID tAndETID = generateTraceID(tp, tid, m, e);
+							if (tid.equals(tAndETID)) {
+								//t.add(e);
+								synchronized (tempTraceEventsMap) {
+									List<Integer> evList = tempTraceEventsMap.get(t);
+									evList.add(e.getId());
+								}
+							} else {
+								//SLEXTrace t2 = perspectiveF.getStorage().cloneTrace(t,idd.getNextId());
+								SLEXTrace t2 = perspectiveF.getStorage().createTrace(idd.getNextId(), t.getPerspectiveId(), tAndETID.serialize());
+								//t2.setCaseId(tAndETID.serialize());
+								//t2.add(e);
+								List<Integer> t2events = new ArrayList<>();
+								t2events.addAll(tempTraceEventsMap.get(t));
+								t2events.add(e.getId());
+								
+								synchronized (tempTraceEventsMap) {
+									tempTraceEventsMap.put(t2, t2events);
+								}
+								
+								synchronized (tracesMap) {
+									tracesMap.put(t2, tAndETID); // FIXME
+								}
+								
+								synchronized (originClonedTraces) {
+									originClonedTraces.add(t); // FIXME
+								}
+									
+								addTraceToRelatedMap(t2,tAndETID,relatedMap);
+									
+								traces++;
+							}
+								
+							/**/
+							j++;
+						} else {
+							i++;
+							pre += l.size();
+							l = tracesRandC.get(i);
+						}
+					}
+				}
+			}
+			
+			class CleanupTask implements Task {
+
+				public SLEXTrace[] tracesArray = null;
+				public List<HashMap<Column,HashMap<String,HashSet<SLEXTrace>>>> relatedMaps = null;
+				public int removedTraces = 0;
+				public int start = 0;
+				public int end = 0;
+				
+				@Override
+				public void doTask() {
+					removedTraces = 0;
+					int j = start;
+					while (j < end) {
+						SLEXTrace t = tracesArray[j];
+						if (originClonedTraces.contains(t)) {
+							synchronized (tempTraceEventsMap) {
+								tempTraceEventsMap.remove(t);
+							}
+							//perspective.remove(t);
+							removedTraces++;
+							
+						} else {
+						
+							TraceID tid = tracesMap.get(t);
+							HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMaps(tid, relatedMaps);
+							relatedTraces.remove(t);
+							for (SLEXTrace t2: relatedTraces) {
+								if (!originClonedTraces.contains(t2)) {
+									if (subtrace(tid, tracesMap.get(t2))) {
+										if (subtrace(tracesMap.get(t2),tid)) {
+											synchronized (tempTraceEventsMap) {
+												List<Integer> tevs = tempTraceEventsMap.get(t);
+												List<Integer> t2evs = tempTraceEventsMap.get(t2);
+												if (tevs != null && t2evs != null) {
+													if (tevs.size() < t2evs.size()) {
+														tempTraceEventsMap.remove(t);
+														removedTraces++;
+														break;
+													}
+												}
+											}
+										} else {
+											//perspective.remove(t);
+											synchronized (tempTraceEventsMap) {
+												tempTraceEventsMap.remove(t);
+											}
+											removedTraces++;
+											break;
+										}
+									}
+								}
+							}
+						}
+						j++;
+					}
+					
+				}
+				
+			}
+			
+			int cores = Runtime.getRuntime().availableProcessors();			
+			List<WorkerThread> workers = new ArrayList<>();
+			
+			List<CompatibleTask> compTasks = new ArrayList<>();
+			List<SplitTask> splitTasks = new ArrayList<>();
+			List<CleanupTask> cleanupTasks = new ArrayList<>(); 
+			List<HashMap<Column,HashMap<String,HashSet<SLEXTrace>>>> relatedMaps = new ArrayList<>();
+			
+			IdBatchDispenser idbd = new IdBatchDispenser(perspective.getStorage().getMaxTraceId(), 2000);
+			
+			for (int j = 0; j < cores; j++) {
+				HashMap<Column,HashMap<String,HashSet<SLEXTrace>>> relatedMap = new HashMap<>();
+				
+				for (Column cpa: tp.getPAList()) {
+					relatedMap.put(cpa, new HashMap<String,HashSet<SLEXTrace>>());
+				}
+				
+				relatedMaps.add(relatedMap);
+				
+				compTasks.add(new CompatibleTask());
+				SplitTask spltTask = new SplitTask();
+				spltTask.idd = idbd.getDispenser();
+				splitTasks.add(spltTask);
+				cleanupTasks.add(new CleanupTask());
+				WorkerThread wt = new WorkerThread();
+				workers.add(wt);
+				wt.start();
+			}
+			
+			IdDispenser idd = idbd.getDispenser();
+			
+			/**/
 			
 			while ((e = erset.getNext()) != null) {
-				List<SLEXTrace> tracesCAndR = new Vector<>();
+				//List<SLEXTrace> tracesCAndR = new Vector<>();
 				TraceID eTID = generateTraceID(tp, m, e);
 				
-				for (SLEXTrace t: getRelatedTracesFromMap(eTID,relatedMap)) {
-					if (compatibleTraces(tracesMap.get(t),eTID)) {
-						tracesCAndR.add(t);
-					}
+				HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMaps(eTID,relatedMaps);
+				SLEXTrace[] relatedTracesArray = relatedTraces.toArray(new SLEXTrace[0]);
+				
+				int last_end = 0;
+				int amount = relatedTraces.size();
+				
+				for (int j = 0; j< workers.size(); j++) {
+					CompatibleTask task = compTasks.get(j);
+					task.relatedTraces = relatedTracesArray;
+					task.eTID = eTID;
+					task.start = last_end;
+					task.end = task.start + (amount / (workers.size() - j));
+					amount -= task.end - task.start;
+					last_end = task.end;
+					workers.get(j).setTask(task);
+					
+					System.out.println("CompatibleTask: "+j+" from "+task.start+" to "+task.end);
+				}
+				
+				List<List<SLEXTrace>> listsTracesCandR = new  ArrayList<>();
+				amount = 0;
+				
+				for (int j = 0; j< workers.size(); j++) {
+					WorkerThread wt = workers.get(j);
+					CompatibleTask task = (CompatibleTask) wt.waitUntilTaskFinished();
+					List<SLEXTrace> tracesC = task.tracesC;
+					listsTracesCandR.add(tracesC);
+					amount += tracesC.size();
 				}
 			
 				boolean containsRoot = true;
@@ -501,57 +725,48 @@ public class LogTraceSplitter {
 				}
 				
 				if (containsRoot) {
-					SLEXTrace t = perspective.getStorage().createTrace(perspective.getId(),eTID.serialize());
-					t.add(e);
+					SLEXTrace t = perspective.getStorage().createTrace(idd.getNextId(),perspective.getId(),eTID.serialize());
+					List<Integer> tevents = new ArrayList<>();
+					tevents.add(e.getId());
+					tempTraceEventsMap.put(t, tevents);
+					//t.add(e);
 					tracesMap.put(t, eTID);
 					
-					addTraceToRelatedMap(t,eTID,relatedMap);
-					//dagThread.addTask(DAGThread.ADD_TO_MAP,t,eTID,1);
-					
-					//if (tracesCAndR.isEmpty()) {
-						/**/
-						// No trace is compatible and related => no trace is sub or super trace of t 
-						// Therefore, we add it as a child of root
-						//dagThread.addTask(DAGThread.ADD_CHILD_TO_ROOT,t,eTID,null);
-						/**/
-					//} else {
-						//dagThread.addTask(DAGThread.ADD_TO_DAG,t,eTID,null);
-					//}
+					addTraceToRelatedMap(t,eTID,relatedMaps.get(0));
 					
 					traces++;
 					phandler.refreshValue("Traces", String.valueOf(traces));
 					i++;
 				}
 				
-				if (!tracesCAndR.isEmpty()) {
-					for (SLEXTrace t: tracesCAndR) {
-						TraceID tid = tracesMap.get(t);
-						TraceID tAndETID = generateTraceID(tp, tid, m, e);
-						if (tid.equals(tAndETID)) {
-							t.add(e);
-							//dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t,tAndETID,1);
-						} else {
-							//int n = t.getNumberEvents();
-							SLEXTrace t2 = perspective.getStorage().cloneTrace(t);
-							t2.setCaseId(tAndETID.serialize());
-							t2.commit();
-							t2.add(e);
-							tracesMap.put(t2, tAndETID);
-						
-							originClonedTraces.add(t);
-							
-							addTraceToRelatedMap(t2,tAndETID,relatedMap);
-							//dagThread.addTask(DAGThread.ADD_TO_MAP,t2,tAndETID,n);
-							//dagThread.addTask(DAGThread.ADD_EVENTS_TO_TRACE,t2,tAndETID,1);
-							//dagThread.addTask(DAGThread.ADD_TO_DAG,t2,tAndETID,null);
-						
-							traces++;
-							phandler.refreshValue("Traces", String.valueOf(traces));
-						}
-						i++;
-					}
-				}
 				
+				last_end = 0;
+			
+				for (int j = 0; j< workers.size(); j++) {
+					SplitTask task = splitTasks.get(j);
+					task.tracesRandC = listsTracesCandR;
+					//task.eTID = eTID;
+					task.e = e;
+					task.relatedMap = relatedMaps.get(j);
+					task.start = last_end;
+					task.end = task.start + (amount / (workers.size() - j));
+					amount -= task.end - task.start;
+					last_end = task.end;
+					workers.get(j).setTask(task);
+					
+					System.out.println("SplitTask: "+j+" from "+task.start+" to "+task.end);
+				}
+				System.out.println("--");
+				
+				for (int j = 0; j< workers.size(); j++) {
+					WorkerThread wt = workers.get(j);
+					SplitTask task = (SplitTask) wt.waitUntilTaskFinished();
+					traces += task.traces;
+					i+=task.traces;
+				}
+
+				phandler.refreshValue("Traces", String.valueOf(traces));
+
 				events++;
 				phandler.refreshValue("Events", String.valueOf(events));
 				
@@ -559,6 +774,7 @@ public class LogTraceSplitter {
 					perspective.getStorage().commit();
 					i=0;
 				}
+				
 			}
 			
 			//dagThread.addTask(DAGThread.FINISH, null, null, null);
@@ -575,62 +791,71 @@ public class LogTraceSplitter {
 			System.out.println("originClonedTraces elements: "+originClonedTraces.size());
 			long startTimeCleanup = System.currentTimeMillis();
 			
+			
+			/**/
+			
+			int amount = tracesMap.size();
+			int last_end = 0;
+			
+			SLEXTrace[] tracesArray = tracesMap.keySet().toArray(new SLEXTrace[0]);
+			
+			for (int j = 0; j< workers.size(); j++) {
+				CleanupTask task = cleanupTasks.get(j);
+				task.tracesArray = tracesArray;
+				task.relatedMaps = relatedMaps;
+				task.start = last_end;
+				task.end = task.start + (amount / (workers.size() - j));
+				amount -= task.end - task.start;
+				last_end = task.end;
+				workers.get(j).setTask(task);
+				
+				System.out.println("CleanupTask: "+j+" from "+task.start+" to "+task.end);
+			}
+			System.out.println("--");
+			
 			int removedTraces = 0;
-			for (SLEXTrace t: tracesMap.keySet()) {
-//				if (!dagThread.getDAG().getNode(t).getChildren().isEmpty()) {
-//					perspective.remove(t);
-//					removedTraces++;
-//					phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
-//					
-//					i++;
-//					if (i >= MAX_ITERATIONS_PER_COMMIT) {
-//						perspective.getStorage().commit();
-//						i=0;
-//					}
-//				}
-				
-				if (originClonedTraces.contains(t)) {
-					perspective.remove(t);
-					removedTraces++;
-					phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
-					
-					i++;
-					if (i >= MAX_ITERATIONS_PER_COMMIT) {
-						perspective.getStorage().commit();
-						i=0;
-					}
-				} else {
-				
-					TraceID tid = tracesMap.get(t);
-					HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMap(tid, relatedMap);
-					relatedTraces.remove(t);
-					for (SLEXTrace t2: relatedTraces) {
-						if (!originClonedTraces.contains(t2)) {
-							if (subtrace(tid, tracesMap.get(t2))) {
-								perspective.remove(t);
-								removedTraces++;
-								phandler.refreshValue("RemovedTraces",
-										String.valueOf(removedTraces));
+			
+			for (int j = 0; j< workers.size(); j++) {
+				WorkerThread wt = workers.get(j);
+				CleanupTask task = (CleanupTask) wt.waitUntilTaskFinished();
+				removedTraces += task.removedTraces;
+				i+=task.removedTraces;
+			}
+						
+			phandler.refreshValue("RemovedTraces", String.valueOf(removedTraces));
+			
+			/**/
 
-								i++;
-								if (i >= MAX_ITERATIONS_PER_COMMIT) {
-									perspective.getStorage().commit();
-									i = 0;
-								}
-								break;
-							}
-						}
-					}
-				}
+			for (int j = 0; j < workers.size(); j++) {
+				workers.get(j).stopThread();
 			}
 			
-			perspective.getStorage().commit();
-		
 			long endTimeCleanup = System.currentTimeMillis();
 			
 			long durationCleanup = endTimeCleanup - startTimeCleanup;
 			
 			System.out.println("Cleanup time: "+Utils.printTime(durationCleanup));
+
+			long startTimeCommit = System.currentTimeMillis();
+			
+			perspective.getStorage().setAutoCommitOnCreation(true);
+			
+			for (SLEXTrace t: tempTraceEventsMap.keySet()) {
+				t.commit();
+				List<Integer> evlist = tempTraceEventsMap.get(t);
+				for (Integer eId: evlist) {
+					perspective.getStorage().addEventToTrace(t.getId(), eId);
+				}
+			}
+			
+			perspective.getStorage().commit();
+		
+			long endTimeCommit = System.currentTimeMillis();
+			
+			long durationCommit = endTimeCommit - startTimeCommit;
+			
+			System.out.println("Commit time: "+Utils.printTime(durationCommit));
+
 			
 		} catch (Exception e) {
 			e.printStackTrace();

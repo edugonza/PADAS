@@ -49,6 +49,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -80,10 +81,10 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private JList<Object> listSortField;
 	private JList<Object> listTraceIdFields;
 	
-	private List<Object> orderNamesSelected = new Vector<>();
-	private List<Object> traceIdNamesSelected = new Vector<>();
+	private List<Object> orderNamesSelected = new  ArrayList<>();
+	private List<Object> traceIdNamesSelected = new  ArrayList<>();
 
-	private List<GraphNode> listTraceIdNodes = new Vector<>();
+	private List<GraphNode> listTraceIdNodes = new  ArrayList<>();
 	
 	private Object selectedRoot = null;
 	private JTextField txtRootelement;

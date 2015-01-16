@@ -1,5 +1,6 @@
 package org.processmining.redologs.common;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,8 +10,8 @@ import java.util.Vector;
 public class TraceIDPattern {
 	
 	private DataModel dm = null;
-	private List<TraceIDPatternElement> pe = new Vector<TraceIDPatternElement>();
-	private List<Column> pa = new Vector<>();
+	private List<TraceIDPatternElement> pe = new  ArrayList<TraceIDPatternElement>();
+	private List<Column> pa = new  ArrayList<>();
 	private HashMap<Column,Column> canonicalCache = new HashMap<>();
 	private HashMap<Column,List<Column>> inverseCanonicalCache = new HashMap<>();
 	private boolean dirty = false;
@@ -113,13 +114,13 @@ public class TraceIDPattern {
 	public void precomputeCanonicalization() {
 		canonicalCache = new HashMap<>();
 		inverseCanonicalCache = new HashMap<>();
-		pa = new Vector<>();
+		pa = new ArrayList<>();
 		for (TraceIDPatternElement e: pe) {
 			List<Column> clist;
 			if (e.isKey()) {
 				clist = e.getKey().fields;
 			} else {
-				clist = new Vector<>();
+				clist = new  ArrayList<>();
 				clist.add(e.getColumn());
 			}
 			
@@ -132,7 +133,7 @@ public class TraceIDPattern {
 					if (inverseCanonicalCache.containsKey(cn)) {
 						inverseCanonicalCache.get(cn).add(c);
 					} else {
-						inverseCanonicalCache.put(cn, new Vector<Column>(Arrays.asList(c)));
+						inverseCanonicalCache.put(cn, new  ArrayList<Column>(Arrays.asList(c)));
 						pa.add(cn);
 					}
 				}

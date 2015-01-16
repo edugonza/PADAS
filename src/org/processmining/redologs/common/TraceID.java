@@ -1,5 +1,6 @@
 package org.processmining.redologs.common;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -63,7 +64,7 @@ public class TraceID {
 	}
 	
 	public String serialize() {
-		List<String> tidValues = new Vector<String>();
+		List<String> tidValues = new ArrayList<String>();
 		for (Column c: tp.getPAList()) {
 			tidValues.add(getValue(c));
 		}
