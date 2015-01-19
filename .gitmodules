@@ -1,0 +1,3 @@
+[submodule "OpenSLEX"]
+	path = OpenSLEX
+	url = ../OpenSLEX.git

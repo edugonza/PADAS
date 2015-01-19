@@ -317,8 +317,10 @@ public class LogTraceSplitter {
 		
 		for (Entry<SLEXAttribute, SLEXAttributeValue> ae : e.getAttributeValues().entrySet()) {
 			String v = null;
-			if (ae.getValue() != null) {
+			if (ae.getValue() != null && ae.getValue().getValue() != null) {
 				v = ae.getValue().getValue();
+			} else {
+				continue;
 			}
 			
 			Column c_mapped = m.map(ae.getKey());
@@ -685,7 +687,7 @@ public class LogTraceSplitter {
 			while ((e = erset.getNext()) != null) {
 				//List<SLEXTrace> tracesCAndR = new Vector<>();
 				TraceID eTID = generateTraceID(tp, m, e);
-				
+
 				HashSet<SLEXTrace> relatedTraces = getRelatedTracesFromMaps(eTID,relatedMaps);
 				SLEXTrace[] relatedTracesArray = relatedTraces.toArray(new SLEXTrace[0]);
 				
