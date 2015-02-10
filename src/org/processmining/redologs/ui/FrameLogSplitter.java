@@ -91,7 +91,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private TableInfo common_table = null;
 	private JLabel processedEventsLabel;
 	private JLabel generatedTracesLabel;
-	private JLabel dagTasksLabel;
+	//private JLabel dagTasksLabel;
 	private JLabel removedTracesLabel;
 	private HistogramPanel histogramPanel;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
@@ -441,7 +441,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 									} else if (key.compareTo("RemovedTraces") == 0) {
 										removedTracesLabel.setText(value);
 									} else if (key.compareTo("DAGTasks") == 0) {
-										dagTasksLabel.setText(value);
+										//dagTasksLabel.setText(value);
 									}
 								}
 							}
@@ -655,56 +655,56 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		GridBagConstraints gbc_lblRemovedTraces = new GridBagConstraints();
 		gbc_lblRemovedTraces.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemovedTraces.gridx = 0;
-		gbc_lblRemovedTraces.gridy = 6;
+		gbc_lblRemovedTraces.gridy = 5;
 		panel_side.add(lblRemovedTraces, gbc_lblRemovedTraces);
 		
 		removedTracesLabel = new JLabel("0");
 		GridBagConstraints gbc_removedTracesLabel = new GridBagConstraints();
 		gbc_removedTracesLabel.insets = new Insets(0, 0, 5, 0);
 		gbc_removedTracesLabel.gridx = 1;
-		gbc_removedTracesLabel.gridy = 6;
+		gbc_removedTracesLabel.gridy = 5;
 		panel_side.add(removedTracesLabel, gbc_removedTracesLabel);
 		
-		JLabel lbldagTasks = new JLabel("DAG Tasks");
-		GridBagConstraints gbc_lbldagTasks = new GridBagConstraints();
-		gbc_lbldagTasks.insets = new Insets(0, 0, 5, 5);
-		gbc_lbldagTasks.gridx = 0;
-		gbc_lbldagTasks.gridy = 5;
-		panel_side.add(lbldagTasks, gbc_lbldagTasks);
+//		JLabel lbldagTasks = new JLabel("DAG Tasks");
+//		GridBagConstraints gbc_lbldagTasks = new GridBagConstraints();
+//		gbc_lbldagTasks.insets = new Insets(0, 0, 5, 5);
+//		gbc_lbldagTasks.gridx = 0;
+//		gbc_lbldagTasks.gridy = 5;
+//		panel_side.add(lbldagTasks, gbc_lbldagTasks);
 		
-		dagTasksLabel = new JLabel("0");
-		GridBagConstraints gbc_dagTasksLabel = new GridBagConstraints();
-		gbc_dagTasksLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_dagTasksLabel.gridx = 1;
-		gbc_dagTasksLabel.gridy = 5;
-		panel_side.add(dagTasksLabel, gbc_dagTasksLabel);
+//		dagTasksLabel = new JLabel("0");
+//		GridBagConstraints gbc_dagTasksLabel = new GridBagConstraints();
+//		gbc_dagTasksLabel.insets = new Insets(0, 0, 5, 0);
+//		gbc_dagTasksLabel.gridx = 1;
+//		gbc_dagTasksLabel.gridy = 5;
+//		panel_side.add(dagTasksLabel, gbc_dagTasksLabel);
 		
 		JLabel lblStartDate = new JLabel("Start Date");
 		GridBagConstraints gbc_lblStartDate = new GridBagConstraints();
 		gbc_lblStartDate.insets = new Insets(0, 0, 5, 5);
 		gbc_lblStartDate.gridx = 0;
-		gbc_lblStartDate.gridy = 7;
+		gbc_lblStartDate.gridy = 6;
 		panel_side.add(lblStartDate, gbc_lblStartDate);
 		
 		lblStartdatevalue = new JLabel("");
 		GridBagConstraints gbc_lblStartdatevalue = new GridBagConstraints();
 		gbc_lblStartdatevalue.insets = new Insets(0, 0, 5, 0);
 		gbc_lblStartdatevalue.gridx = 1;
-		gbc_lblStartdatevalue.gridy = 7;
+		gbc_lblStartdatevalue.gridy = 6;
 		panel_side.add(lblStartdatevalue, gbc_lblStartdatevalue);
 		
 		JLabel lblEndDate = new JLabel("End Date");
 		GridBagConstraints gbc_lblEndDate = new GridBagConstraints();
 		gbc_lblEndDate.insets = new Insets(0, 0, 5, 5);
 		gbc_lblEndDate.gridx = 0;
-		gbc_lblEndDate.gridy = 8;
+		gbc_lblEndDate.gridy = 7;
 		panel_side.add(lblEndDate, gbc_lblEndDate);
 		
 		lblEnddatevalue = new JLabel("");
 		GridBagConstraints gbc_lblEnddatevalue = new GridBagConstraints();
 		gbc_lblEnddatevalue.insets = new Insets(0, 0, 5, 0);
 		gbc_lblEnddatevalue.gridx = 1;
-		gbc_lblEnddatevalue.gridy = 8;
+		gbc_lblEnddatevalue.gridy = 7;
 		panel_side.add(lblEnddatevalue, gbc_lblEnddatevalue);
 		
 		JPanel panel_4 = new JPanel();
