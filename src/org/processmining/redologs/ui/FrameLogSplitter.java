@@ -377,6 +377,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				}
 			}
 		});
+		
 		panel_1.add(btnVisualizeDataModel);
 		
 		JPanel panel_2 = new JPanel();
@@ -402,6 +403,11 @@ public class FrameLogSplitter extends CustomInternalFrame {
 				
 				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
 				final String outputLogName = askDiag.showDialog();
+				
+
+				String msg = "Do you want to compute a Matrix instead of the whole log?";
+				AskYesNoDialog askMatrixDiag = new AskYesNoDialog(FrameLogSplitter.this,msg);
+				final boolean computeMatrix = askMatrixDiag.showDialog();
 				
 				final SLEXEventCollection evCol = eventCollection;
 				
@@ -459,9 +465,16 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						progressBar.setStringPainted(true);
 						progressBar.setString("Splitting...");
 						
-						SLEXPerspective perspective = LogTraceSplitter.splitLog(outputLogName, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
+						if (computeMatrix) {
+							
+							LogTraceSplitter.computeMatrix(outputLogName, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
+							
+						} else {
 						
-						FramePerspectives.getInstance().addPerspective(perspective);
+							SLEXPerspective perspective = LogTraceSplitter.splitLog(outputLogName, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
+						
+							FramePerspectives.getInstance().addPerspective(perspective);
+						}
 						
 						progressBar.setIndeterminate(false);
 						progressBar.setString("Log Split");

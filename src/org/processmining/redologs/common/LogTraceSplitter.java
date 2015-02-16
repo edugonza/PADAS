@@ -50,6 +50,8 @@ import org.processmining.openslex.SLEXTrace;
 import org.processmining.redologs.dag.DAG;
 import org.processmining.redologs.dag.DAGNode;
 
+import com.sun.beans.finder.FieldFinder;
+
 public class LogTraceSplitter {
 	
 	public static void splitLog(File logFile, DataModel model, String traceIdField, final String orderField, String timestampField, String[] activityNameFields, File splittedLogFile) {
@@ -870,4 +872,246 @@ public class LogTraceSplitter {
 		return perspective;
 	}
 
+
+	private static int successionArcs = 0; // FIXME
+	public static void computeMatrix(String name, DataModel dm,
+			SLEXEventCollection evCol, SLEXAttributeMapper m,
+			TraceIDPattern tp, List<Column> orderFields, String startDate,
+			String endDate, ProgressHandler phandler) {
+		
+		try {
+			long startTimeSplitting = System.currentTimeMillis();
+			
+			int events = 0;
+			int eventsInMap = 0; // FIXME
+			successionArcs = 0;
+			
+			TraceIDPatternElement root = tp.getRoot();
+			List<Column> rootCanonical = canonicalize(dm, tp, root);
+					
+			List<SLEXAttribute> orderAtts = new ArrayList<>();
+			for (Column ordC: orderFields) {
+				orderAtts.add(m.map(ordC));
+			}
+				
+			SLEXEventResultSet erset = null;
+			if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+				erset = evCol.getEventsResultSetBetweenDatesOrderedBy(orderAtts,startDate,endDate);
+			} else {
+				erset = evCol.getEventsResultSetOrderedBy(orderAtts);
+			}
+			SLEXEvent e = null;
+				
+			HashMap<Column,HashMap<String,HashSet<SLEXEvent>>> relatedEventsMap = new HashMap<>();
+			
+			HashMap<Integer,SLEXEvent> eventsMap = new HashMap<>();
+			HashMap<Integer,TraceID> eventsTraceIDMap = new HashMap<>();
+			HashMap<Integer,ArrayList<Integer>> eventFollowersMap = new HashMap<>();
+			
+			HashMap<String,HashMap<String,Integer>> dfMatrix = new HashMap<>();
+			
+			ArrayList<SLEXAttribute> activityAttributes = new ArrayList<>();
+			
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "COLUMN_CHANGES"));
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "TABLE_NAME"));
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "OPERATION"));
+			
+			/**/
+				
+			while ((e = erset.getNext()) != null) {
+				//List<SLEXTrace> tracesCAndR = new Vector<>();
+				TraceID eTID = generateTraceID(tp, m, e);
+				
+				HashSet<SLEXEvent> relatedEvents = getRelatedEventsFromMap(eTID, relatedEventsMap);
+				
+				HashMap<SLEXEvent,Boolean> visited = new HashMap<>();
+				
+				boolean found = false;
+				
+				for (SLEXEvent re: relatedEvents) {
+					if (recursiveCheckEventTrace(e,eTID,re,visited,eventsTraceIDMap,eventFollowersMap,
+							eventsMap,dfMatrix,activityAttributes,phandler)) {
+						found = true;
+					}
+				}
+				
+				boolean containsRoot = true;
+				
+				if (!found) {
+					
+					for (Column c: rootCanonical) {
+						if (eTID.getValue(c) == null) {
+							containsRoot = false;
+							break;
+						}
+					}
+				
+				}
+				
+				if (containsRoot || found) {
+					addEventToRelatedMap(e, eTID, relatedEventsMap);
+					eventsTraceIDMap.put(e.getId(), eTID);
+					eventsMap.put(e.getId(), e);
+					
+					eventsInMap++;
+					phandler.refreshValue("Traces", String.valueOf(eventsInMap));
+					
+				}
+				
+				events++;
+				phandler.refreshValue("Events", String.valueOf(events));
+					
+			}
+			
+			long endTimeSplitting = System.currentTimeMillis();
+				
+			long durationSplitting = endTimeSplitting - startTimeSplitting;
+				
+			System.out.println("Splitting time: "+Utils.printTime(durationSplitting));
+							
+			for (Entry<String, HashMap<String, Integer>> rowAct: dfMatrix.entrySet()) {
+				String activity = rowAct.getKey();
+				HashMap<String, Integer> rowMap = rowAct.getValue();
+				System.out.print(activity+" => ");
+				for (Entry<String, Integer> col: rowMap.entrySet()) {
+					String activityCol = col.getKey();
+					Integer count = col.getValue();
+					
+					System.out.print(activityCol+": "+count+", ");
+				}
+				System.out.print('\n');
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		
+		return;
+
+	}
+
+	private static boolean recursiveCheckEventTrace(SLEXEvent e, TraceID eTID,
+			SLEXEvent re, HashMap<SLEXEvent,Boolean> visited,
+			HashMap<Integer, TraceID> eventsTraceIDMap,
+			HashMap<Integer, ArrayList<Integer>> eventFollowersMap,
+			HashMap<Integer,SLEXEvent> eventsMap,
+			HashMap<String,HashMap<String,Integer>> dfMatrix,
+			ArrayList<SLEXAttribute> activityAttributes,
+			ProgressHandler phandler) {
+		boolean found = false;
+		if (!visited.containsKey(re)) {
+			
+			TraceID reTID = eventsTraceIDMap.get(re.getId());
+			if (compatibleTraces(reTID, eTID)) {
+				if (eventFollowersMap.containsKey(re.getId())) {
+					ArrayList<Integer> followers = eventFollowersMap.get(re.getId());
+					for (Integer eid: followers) {
+						SLEXEvent fev = eventsMap.get(eid);
+						if (recursiveCheckEventTrace(e, eTID, fev, visited, eventsTraceIDMap,
+								eventFollowersMap, eventsMap,dfMatrix,activityAttributes,phandler)) {
+							found = true;
+						}
+					}
+				}
+				
+				if (!found) {
+					ArrayList<Integer> followers = eventFollowersMap.get(re.getId());
+					
+					if (followers == null) {
+						followers = new ArrayList<>();
+						eventFollowersMap.put(re.getId(), followers);
+					}
+					followers.add(e.getId());
+					
+					String reActivity = getActivityFromEvent(re,activityAttributes);
+					String eActivity = getActivityFromEvent(e,activityAttributes);
+					
+					HashMap<String, Integer> row = dfMatrix.get(reActivity);
+					if (row == null) {
+						row = new HashMap<>();
+						dfMatrix.put(reActivity, row);
+					}
+					
+					Integer count = 0;
+					
+					if (row.containsKey(eActivity)) {
+						count = row.get(eActivity);
+					}
+					
+					count++;
+					row.put(eActivity, count);
+					
+					found = true;
+					
+					successionArcs++;
+					phandler.refreshValue("RemovedTraces", String.valueOf(successionArcs));
+				}
+				
+			} else {
+				found = false;
+			}
+			
+			visited.put(re,found);
+		} else {
+			found = visited.get(re);
+		}
+		
+		return found;
+	}
+	
+	
+	protected static String getActivityFromEvent(SLEXEvent e,ArrayList<SLEXAttribute> activityAttributes) {
+		String activity = "";
+		
+		Hashtable<SLEXAttribute, SLEXAttributeValue> attributes = e.getAttributeValues();
+		
+		for (SLEXAttribute at: activityAttributes) {
+			SLEXAttributeValue v = attributes.get(at);
+			activity += v.getValue()+"+";
+		}
+		
+		return activity;
+	}
+	
+	protected static void addEventToRelatedMap(SLEXEvent e, TraceID tid, HashMap<Column,HashMap<String,HashSet<SLEXEvent>>> relatedMap) {
+		// TEST
+		for (Column cpa: tid.getPA()) {
+			if (tid.getValue(cpa) != null) {
+				HashMap<String,HashSet<SLEXEvent>> cpaMap = relatedMap.get(cpa);
+				String v = tid.getValue(cpa);
+				if (cpaMap == null) {
+					cpaMap = new HashMap<>();
+					relatedMap.put(cpa, cpaMap);
+				}
+				if (cpaMap.containsKey(v)) {
+					cpaMap.get(v).add(e);
+				} else {
+					HashSet<SLEXEvent> eset = new HashSet<>();
+					eset.add(e);
+					cpaMap.put(v, eset);
+				}
+			}
+		}
+	}
+	
+	protected static HashSet<SLEXEvent> getRelatedEventsFromMap(TraceID tid, HashMap<Column,HashMap<String,HashSet<SLEXEvent>>> relatedMap) {
+		// TEST
+		HashSet<SLEXEvent> relatedEvents = new HashSet<>();
+		
+		for (Column cpa: tid.getPA()) {
+			if (tid.getValue(cpa) != null) {
+				HashMap<String,HashSet<SLEXEvent>> cpaMap = relatedMap.get(cpa);
+				String v = tid.getValue(cpa);
+				if (cpaMap != null && cpaMap.containsKey(v)) {
+					for (SLEXEvent e: cpaMap.get(v)) {
+						relatedEvents.add(e);
+					}
+				}
+			}
+		}
+		
+		return relatedEvents;
+	}
 }
