@@ -13,6 +13,9 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.SwingConstants;
+import javax.swing.BoxLayout;
+import java.awt.GridLayout;
 
 public class AskYesNoDialog extends JDialog {
 
@@ -31,11 +34,12 @@ public class AskYesNoDialog extends JDialog {
 		}
 		
 		getContentPane().setLayout(new BorderLayout());
-		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
+		contentPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		{
 			JLabel lblNewLabel = new JLabel(msg);
+			lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 			contentPanel.add(lblNewLabel);
 		}
 		{
@@ -73,5 +77,4 @@ public class AskYesNoDialog extends JDialog {
 		dispose();
 		return option;
 	}
-
 }

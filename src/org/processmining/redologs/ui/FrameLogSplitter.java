@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.JPanel;
@@ -47,6 +48,7 @@ import javax.swing.JTextField;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -401,13 +403,31 @@ public class FrameLogSplitter extends CustomInternalFrame {
 					}
 				}
 				
-				AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
-				final String outputLogName = askDiag.showDialog();
-				
-
-				String msg = "Do you want to compute a Matrix instead of the whole log?";
+				String msg = "<html>Do you want to compute a Matrix<br>instead of the whole log?</html>";
 				AskYesNoDialog askMatrixDiag = new AskYesNoDialog(FrameLogSplitter.this,msg);
 				final boolean computeMatrix = askMatrixDiag.showDialog();
+				String outputName = "";
+				File outputFileDfg = null;
+				if (computeMatrix) {
+					// Show dialog to pick location to save Dfg
+					final JFileChooser fc = new JFileChooser();
+					int returnVal = fc.showSaveDialog(FrameLogSplitter.this);
+					
+					if (returnVal == JFileChooser.APPROVE_OPTION) {
+						outputFileDfg = fc.getSelectedFile();
+						outputName = outputFileDfg.getName(); 
+					} else {
+						return;
+					}
+				} else {
+					AskNameDialog askDiag = new AskNameDialog(FrameLogSplitter.this);
+					outputName = askDiag.showDialog();
+					if (outputName == null) {
+						return;
+					}
+				}
+				final String outputLogName = outputName;
+				final File outputFile = outputFileDfg;
 				
 				final SLEXEventCollection evCol = eventCollection;
 				
@@ -467,7 +487,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 						
 						if (computeMatrix) {
 							
-							LogTraceSplitter.computeMatrix(outputLogName, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
+							LogTraceSplitter.computeMatrix(outputFile, model, evCol, mapper, tp, sortFields, startDate, endDate, progressHandler);
 							
 						} else {
 						

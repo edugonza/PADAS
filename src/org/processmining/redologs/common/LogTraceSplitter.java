@@ -2,7 +2,10 @@ package org.processmining.redologs.common;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -874,7 +877,7 @@ public class LogTraceSplitter {
 
 
 	private static int successionArcs = 0; // FIXME
-	public static void computeMatrix(String name, DataModel dm,
+	public static void computeMatrix(File outputFile, DataModel dm,
 			SLEXEventCollection evCol, SLEXAttributeMapper m,
 			TraceIDPattern tp, List<Column> orderFields, String startDate,
 			String endDate, ProgressHandler phandler) {
@@ -909,6 +912,8 @@ public class LogTraceSplitter {
 			HashMap<Integer,ArrayList<Integer>> eventFollowersMap = new HashMap<>();
 			
 			HashMap<String,HashMap<String,Integer>> dfMatrix = new HashMap<>();
+			HashMap<String,Integer> startMap = new HashMap<>();
+			HashMap<String,Integer> endMap = new HashMap<>();
 			
 			ArrayList<SLEXAttribute> activityAttributes = new ArrayList<>();
 			
@@ -930,7 +935,7 @@ public class LogTraceSplitter {
 				
 				for (SLEXEvent re: relatedEvents) {
 					if (recursiveCheckEventTrace(e,eTID,re,visited,eventsTraceIDMap,eventFollowersMap,
-							eventsMap,dfMatrix,activityAttributes,phandler)) {
+							eventsMap,dfMatrix,endMap,activityAttributes,phandler)) {
 						found = true;
 					}
 				}
@@ -949,13 +954,31 @@ public class LogTraceSplitter {
 				}
 				
 				if (containsRoot || found) {
-					addEventToRelatedMap(e, eTID, relatedEventsMap);
 					eventsTraceIDMap.put(e.getId(), eTID);
 					eventsMap.put(e.getId(), e);
 					
 					eventsInMap++;
 					phandler.refreshValue("Traces", String.valueOf(eventsInMap));
 					
+					String activity = getActivityFromEvent(e, activityAttributes);
+					
+					Integer ve = endMap.get(activity);
+					if (ve == null) {
+						ve = 0;
+					}
+					ve++;
+					endMap.put(activity, ve);
+					
+					if (!found && containsRoot) {
+						addEventToRelatedMap(e, eTID, relatedEventsMap); // This ensures only the beginning of each trace can be found and the Graph is explored starting there.
+						
+						Integer vs = startMap.get(activity);
+						if (vs == null) {
+							vs = 0;
+						}
+						vs++;
+						startMap.put(activity, vs);
+					}
 				}
 				
 				events++;
@@ -969,24 +992,11 @@ public class LogTraceSplitter {
 				
 			System.out.println("Splitting time: "+Utils.printTime(durationSplitting));
 							
-			for (Entry<String, HashMap<String, Integer>> rowAct: dfMatrix.entrySet()) {
-				String activity = rowAct.getKey();
-				HashMap<String, Integer> rowMap = rowAct.getValue();
-				System.out.print(activity+" => ");
-				for (Entry<String, Integer> col: rowMap.entrySet()) {
-					String activityCol = col.getKey();
-					Integer count = col.getValue();
-					
-					System.out.print(activityCol+": "+count+", ");
-				}
-				System.out.print('\n');
-			}
+			printDfg(outputFile,dfMatrix,startMap,endMap);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 		
 		return;
 
@@ -998,6 +1008,7 @@ public class LogTraceSplitter {
 			HashMap<Integer, ArrayList<Integer>> eventFollowersMap,
 			HashMap<Integer,SLEXEvent> eventsMap,
 			HashMap<String,HashMap<String,Integer>> dfMatrix,
+			HashMap<String,Integer> endMap,
 			ArrayList<SLEXAttribute> activityAttributes,
 			ProgressHandler phandler) {
 		boolean found = false;
@@ -1010,23 +1021,30 @@ public class LogTraceSplitter {
 					for (Integer eid: followers) {
 						SLEXEvent fev = eventsMap.get(eid);
 						if (recursiveCheckEventTrace(e, eTID, fev, visited, eventsTraceIDMap,
-								eventFollowersMap, eventsMap,dfMatrix,activityAttributes,phandler)) {
+								eventFollowersMap, eventsMap,dfMatrix,endMap,activityAttributes,phandler)) {
 							found = true;
 						}
 					}
 				}
 				
 				if (!found) {
+					String reActivity = getActivityFromEvent(re,activityAttributes);
+					String eActivity = getActivityFromEvent(e,activityAttributes);
+					
 					ArrayList<Integer> followers = eventFollowersMap.get(re.getId());
 					
 					if (followers == null) {
 						followers = new ArrayList<>();
 						eventFollowersMap.put(re.getId(), followers);
+						
+						Integer ve = endMap.get(reActivity);
+						if (ve == null || ve == 0) {
+							ve = 1;
+						}
+						ve--;
+						endMap.put(reActivity,ve);
 					}
 					followers.add(e.getId());
-					
-					String reActivity = getActivityFromEvent(re,activityAttributes);
-					String eActivity = getActivityFromEvent(e,activityAttributes);
 					
 					HashMap<String, Integer> row = dfMatrix.get(reActivity);
 					if (row == null) {
@@ -1061,6 +1079,84 @@ public class LogTraceSplitter {
 		return found;
 	}
 	
+	private static void printDfg(File outputFile, HashMap<String,HashMap<String,Integer>> dfMatrix, HashMap<String,Integer> startMap, HashMap<String,Integer> endMap) {
+		StringBuffer fileOutput = new StringBuffer();
+		
+		ArrayList<String> activities = new ArrayList<>();
+		int i = dfMatrix.size();
+		for (String activity: dfMatrix.keySet()) {
+			activities.add(activity);
+			fileOutput.append(activity);
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include line with start activities
+		i = activities.size();
+		for (String activity: activities) {
+			Integer v = startMap.get(activity);
+			if (v == null) {
+				v = 0;
+			}
+			fileOutput.append(v);
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include line with end activities
+		i = activities.size();
+		for (String activity: activities) {
+			Integer v = endMap.get(activity);
+			if (v == null) {
+				v = 0;
+			}
+			fileOutput.append(v);
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include lines with edges
+		
+		for (String activity: activities) {
+			HashMap<String, Integer> row = dfMatrix.get(activity);
+			i = activities.size();
+			for (String a: activities) {
+				Integer v = 0;
+				if (row != null) {
+					v = row.get(a);
+				}
+				if (v == null) {
+					v = 0;
+				}
+				fileOutput.append(v);
+				i--;
+				if (i > 0) {
+					fileOutput.append(",");
+				}
+			}
+			fileOutput.append('\n');
+		}
+		
+		System.out.println(fileOutput);
+		try {
+			FileWriter w = new FileWriter(outputFile);
+			w.write(fileOutput.toString());
+			w.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
 	protected static String getActivityFromEvent(SLEXEvent e,ArrayList<SLEXAttribute> activityAttributes) {
 		String activity = "";
