@@ -1,4 +1,4 @@
-package org.processmining.redologs.ui;
+package org.processmining.redologs.ui.components;
 
 import java.awt.Color;
 import java.awt.Frame;

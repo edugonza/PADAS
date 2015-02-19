@@ -20,6 +20,7 @@ import org.processmining.openslex.SLEXExporter;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXPerspectiveResultSet;
 import org.processmining.openslex.SLEXStoragePerspective;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
 
 import com.sun.java.swing.plaf.windows.WindowsBorders.ProgressBarBorder;
 

@@ -41,6 +41,9 @@ import org.processmining.redologs.config.Config;
 import org.processmining.redologs.config.DatabaseConnectionData;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
+import org.processmining.redologs.ui.components.AskNameDialog;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.components.InfoDialog;
 
 public class FrameTables extends CustomInternalFrame {
 

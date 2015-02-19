@@ -39,7 +39,7 @@ import org.processmining.redologs.common.RelationResult;
 import org.processmining.redologs.common.RelationsGraphNode;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.config.DatabaseConnectionData;
-import org.processmining.redologs.ui.VertexDisplayPredicate;
+import org.processmining.redologs.ui.graphs.VertexDisplayPredicate;
 
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout2;

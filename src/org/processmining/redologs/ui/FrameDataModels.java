@@ -14,6 +14,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.TableInfo;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
 
 public class FrameDataModels extends CustomInternalFrame {
 

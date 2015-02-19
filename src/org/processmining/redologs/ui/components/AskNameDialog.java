@@ -1,4 +1,4 @@
-package org.processmining.redologs.ui;
+package org.processmining.redologs.ui.components;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -13,20 +13,19 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import javax.swing.SwingConstants;
-import javax.swing.BoxLayout;
-import java.awt.GridLayout;
 
-public class AskYesNoDialog extends JDialog {
+public class AskNameDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
-	private boolean option = false;
+	private JTextField txtName;
+	private String name;
+
 	/**
 	 * Create the dialog.
 	 */
-	public AskYesNoDialog(JComponent comp, String msg) {
+	public AskNameDialog(JComponent comp) {
 		setModal(true);
-		setTitle("?");		
+		setTitle("Name");		
 		setBounds(100, 100, 382, 137);
 		
 		if (comp != null) {
@@ -34,13 +33,17 @@ public class AskYesNoDialog extends JDialog {
 		}
 		
 		getContentPane().setLayout(new BorderLayout());
+		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		{
-			JLabel lblNewLabel = new JLabel(msg);
-			lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+			JLabel lblNewLabel = new JLabel("Please provide a name for this element: ");
 			contentPanel.add(lblNewLabel);
+		}
+		{
+			txtName = new JTextField();
+			contentPanel.add(txtName);
+			txtName.setColumns(10);
 		}
 		{
 			JPanel buttonPane = new JPanel();
@@ -50,7 +53,7 @@ public class AskYesNoDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						option = true;
+						name = txtName.getText();
 						setVisible(false);
 					}
 				});
@@ -62,7 +65,7 @@ public class AskYesNoDialog extends JDialog {
 				JButton cancelButton = new JButton("Cancel");
 				cancelButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						option = false;
+						name = null;
 						setVisible(false);
 					}
 				});
@@ -72,9 +75,10 @@ public class AskYesNoDialog extends JDialog {
 		}
 	}
 	
-	public boolean showDialog() {
+	public String showDialog() {
 		setVisible(true);
 		dispose();
-		return option;
+		return name;
 	}
+
 }

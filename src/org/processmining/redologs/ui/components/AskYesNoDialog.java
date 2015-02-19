@@ -1,4 +1,4 @@
-package org.processmining.redologs.ui;
+package org.processmining.redologs.ui.components;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -13,21 +13,21 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import javax.swing.BoxLayout;
 import javax.swing.SwingConstants;
+import javax.swing.BoxLayout;
+import java.awt.GridLayout;
 
-public class InfoDialog extends JDialog {
+public class AskYesNoDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
-
+	private boolean option = false;
 	/**
 	 * Create the dialog.
 	 */
-	public InfoDialog(String msg, JComponent comp) {
-		setResizable(false);
+	public AskYesNoDialog(JComponent comp, String msg) {
 		setModal(true);
-		setTitle("Info");
-		setBounds(100, 100, 318, 134);
+		setTitle("?");		
+		setBounds(100, 100, 382, 137);
 		
 		if (comp != null) {
 			setLocationRelativeTo(comp);
@@ -36,7 +36,7 @@ public class InfoDialog extends JDialog {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new BorderLayout(0, 0));
+		contentPanel.setLayout(new GridLayout(0, 1, 0, 0));
 		{
 			JLabel lblNewLabel = new JLabel(msg);
 			lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -44,13 +44,13 @@ public class InfoDialog extends JDialog {
 		}
 		{
 			JPanel buttonPane = new JPanel();
-			FlowLayout fl_buttonPane = new FlowLayout(FlowLayout.CENTER);
-			buttonPane.setLayout(fl_buttonPane);
+			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
+						option = true;
 						setVisible(false);
 					}
 				});
@@ -58,12 +58,23 @@ public class InfoDialog extends JDialog {
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
 			}
+			{
+				JButton cancelButton = new JButton("Cancel");
+				cancelButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						option = false;
+						setVisible(false);
+					}
+				});
+				cancelButton.setActionCommand("Cancel");
+				buttonPane.add(cancelButton);
+			}
 		}
 	}
 	
-	public void showDialog() {
+	public boolean showDialog() {
 		setVisible(true);
 		dispose();
+		return option;
 	}
-
 }

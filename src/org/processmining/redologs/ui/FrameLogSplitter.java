@@ -34,6 +34,10 @@ import org.processmining.redologs.common.SLEXAttributeMapper;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.common.TraceIDPattern;
 import org.processmining.redologs.oracle.OracleLogMinerExtractor;
+import org.processmining.redologs.ui.components.AskNameDialog;
+import org.processmining.redologs.ui.components.AskYesNoDialog;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.components.HistogramPanel;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -697,20 +701,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbc_removedTracesLabel.gridx = 1;
 		gbc_removedTracesLabel.gridy = 5;
 		panel_side.add(removedTracesLabel, gbc_removedTracesLabel);
-		
-//		JLabel lbldagTasks = new JLabel("DAG Tasks");
-//		GridBagConstraints gbc_lbldagTasks = new GridBagConstraints();
-//		gbc_lbldagTasks.insets = new Insets(0, 0, 5, 5);
-//		gbc_lbldagTasks.gridx = 0;
-//		gbc_lbldagTasks.gridy = 5;
-//		panel_side.add(lbldagTasks, gbc_lbldagTasks);
-		
-//		dagTasksLabel = new JLabel("0");
-//		GridBagConstraints gbc_dagTasksLabel = new GridBagConstraints();
-//		gbc_dagTasksLabel.insets = new Insets(0, 0, 5, 0);
-//		gbc_dagTasksLabel.gridx = 1;
-//		gbc_dagTasksLabel.gridy = 5;
-//		panel_side.add(dagTasksLabel, gbc_dagTasksLabel);
 		
 		JLabel lblStartDate = new JLabel("Start Date");
 		GridBagConstraints gbc_lblStartDate = new GridBagConstraints();

@@ -1,4 +1,4 @@
-package org.processmining.redologs.ui;
+package org.processmining.redologs.ui.graphs;
 
 import org.apache.commons.collections15.Predicate;
 import org.processmining.redologs.common.GraphNode;
@@ -7,8 +7,26 @@ import edu.uci.ics.jung.graph.util.Context;
 
 public class VertexDisplayPredicate<V, E> implements Predicate<Context<Graph<V, E>, V>> {
 	
-	protected boolean filter_small;
-	protected boolean filter_traceId;
+	private boolean filter_small;
+	
+	public boolean isFilter_small() {
+		return filter_small;
+	}
+
+	public void setFilter_small(boolean filter_small) {
+		this.filter_small = filter_small;
+	}
+
+	private boolean filter_traceId;
+	
+	public boolean isFilter_traceId() {
+		return filter_traceId;
+	}
+
+	public void setFilter_traceId(boolean filter_traceId) {
+		this.filter_traceId = filter_traceId;
+	}
+
 	protected final static int MIN_DEGREE = 4;
 
 	public VertexDisplayPredicate(boolean filter) {

@@ -21,6 +21,8 @@ import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.GraphEdge;
 import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.oracle.OracleRelationsExplorer;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.graphs.VertexDisplayPredicate;
 
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
@@ -88,7 +90,7 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 				if (vv != null) {
 					VertexDisplayPredicate<GraphNode, GraphEdge> vdpred = (VertexDisplayPredicate<GraphNode, GraphEdge>) vv
 							.getRenderContext().getVertexIncludePredicate();
-					vdpred.filterExtraFields(!vdpred.filter_small);
+					vdpred.filterExtraFields(!vdpred.isFilter_small());
 					vv.repaint();
 				}
 			}
@@ -242,7 +244,7 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 		if (vv != null) {
 			VertexDisplayPredicate<GraphNode, GraphEdge> vdpred = (VertexDisplayPredicate<GraphNode, GraphEdge>) vv
 					.getRenderContext().getVertexIncludePredicate();
-			vdpred.filterTraceId(!vdpred.filter_traceId);
+			vdpred.filterTraceId(!vdpred.isFilter_traceId());
 			vv.repaint();
 		}
 	}

@@ -19,6 +19,8 @@ import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.openslex.SLEXStorageImpl;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.LogTraceSplitter;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.components.HistogramPanel;
 
 import com.sun.org.apache.xml.internal.security.keys.storage.StorageResolver;
 

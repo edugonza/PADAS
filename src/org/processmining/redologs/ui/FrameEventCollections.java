@@ -16,6 +16,7 @@ import javax.swing.table.DefaultTableModel;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventCollectionResultSet;
 import org.processmining.openslex.SLEXStorageCollection;
+import org.processmining.redologs.ui.components.CustomInternalFrame;
 
 import edu.uci.ics.jung.algorithms.metrics.Metrics;
 
