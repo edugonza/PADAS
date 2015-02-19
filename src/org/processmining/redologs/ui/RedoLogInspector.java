@@ -282,6 +282,17 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmLogSplitter);
 		
+		JMenuItem mntmPersInteract = new JMenuItem("Perspectives Interaction Miner");
+		mntmPersInteract.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FramePerspectivesInteraction pIntMnr = new FramePerspectivesInteraction();
+				desktopPane.add(pIntMnr);
+				pIntMnr.setVisible(true);
+				pIntMnr.setFocusable(true);
+			}
+		});
+		mnTools.add(mntmPersInteract);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		

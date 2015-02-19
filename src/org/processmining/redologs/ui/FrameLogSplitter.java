@@ -37,6 +37,7 @@ import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 import org.processmining.redologs.ui.components.AskNameDialog;
 import org.processmining.redologs.ui.components.AskYesNoDialog;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.components.DataModelList;
 import org.processmining.redologs.ui.components.DataModelTree;
 import org.processmining.redologs.ui.components.HistogramPanel;
 
@@ -82,13 +83,9 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	private static final long serialVersionUID = -7078418810402851925L;
 	
 	private DataModel model = null;
-	private JList<Object> listSortField;
-	private JList<Object> listTraceIdFields;
 	
-	private List<Object> orderNamesSelected = new  ArrayList<>();
-	private List<Object> traceIdNamesSelected = new  ArrayList<>();
-
-	private List<GraphNode> listTraceIdNodes = new  ArrayList<>();
+	private DataModelList listTraceIdFields = new DataModelList();
+	private DataModelList listSortField = new DataModelList();
 	
 	private Object selectedRoot = null;
 	private JTextField txtRootelement;
@@ -107,104 +104,47 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
-			DefaultListModel list2Model = (DefaultListModel) listTraceIdFields.getModel();
-			list2Model.removeAllElements();
-			DefaultListModel list3Model = (DefaultListModel) listSortField.getModel();
-			list3Model.removeAllElements();
-			traceIdNamesSelected = new Vector<>();
-			orderNamesSelected = new Vector<>();
+			listTraceIdFields.clear();
+			listSortField.clear();
 		}
 		this.model = model;
 		tree.setDataModel(model);
 	}
 	
-	private class ListTransferHandler extends TransferHandler {
-		
-		public static final int TRACEID_HANDLER = 1;
-		public static final int ORDER_HANDLER = 3;
-		
-		private int type = 0;
-		
-		public ListTransferHandler(int type) {
-			this.type = type;
-		}
-		
-		@Override
-		public boolean canImport(TransferSupport info) {
-			// Check for flavor
-	        if (info.isDataFlavorSupported(new DataFlavor(Key.class, "")) ||
-	        		info.isDataFlavorSupported(new DataFlavor(EventAttributeColumn.class, ""))) {
-	            return true;
-	        }
-	        return false;
-	   }
-		
-		@Override
-		public boolean importData(TransferSupport info) {
-			if (!info.isDrop()) {
-				return false;
-			}
-			JList<Object> list = (JList<Object>)info.getComponent();
-			
-			Transferable t = info.getTransferable();
-	        Object data;
-	        try {
-	            data = t.getTransferData(new DataFlavor(Object.class,""));
-	            DefaultListModel<Object> listModel = (DefaultListModel<Object>)list.getModel();
-		        listModel.addElement(data);
-		        if (type == TRACEID_HANDLER) {
-		        	traceIdNamesSelected.add(data);
-		        	if (listTraceIdNodes != null) {
-		        		if (data instanceof GraphNode) {
-		        			listTraceIdNodes.add((GraphNode) data);
-		        		} else if (data instanceof EventAttributeColumn) {
-		        			listTraceIdNodes.add(((EventAttributeColumn) data).c);
-		        		}
-		        	}
-		        } else if (type == ORDER_HANDLER) {
-		        	orderNamesSelected.add(data);
-		        }
-		        return true;
-	        } catch (Exception e) {
-	        	return false;
-	        }
-		}
-	}
-	
-	private class TextFieldTransferHandler extends TransferHandler {
-		@Override
-		public boolean canImport(TransferSupport info) {
-			// Check for flavor
-			if (info.isDataFlavorSupported(new DataFlavor(Key.class, "")) ||
-	        		info.isDataFlavorSupported(new DataFlavor(EventAttributeColumn.class, ""))) {
-	            return true;
-	        }
-	        return false;
-	    }
-		
-		public void setData(Object data) {
-			
-		}
-		
-		@Override
-		public boolean importData(TransferSupport info) {
-			if (!info.isDrop()) {
-				return false;
-			}
-			JTextField field = (JTextField) info.getComponent();
-			
-			Transferable t = info.getTransferable();
-	        Object data;
-	        try {
-	            data = (Object)t.getTransferData(new DataFlavor(Object.class,""));
-	            setData(data);
-	        } 
-	        catch (Exception e) { return false; }
-			
-	        field.setText(data.toString()); //FIXME proper field name transformation
-			return true;
-		}
-	}
+//	private class TextFieldTransferHandler extends TransferHandler {
+//		@Override
+//		public boolean canImport(TransferSupport info) {
+//			// Check for flavor
+//			if (info.isDataFlavorSupported(new DataFlavor(Key.class, "")) ||
+//	        		info.isDataFlavorSupported(new DataFlavor(EventAttributeColumn.class, ""))) {
+//	            return true;
+//	        }
+//	        return false;
+//	    }
+//		
+//		public void setData(Object data) {
+//			
+//		}
+//		
+//		@Override
+//		public boolean importData(TransferSupport info) {
+//			if (!info.isDrop()) {
+//				return false;
+//			}
+//			JTextField field = (JTextField) info.getComponent();
+//			
+//			Transferable t = info.getTransferable();
+//	        Object data;
+//	        try {
+//	            data = (Object)t.getTransferData(new DataFlavor(Object.class,""));
+//	            setData(data);
+//	        } 
+//	        catch (Exception e) { return false; }
+//			
+//	        field.setText(data.toString()); //FIXME proper field name transformation
+//			return true;
+//		}
+//	}
 	
 	public FrameLogSplitter() {
 		super("Log Splitter");
@@ -258,6 +198,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 								
 				final List<Column> sortFields = new Vector<>();
+				List<Object> orderNamesSelected = listSortField.getElementsList(); 
 				for (int i = 0; i < orderNamesSelected.size(); i++) {
 					if (orderNamesSelected.get(i) instanceof EventAttributeColumn) {
 						sortFields.add(((EventAttributeColumn) orderNamesSelected.get(i)).c);
@@ -417,23 +358,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
 		panel_side.setLayout(gbl_panel_side);
 		
-		listSortField = new JList<>();
-		listSortField.setVisibleRowCount(3);
-		listSortField.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode()==KeyEvent.VK_DELETE) {
-					int selected = listSortField.getSelectedIndex();
-					if (selected > -1) {
-						DefaultListModel model = (DefaultListModel) listSortField.getModel();
-						Object selectedObj = model.get(selected);
-						orderNamesSelected.remove(selectedObj);
-						model.remove(selected);
-					}
-				}
-			}
-		});
-		
 		JLabel lblNewLabel_1 = new JLabel("Order");
 		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
 		gbc_lblNewLabel_1.fill = GridBagConstraints.HORIZONTAL;
@@ -443,7 +367,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		panel_side.add(lblNewLabel_1, gbc_lblNewLabel_1);
 		listSortField.setModel(new DefaultListModel<>());
 		listSortField.setDropMode(DropMode.INSERT);
-		listSortField.setTransferHandler(new ListTransferHandler(ListTransferHandler.ORDER_HANDLER));
 		
 		JScrollPane scrollPane_0 = new JScrollPane(listSortField);
 		GridBagConstraints gbc_scrollPane_0 = new GridBagConstraints();
@@ -456,29 +379,6 @@ public class FrameLogSplitter extends CustomInternalFrame {
 		gbc_listActivityNameFields.insets = new Insets(0, 0, 5, 0);
 		gbc_listActivityNameFields.gridx = 1;
 		gbc_listActivityNameFields.gridy = 2;
-		
-		listTraceIdFields = new JList<>();
-		listTraceIdFields.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		listTraceIdFields.setModel(new DefaultListModel<>());
-		listTraceIdFields.setDropMode(DropMode.INSERT);
-		listTraceIdFields.setTransferHandler(new ListTransferHandler(ListTransferHandler.TRACEID_HANDLER));
-		listTraceIdFields.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode()==KeyEvent.VK_DELETE) {
-					int selected = listTraceIdFields.getSelectedIndex();
-					if (selected > -1) {
-						DefaultListModel model = (DefaultListModel) listTraceIdFields.getModel();
-						Object selectedObj = model.get(selected);
-						traceIdNamesSelected.remove(selectedObj);
-						if (listTraceIdNodes != null) {
-							listTraceIdNodes.remove(selectedObj);
-						}
-						model.remove(selected);
-					}
-				}
-			}
-		});
 		
 		JLabel lblNewLabel_2 = new JLabel("TraceId");
 		GridBagConstraints gbc_lblNewLabel_2 = new GridBagConstraints();
@@ -625,18 +525,15 @@ public class FrameLogSplitter extends CustomInternalFrame {
 	}
 	
 	public void setTraceIdHierarchy(List<GraphNode> listSelectedNodes) {
-		DefaultListModel model = (DefaultListModel) listTraceIdFields.getModel();
-		model.removeAllElements();
-		listTraceIdNodes = new Vector<>();
+		listTraceIdFields.clear();
 		for (GraphNode g: listSelectedNodes) {
 			if ((g instanceof Key) || (g instanceof Column)) {
-				model.addElement(g);
-				listTraceIdNodes.add(g);
-			}			
+				listTraceIdFields.addElement(g);
+			}
 		}
 	}
 
 	public List<GraphNode> getTraceIdHierarchy() {
-		return listTraceIdNodes;
+		return listTraceIdFields.getNodesList();
 	}	
 }
