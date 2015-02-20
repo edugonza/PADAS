@@ -1,4 +1,4 @@
-package org.processmining.redologs.ui;
+package org.processmining.redologs.ui.components;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -9,7 +9,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.border.Border;
  
-public class BackgroundImage implements Border{
+public class BackgroundImage implements Border {
     public BufferedImage back;
  
     public BackgroundImage(){

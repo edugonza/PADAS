@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -50,8 +51,10 @@ import org.processmining.openslex.SLEXFactory;
 import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXTrace;
+import org.processmining.openslex.SLEXTraceResultSet;
 import org.processmining.redologs.dag.DAG;
 import org.processmining.redologs.dag.DAGNode;
+import org.processmining.redologs.ui.components.DataModelList;
 
 import com.sun.beans.finder.FieldFinder;
 
@@ -1147,13 +1150,16 @@ public class LogTraceSplitter {
 		}
 		
 		System.out.println(fileOutput);
-		try {
-			FileWriter w = new FileWriter(outputFile);
-			w.write(fileOutput.toString());
-			w.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		
+		if (outputFile != null) {
+			try {
+				FileWriter w = new FileWriter(outputFile);
+				w.write(fileOutput.toString());
+				w.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}
@@ -1209,5 +1215,108 @@ public class LogTraceSplitter {
 		}
 		
 		return relatedEvents;
+	}
+
+
+	public static void computeInteractionMatrix(SLEXPerspective perspectiveA,
+			SLEXPerspective perspectiveB,
+			TraceIDPattern tp,
+			//List<Column> sortFields,
+			SLEXAttributeMapper m) {
+
+		try {
+			long startTime = System.currentTimeMillis();
+			
+//			List<SLEXAttribute> orderAtts = new ArrayList<>();
+//			for (Column ordC : sortFields) {
+//				orderAtts.add(m.map(ordC));
+//			}
+
+			// Go through all traces in Perspective A and build an index with
+			// the new TP
+			
+			HashMap<SLEXTrace,TraceID> tracesMapA = new HashMap<>();
+			HashMap<Column, HashMap<String, HashSet<SLEXTrace>>> relatedMapA = new HashMap<>();
+			
+			SLEXTraceResultSet trset = perspectiveA.getTracesResultSet();
+			SLEXTrace t = null;
+
+			while ((t = trset.getNext()) != null) {
+				TraceID tid = generateTraceID(tp, m, t);
+				tracesMapA.put(t, tid);
+				addTraceToRelatedMap(t, tid, relatedMapA);
+			}
+			
+			// Go through all traces in Perspective B and build another index
+			// with the new TP
+
+			HashMap<SLEXTrace,TraceID> tracesMapB = new HashMap<>();
+			HashMap<Column, HashMap<String, HashSet<SLEXTrace>>> relatedMapB = new HashMap<>();
+			
+			trset = perspectiveB.getTracesResultSet();
+			t = null;
+
+			while ((t = trset.getNext()) != null) {
+				TraceID tid = generateTraceID(tp, m, t);
+				tracesMapB.put(t, tid);
+				addTraceToRelatedMap(t, tid, relatedMapB);
+			}
+			
+			// Go through all traces in A and find for each of them the set of
+			// traces in B which are related and compatible
+			// For each pair, find DFG between activities of A and activities of
+			// B
+
+			HashMap<String, HashMap<String, Integer>> dfMatrix = new HashMap<>();
+			HashMap<String, Integer> startMap = new HashMap<>();
+			HashMap<String, Integer> endMap = new HashMap<>();
+			
+			for (Entry<SLEXTrace, TraceID> entry: tracesMapA.entrySet()) {
+				SLEXTrace tA = entry.getKey();
+				TraceID tidA = entry.getValue();
+				HashSet<SLEXTrace> relatedB = getRelatedTracesFromMap(tidA, relatedMapB);
+				
+				ArrayList<SLEXEvent> eventsA = getEventsFromTrace(tA);
+				
+				// Sort eventsA by ORDER fields
+				// TODO
+				
+				for (SLEXTrace tB: relatedB) {
+					TraceID tidB = tracesMapB.get(tB);
+					if (compatibleTraces(tidA, tidB)) {
+						
+						// Obtain tB events, add eventsA to the list, sort by ORDER, and count DFG
+						// TODO
+					}
+				}
+			}
+			
+			// Print Computation time
+			long endTime = System.currentTimeMillis();
+			long duration = endTime - startTime;
+			
+			System.out.println("Interaction Matrix computation time: "+Utils.printTime(duration));
+			
+			// Print DFG
+			printDfg(null, dfMatrix, startMap, endMap );
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return;
+	}
+	
+	private static ArrayList<SLEXEvent> getEventsFromTrace(SLEXTrace t) {
+		ArrayList<SLEXEvent> eventsList = new ArrayList<>();
+		
+		SLEXEventResultSet erset = t.getEventsResultSet();
+		SLEXEvent e = null;
+		
+		while ((e = erset.getNext()) != null) {
+			eventsList.add(e);
+		}
+		
+		return eventsList;
 	}
 }

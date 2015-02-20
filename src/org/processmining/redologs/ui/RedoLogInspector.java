@@ -1,5 +1,6 @@
 package org.processmining.redologs.ui;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Rectangle;
 
@@ -33,6 +34,7 @@ import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.SLEXDataModelExportImport;
 import org.processmining.redologs.config.Config;
+import org.processmining.redologs.ui.components.BackgroundImage;
 
 import java.awt.event.ActionListener;
 import java.awt.Toolkit;
@@ -87,7 +89,7 @@ public class RedoLogInspector {
 		} catch (IllegalAccessException e) {
 			// handle exception
 		}
-
+		
 		Config.getInstance();
 		
 		EventQueue.invokeLater(new Runnable() {

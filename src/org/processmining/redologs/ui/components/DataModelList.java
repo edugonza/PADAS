@@ -14,9 +14,12 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
 
+import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.EventAttributeColumn;
 import org.processmining.redologs.common.GraphNode;
 import org.processmining.redologs.common.Key;
+import org.processmining.redologs.common.TraceIDPattern;
 
 public class DataModelList extends JList {
 
@@ -47,6 +50,19 @@ public class DataModelList extends JList {
 				}
 			}
 		});
+	}
+	
+	public TraceIDPattern getTraceIDPattern(DataModel model) {
+		TraceIDPattern tp = new TraceIDPattern(model);
+		for (GraphNode n: this.getNodesList()) {
+			if (n instanceof Column) {
+				tp.add((Column) n);
+			} else if (n instanceof Key) {
+				tp.add((Key) n);
+			}
+		}
+		
+		return tp;
 	}
 	
 	public void clear() {
