@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +20,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import org.deckfour.xes.classification.XEventAttributeClassifier;
@@ -54,6 +57,7 @@ import org.processmining.openslex.SLEXTrace;
 import org.processmining.openslex.SLEXTraceResultSet;
 import org.processmining.redologs.dag.DAG;
 import org.processmining.redologs.dag.DAGNode;
+import org.processmining.redologs.ui.FramePerspectives;
 import org.processmining.redologs.ui.components.DataModelList;
 
 import com.sun.beans.finder.FieldFinder;
@@ -415,6 +419,10 @@ public class LogTraceSplitter {
 		for (Column cpa: tid.getPA()) {
 			if (tid.getValue(cpa) != null) {
 				HashMap<String,HashSet<SLEXTrace>> cpaMap = relatedMap.get(cpa);
+				if (cpaMap == null) {
+					cpaMap = new HashMap<>();
+					relatedMap.put(cpa, cpaMap);
+				}
 				String v = tid.getValue(cpa);
 				if (cpaMap.containsKey(v)) {
 					cpaMap.get(v).add(trace);
@@ -1164,6 +1172,88 @@ public class LogTraceSplitter {
 		
 	}
 	
+	private static void printDfgEntries(File outputFile, HashMap<String,HashMap<String,HashSet<Entry<Integer,Integer>>>> dfMatrix, HashMap<String,HashSet<Integer>> startMap, HashMap<String,HashSet<Integer>> endMap) {
+		StringBuffer fileOutput = new StringBuffer();
+		
+		ArrayList<String> activities = new ArrayList<>();
+		int i = dfMatrix.size();
+		for (String activity: dfMatrix.keySet()) {
+			activities.add(activity);
+			fileOutput.append(activity);
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include line with start activities
+		i = activities.size();
+		for (String activity: activities) {
+			HashSet<Integer> v = startMap.get(activity);
+			if (v == null) {
+				v = new HashSet<>();
+			}
+			fileOutput.append(v.size());
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include line with end activities
+		i = activities.size();
+		for (String activity: activities) {
+			HashSet<Integer> v = endMap.get(activity);
+			if (v == null) {
+				v = new HashSet<>();
+			}
+			fileOutput.append(v.size());
+			i--;
+			if (i > 0) {
+				fileOutput.append(",");
+			}
+		}
+		fileOutput.append('\n');
+		
+		// Include lines with edges
+		
+		for (String activity: activities) {
+			HashMap<String, HashSet<Entry<Integer,Integer>>> row = dfMatrix.get(activity);
+			i = activities.size();
+			for (String a: activities) {
+				HashSet<Entry<Integer,Integer>> v = null;
+				if (row != null) {
+					v = row.get(a);
+				}
+				if (v == null) {
+					v = new HashSet<>();
+				}
+				fileOutput.append(v.size());
+				i--;
+				if (i > 0) {
+					fileOutput.append(",");
+				}
+			}
+			fileOutput.append('\n');
+		}
+		
+		System.out.println(fileOutput);
+		
+		if (outputFile != null) {
+			try {
+				FileWriter w = new FileWriter(outputFile);
+				w.write(fileOutput.toString());
+				w.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
 	protected static String getActivityFromEvent(SLEXEvent e,ArrayList<SLEXAttribute> activityAttributes) {
 		String activity = "";
 		
@@ -1218,20 +1308,33 @@ public class LogTraceSplitter {
 	}
 
 
-	public static void computeInteractionMatrix(SLEXPerspective perspectiveA,
+	public static void computeInteractionMatrix(
+			SLEXEventCollection evCol,
+			SLEXPerspective perspectiveA,
 			SLEXPerspective perspectiveB,
 			TraceIDPattern tp,
-			//List<Column> sortFields,
+			List<Column> sortFields,
 			SLEXAttributeMapper m) {
 
 		try {
 			long startTime = System.currentTimeMillis();
 			
-//			List<SLEXAttribute> orderAtts = new ArrayList<>();
-//			for (Column ordC : sortFields) {
-//				orderAtts.add(m.map(ordC));
-//			}
+			List<SLEXAttribute> orderAtts = new ArrayList<>();
+			for (Column ordC : sortFields) {
+				orderAtts.add(m.map(ordC));
+			}
 
+			ArrayList<SLEXAttribute> activityAttributes = new ArrayList<>();
+			
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "COLUMN_CHANGES"));
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "TABLE_NAME"));
+			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "OPERATION"));
+			
+			// Create new interaction perspective
+			SLEXFactory slexFactory = new SLEXFactory(null);
+			
+			SLEXPerspective interactionP = slexFactory.createStoragePerspective().createPerspective(evCol, "interactionLog");
+			
 			// Go through all traces in Perspective A and build an index with
 			// the new TP
 			
@@ -1267,9 +1370,11 @@ public class LogTraceSplitter {
 			// For each pair, find DFG between activities of A and activities of
 			// B
 
-			HashMap<String, HashMap<String, Integer>> dfMatrix = new HashMap<>();
-			HashMap<String, Integer> startMap = new HashMap<>();
-			HashMap<String, Integer> endMap = new HashMap<>();
+			HashMap<String, HashMap<String, HashSet<Entry<Integer,Integer>>>> dfMatrix = new HashMap<>();
+			HashMap<String, HashSet<Integer>> startMap = new HashMap<>();
+			HashMap<String, HashSet<Integer>> endMap = new HashMap<>();
+			
+			int traceIdcounter = 0;
 			
 			for (Entry<SLEXTrace, TraceID> entry: tracesMapA.entrySet()) {
 				SLEXTrace tA = entry.getKey();
@@ -1279,18 +1384,103 @@ public class LogTraceSplitter {
 				ArrayList<SLEXEvent> eventsA = getEventsFromTrace(tA);
 				
 				// Sort eventsA by ORDER fields
-				// TODO
+				TreeMap<Integer, SLEXEvent> treeEventsA = new TreeMap<>();
+				for (SLEXEvent e: eventsA) {
+					Integer order = getIntegerOrderFromEvent(e, orderAtts);
+					treeEventsA.put(order, e);
+				}
 				
 				for (SLEXTrace tB: relatedB) {
 					TraceID tidB = tracesMapB.get(tB);
 					if (compatibleTraces(tidA, tidB)) {
 						
 						// Obtain tB events, add eventsA to the list, sort by ORDER, and count DFG
-						// TODO
+						ArrayList<SLEXEvent> eventsB = getEventsFromTrace(tB);
+						
+						HashMap<Integer, SLEXEvent> mapEventsB = new HashMap<>();
+						for (SLEXEvent e: eventsB) {
+							Integer order = getIntegerOrderFromEvent(e, orderAtts);
+							mapEventsB.put(order, e);
+						}
+						
+						TreeMap<Integer,SLEXEvent> treeEventsAandB = (TreeMap<Integer, SLEXEvent>) treeEventsA.clone();
+						
+						treeEventsAandB.putAll(mapEventsB);
+						
+						traceIdcounter++;
+						SLEXTrace tAandB = interactionP.getStorage().createTrace(traceIdcounter, interactionP.getId(), null);
+						
+						String lastActivity = null;
+						SLEXEvent lastEvent = null;
+//						boolean lastEventInA = false;
+						for (Integer order: treeEventsAandB.keySet()) {
+							SLEXEvent e = treeEventsAandB.get(order);
+							String activity = getActivityFromEvent(e, activityAttributes);
+//							boolean eventInA = false;
+							
+//							if (treeEventsA.containsKey(order)) {
+//								eventInA = true;
+//							}
+							
+							tAandB.add(e);
+							
+							if (lastActivity == null) {
+								HashSet<Integer> countSet = startMap.get(activity);
+								if (countSet == null) {
+									countSet = new HashSet<>();
+								}
+								countSet.add(e.getId());
+								startMap.put(activity, countSet);
+							} else {
+								
+//								if ((eventInA && lastEventInA) || (!eventInA && !lastEventInA)) {
+//									
+//									// Both events belong to the same perspective. Skip
+//									
+//								} else {
+								
+									 HashMap<String, HashSet<Entry<Integer, Integer>>> row = dfMatrix.get(lastActivity);
+									if (row == null) {
+										row = new HashMap<>();
+										dfMatrix.put(lastActivity, row);
+									}
+								
+									HashSet<Entry<Integer, Integer>> setEntries = null;
+								
+									if (row.containsKey(activity)) {
+										setEntries = row.get(activity);
+									} else {
+										setEntries = new HashSet<>();
+									}
+								
+									Entry<Integer,Integer> entryPair = new AbstractMap.SimpleEntry(lastEvent.getId(), e.getId());
+									setEntries.add(entryPair);
+									
+									row.put(activity, setEntries);
+//								}
+							}
+							
+							lastActivity = activity;
+							lastEvent = e;
+//							lastEventInA = eventInA;
+						}
+						
+						if (lastActivity != null) {
+							HashSet<Integer> countSet = endMap.get(lastActivity);
+							if (countSet == null) {
+								countSet = new HashSet<>();
+							}
+							countSet.add(lastEvent.getId());
+							endMap.put(lastActivity,countSet);
+						}
+						
+						TraceID tidAandB = generateTraceID(tp, m, tAandB);
+						tAandB.setCaseId(tidAandB.serialize());
 					}
 				}
 			}
 			
+			FramePerspectives.getInstance().addPerspective(interactionP);
 			// Print Computation time
 			long endTime = System.currentTimeMillis();
 			long duration = endTime - startTime;
@@ -1298,13 +1488,30 @@ public class LogTraceSplitter {
 			System.out.println("Interaction Matrix computation time: "+Utils.printTime(duration));
 			
 			// Print DFG
-			printDfg(null, dfMatrix, startMap, endMap );
+			printDfgEntries(null, dfMatrix, startMap, endMap );
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		return;
+	}
+	
+	private static Integer getIntegerOrderFromEvent(SLEXEvent e, List<SLEXAttribute> orderAtts) {
+		Integer order = -1;
+		
+		Hashtable<SLEXAttribute, SLEXAttributeValue> eventAtts = e.getAttributeValues();
+		
+		String orderStr = "";
+		
+		for (SLEXAttribute oat: orderAtts) {
+			SLEXAttributeValue v = eventAtts.get(oat);
+			orderStr += v.getValue();
+		}
+		
+		order = Integer.valueOf(orderStr);
+		
+		return order;
 	}
 	
 	private static ArrayList<SLEXEvent> getEventsFromTrace(SLEXTrace t) {

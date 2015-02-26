@@ -173,7 +173,7 @@ public class FramePerspectivesInteraction extends CustomInternalFrame {
 												
 						FramePerspectives.getInstance().addPerspective(perspectiveB);
 						
-						LogTraceSplitter.computeInteractionMatrix(perspectiveA,perspectiveB,tpListCombined.getTraceIDPattern(model)/*,sortFields*/,mapper);
+						LogTraceSplitter.computeInteractionMatrix(evCol,perspectiveA,perspectiveB,tpListCombined.getTraceIDPattern(model),sortFields,mapper);
 						
 //						progressBar.setIndeterminate(false);
 //						progressBar.setString("Log Split");
