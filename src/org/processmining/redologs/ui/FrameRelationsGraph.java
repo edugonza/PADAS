@@ -24,6 +24,9 @@ import org.processmining.redologs.oracle.OracleRelationsExplorer;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.graphs.VertexDisplayPredicate;
 
+import edu.uci.ics.jung.algorithms.layout.AbstractLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.SpringLayout2;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.Layer;
@@ -31,9 +34,11 @@ import edu.uci.ics.jung.visualization.RenderContext;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.picking.PickedState;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Color;
 
 public class FrameRelationsGraph extends CustomInternalFrame {
 
@@ -48,6 +53,7 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 	private JPanel graphPanel;
 	private boolean traceIdSelector = false;
 	private List<GraphNode> listSelectedNodes;
+	private Layout<GraphNode, GraphEdge> layout;
 	
 	public FrameRelationsGraph() {
 		this(false,null);
@@ -85,6 +91,14 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 
 		JButton btnShowExtraFields = new JButton("Toggle Extra fields");
 		panel_2.add(btnShowExtraFields);
+		
+		JButton btnLock = new JButton("Lock");
+		btnLock.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				((SpringLayout2) layout).lock(true);
+			}
+		});
+		panel_2.add(btnLock);
 		btnShowExtraFields.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (vv != null) {
@@ -158,12 +172,21 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 		}
 		this.getContentPane()
 				.add(graphPanel, BorderLayout.CENTER);
-		graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.X_AXIS));
+		GridBagLayout gbl_graphPanel = new GridBagLayout();
+		gbl_graphPanel.columnWidths = new int[]{0};
+		gbl_graphPanel.rowHeights = new int[]{0};
+		gbl_graphPanel.columnWeights = new double[]{Double.MIN_VALUE};
+		gbl_graphPanel.rowWeights = new double[]{Double.MIN_VALUE};
+		graphPanel.setLayout(gbl_graphPanel);
 	}
 	
 	public void reloadGraph(final DataModel model) {
 
 		graphPanel.removeAll();
+		
+		if (layout != null) {
+			((SpringLayout2<?, ?>) layout).lock(true); 
+		}
 
 		Thread relationsThread = new Thread(new Runnable() {
 
@@ -179,15 +202,19 @@ public class FrameRelationsGraph extends CustomInternalFrame {
 					
 					graph = OracleRelationsExplorer.generateRelationsGraphPKAndFK(model);
 
-					vv = OracleRelationsExplorer.getViewer(graph,
+					layout = new SpringLayout2<>(graph);
+					vv = OracleRelationsExplorer.getViewer(graph, layout,
 						"Relations from Foreign and Primary Keys");
 
+					//vv.getGraphLayout().setSize(new Dimension(1600,900));
+					vv.getGraphLayout().setSize(graphPanel.getSize());
 					gbc_vv = new GridBagConstraints();
 					gbc_vv.fill = GridBagConstraints.BOTH;
 					gbc_vv.gridx = 0;
 					gbc_vv.gridy = 0;
 
-					vv.setSize(graphPanel.getSize());
+					//vv.setSize(graphPanel.getSize());
+					//vv.setSize(new Dimension(50, 50));
 
 					if (traceIdSelector) {
 					    

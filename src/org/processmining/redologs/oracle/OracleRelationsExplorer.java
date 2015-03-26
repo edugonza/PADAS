@@ -42,8 +42,11 @@ import org.processmining.redologs.config.DatabaseConnectionData;
 import org.processmining.redologs.ui.graphs.VertexDisplayPredicate;
 
 import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
 import edu.uci.ics.jung.algorithms.layout.FRLayout2;
 import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.SpringLayout;
+import edu.uci.ics.jung.algorithms.layout.SpringLayout2;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseGraph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
@@ -875,10 +878,18 @@ public class OracleRelationsExplorer {
 	}
 	
 	
-	public static VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, String title) {
+	public static VisualizationViewer<GraphNode,GraphEdge> getViewer(final Graph<GraphNode,GraphEdge> graph, Layout<GraphNode,GraphEdge> layout, String title) {
 		//Layout<GraphNode, GraphEdge> layout = new CircleLayout<>(graph);
 		//Layout<GraphNode, GraphEdge> layout = new SpringLayout2<>(graph);
-		Layout<GraphNode, GraphEdge> layout = new FRLayout2<>(graph);
+		if (layout == null) {
+			layout = new SpringLayout2<>(graph);
+		}
+		SpringLayout2<GraphNode,GraphEdge> sprngLayout = (SpringLayout2<GraphNode, GraphEdge>) layout;
+		//sprngLayout.setForceMultiplier(2.0);
+		sprngLayout.setRepulsionRange(500);
+		//Layout<GraphNode, GraphEdge> layout = new FRLayout2<>(graph);
+		//layout.setSize(new Dimension(200,200));
+		//Dimension d = layout.getSize();
 		//layout.setSize(new Dimension(600,600)); // sets the initial size of the space
 		// The BasicVisualizationServer<V,E> is parameterized by the edge types
 		VisualizationViewer<GraphNode,GraphEdge> vv = new VisualizationViewer<GraphNode,GraphEdge>(layout);
@@ -917,7 +928,7 @@ public class OracleRelationsExplorer {
 	}
 	
 	public void showGraph2(final Graph<GraphNode,GraphEdge> graph, String title) {
-		VisualizationViewer<GraphNode,GraphEdge> vv = getViewer(graph, title);
+		VisualizationViewer<GraphNode,GraphEdge> vv = getViewer(graph, null, title);
 		JFrame frame = new JFrame(title);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(vv);
