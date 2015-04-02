@@ -57,6 +57,7 @@
 			<attribute name="javadoc_location" value="file:/home/eduardo/Software/Libraries/jgraphx-3.1.2.2/docs/api/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/btc-ascii-table-1.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OpenSLEX"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
