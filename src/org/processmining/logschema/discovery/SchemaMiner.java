@@ -5,6 +5,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -77,7 +78,30 @@ public class SchemaMiner {
 		HashMap<String,Integer> eventsCountPerClass = new HashMap<>();
 		this.classesMapCI = computeCI(eventsCountPerClass);
 		
-		HashMap<String,HashMap<String,Double>> diffMap = computeDiffMap(classesMapCI);
+		// Count common attributes to all classes
+		HashSet<String> attrCommon = null;
+		for (String c: classesMapCI.keySet()) {
+			List<String> atts = classesMapCI.get(c);
+			if (attrCommon == null) {
+				attrCommon = new HashSet<>();
+				for (String at: atts) {
+					attrCommon.add(at);
+				}
+			} else {
+				Iterator<String> it = attrCommon.iterator();
+				while (it.hasNext()) {
+					String comm = it.next();
+					if (!atts.contains(comm)) {
+						it.remove();
+					}
+				}
+			}
+		}
+		int commonAtts = attrCommon.size();
+		System.out.println("# Common attributes: "+commonAtts+" => "+attrCommon);
+		
+		// Compute Diff and Dominant maps
+		HashMap<String,HashMap<String,Double>> diffMap = computeDiffMap(classesMapCI,commonAtts);
 		HashMap<String,HashMap<String,Double>> dominantMap = computeDominantMap(classesMapCI,eventsCountPerClass);
 		
 		printDiffAndDominantMap(diffMap,dominantMap);
@@ -143,8 +167,8 @@ public class SchemaMiner {
 			diffData[i-1][0] = header[i];
 			domData[i-1][0] = header[i];
 			for (int j = 1; j < header.length; j++) {
-				diffData[i-1][j] = String.valueOf(diffMap.get(header[i]).get(header[j]));
-				domData[i-1][j] = String.valueOf(dominantMap.get(header[i]).get(header[j]));
+				diffData[i-1][j] = String.format("%1$,.2f", diffMap.get(header[i]).get(header[j]));
+				domData[i-1][j] = String.format("%1$,.2f", dominantMap.get(header[i]).get(header[j]));
 			}
 		}
 		
@@ -269,7 +293,7 @@ public class SchemaMiner {
 	}
 
 	private HashMap<String, HashMap<String, Double>> computeDiffMap(
-			HashMap<String, List<String>> ciMap) {
+			HashMap<String, List<String>> ciMap, int commonAtts) {
 		HashMap<String, HashMap<String, Double>> diffMap = new HashMap<>();
 		
 		for (String cla: ciMap.keySet()) {
@@ -287,9 +311,9 @@ public class SchemaMiner {
 					}
 				}
 				
-				total = claList.size() - common + clbList.size();
+				total = claList.size() - common + clbList.size() - commonAtts;
 				
-				Double diffVal = Math.abs((((double) common / (double) total) - 1.0)) ;
+				Double diffVal = Math.abs((((double) (common - commonAtts + 1.0) / (double) (total + 1.0)) - 1.0)) ;
 				
 				HashMap<String,Double> aMap = null;
 				if (diffMap.containsKey(cla)) {
