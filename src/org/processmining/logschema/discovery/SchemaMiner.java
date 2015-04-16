@@ -62,7 +62,7 @@ public class SchemaMiner {
 			SLEXStorageDataModel st = new SLEXStorageImpl("data","test-dm-schema-miner.slexdm",SLEXStorage.TYPE_DATAMODEL);
 			SLEXDMDataModel dm = st.createDMDataModel("Test-CF");
 			SchemaMiner sminer = new SchemaMiner(xlog, dm);
-			sminer.discoverClasses(0.4);
+			sminer.discoverClasses(1.0);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
