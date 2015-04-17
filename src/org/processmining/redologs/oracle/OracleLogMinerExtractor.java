@@ -50,10 +50,13 @@ public class OracleLogMinerExtractor {
 	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID","RS_ID","SSN"};
 	public static final String COLUMN_CHANGES = "COLUMN_CHANGES";
 	public static final String COLUMN_ORDER = "ORDER";
-	private static final String COLUMN_CHANGE_NONE = "1";
-	private static final String COLUMN_CHANGE_UPDATED = "4";
-	private static final String COLUMN_CHANGE_TO_NULL = "2";
-	private static final String COLUMN_CHANGE_FROM_NULL = "3";
+	public static final String COLUMN_OPERATION = "OPERATION";
+	public static final String COLUMN_TABLE_NAME = "TABLE_NAME";
+	public static final String COLUMN_TIMESTAMP = "TIMESTAMP";
+	public static final String COLUMN_CHANGE_NONE = "1";
+	public static final String COLUMN_CHANGE_UPDATED = "4";
+	public static final String COLUMN_CHANGE_TO_NULL = "2";
+	public static final String COLUMN_CHANGE_FROM_NULL = "3";
 	private static final String COLUMN_PRESENT = "1";
 	private static final String COLUMN_MISSING = "0";
 	public static final String NEW_VALUES_PREFIX = "V_NEW_";

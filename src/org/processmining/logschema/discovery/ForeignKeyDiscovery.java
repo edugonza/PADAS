@@ -6,68 +6,78 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.processmining.openslex.SLEXEventCollection;
+import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.Key;
+import org.processmining.redologs.common.TableInfo;
 import org.processmining.utils.Pair;
 
 public class ForeignKeyDiscovery {
 	
-	private List<String> tables = null;
-	private List<String> columns = null;
-	private List<String[]> pks = null;
+	private List<TableInfo> tables = null;
+	private List<Column> columns = null;
+	private List<Key> pks = null;
 	
-	public ForeignKeyDiscovery(List<String> columns, List<String[]> pks) {
+	public ForeignKeyDiscovery(List<TableInfo> tables, List<Column> columns, List<Key> pks) {
+		this.tables = tables;
 		this.columns = columns;
 		this.pks = pks;
 	}
 	
-	public List<Pair<String[],String[]>> discoverForeignKeys(int k, int l, double inclusionCoefficient, String[][] values) {
+	public List<Key> discoverForeignKeys(int k, int l, double inclusionCoefficient, DataAccess values) {
 		
-		List<Pair<String[],String[]>> fks = new ArrayList<>();
+		//List<Pair<String[],String[]>> fks = new ArrayList<>();
+		List<Key> fks = new ArrayList<>();
 		
-		HashMap<String,HashMap<Integer,String[]>> colKSketches = new HashMap<>();
+		//HashMap<String,HashMap<Integer,String[]>> colKSketches = new HashMap<>();
+		HashMap<Column,HashMap<Integer,String[]>> colKSketches = new HashMap<>();
+		
 		HashMap<Integer,HashMap<Integer,String[]>> pkKSketches = new HashMap<>();
 		
-		HashMap<Pair<String[],String>,String> colToPKColMap = new HashMap<>();
+		HashMap<Pair<Key,Column>,Column> colToPKColMap = new HashMap<>();
 		HashMap<Integer,QuantileHistogram> pksQuantileHistogram = new HashMap<>();
 		
 		// Phase 1
 		
 		for (int i = 0; i < columns.size(); i++) {
-			colKSketches.put(columns.get(i), bottomKSketch(k, new int[] {i}, values));
+			Column c = columns.get(i);
+			colKSketches.put(c, bottomKSketch(k, new Column[] {c}, values.getRowsForColumn(c)));
 		}
 		
 		for (int i = 0; i < pks.size(); i++) {
-			String[] pki = pks.get(i);
-			for (int j = 0; j < pki.length; j++) {
+			Key pki = pks.get(i);
+			for (int j = 0; j < pki.fields.size(); j++) {
 				for (int f = 0; f < columns.size(); f++) {
-					if (computeInclusionCoefficient(colKSketches.get(columns.get(f)),colKSketches.get(pki[j])) >= inclusionCoefficient) {
-						if (pki.length == 1) {
-							fks.add(new Pair<String[], String[]>(pki, new String[] {columns.get(f)}));
+					if (computeInclusionCoefficient(colKSketches.get(columns.get(f)),colKSketches.get(pki.fields.get(j)))
+							>= inclusionCoefficient) {
+						if (pki.fields.size() == 1) {
+							Key fk = new Key();
+							fk.refers_to = pki;
+							fk.fields = new ArrayList<>();
+							fk.fields.add(columns.get(f));
+							fk.refers_to_column.put(columns.get(f),pki.fields.get(0));
+							fks.add(fk);
 						} else {
-							colToPKColMap.put(new Pair<String[], String>(pki, pki[j]), columns.get(f));
+							colToPKColMap.put(new Pair<Key, Column>(pki, pki.fields.get(j)), columns.get(f));
 						}
 					}
 				}
-				
 			}
 			
-			int[] pkint = new int[pki.length];
-			if (pki.length > 1) {
-				for (int ik = 0; ik < pki.length; ik++) {
-					pkint[ik] = columns.indexOf(pki[ik]);
-				}
-				pkKSketches.put(i,bottomKSketch(k, pkint,values));
+			if (pki.fields.size() > 1) {
+				pkKSketches.put(i,bottomKSketch(k, pki.fields.toArray(new Column[] {}),values.getRowsForTable(pki.table)));
 			}
 			
 			// Compute Q[P] <- Quantile histogram of P
-			QuantileHistogram qh = lquantileHistogram(l, pkint, values);
+			QuantileHistogram qh = lquantileHistogram(l, pki.fields.toArray(new Column[] {}), values.getRowsForTable(pki.table));
 			pksQuantileHistogram.put(i, qh);
 		}
 		
 		// Phase 2 TODO
 		
 		for (int i = 0; i < pks.size(); i++) {
-			String[] pki = pks.get(i);
-			if (pki.length == 1) {
+			Key pki = pks.get(i);
+			if (pki.fields.size() == 1) {
 				// Single-column PK TODO
 			} else {
 				// Multi-column PK TODO
@@ -87,20 +97,20 @@ public class ForeignKeyDiscovery {
 		return 0.0;
 	}
 	
-	public static QuantileHistogram lquantileHistogram(int l, int[] p, String[][] values) {
+	public static QuantileHistogram lquantileHistogram(int l, Column[] pCols, RowsAccess values) {
 		
-		QuantileHistogram qh = new QuantileHistogram(p.length,l);
-		qh.sizeP = values.length;
+		QuantileHistogram qh = new QuantileHistogram(pCols.length,l);
+		qh.sizeP = values.size();
 		
-		for (int i = 0; i < values.length; i++) {
+		for (int i = 0; i < values.size(); i++) {
 			
 			StringBuffer sv = new StringBuffer();
-			for (int j = 0; j < p.length; j++) {
-				sv.append(values[i][p[j]]+"#");
+			for (int j = 0; j < pCols.length; j++) {
+				sv.append(values[i][pCols[j]]+"#");
 			}
 			int vHash = sv.toString().hashCode();
 			
-			for (int j = 0; j < p.length; j++) {
+			for (int j = 0; j < pCols.length; j++) {
 				String v = values[i][p[j]];
 				ArrayList<Integer> di = qh.dist.get(j);
 				if (di == null) {
@@ -193,16 +203,17 @@ public class ForeignKeyDiscovery {
 		return y;
 	}
 	
-	public static HashMap<Integer,String[]> bottomKSketch(int k, int[] f, String[][] values) {
+	public static HashMap<Integer,String[]> bottomKSketch(int k, Column[] cols, RowsAccess values) {
 		
 		HashMap<Integer,String[]> sketch = new HashMap<>();
 		List<Integer> sketchSorted = new ArrayList<>();
 		
-		for (int i = 0; i < values.length; i++) {
-			String[] v = new String[f.length];
+		for (int i = 0; i < values.size(); i++) {
+			String[] v = new String[cols.length];
 			StringBuffer strV = new StringBuffer();
-			for (int j = 0; j < f.length; j++) {
-				v[j] = values[i][f[j]];
+			RowData row = values.getNext();
+			for (int j = 0; j < cols.length; j++) {
+				v[j] = row.get(cols[j]);
 				strV.append(v[j]+"#");
 			}
 			int hash = strV.toString().hashCode();
