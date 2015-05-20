@@ -57,6 +57,7 @@ public class OracleLogMinerExtractor {
 	public static final String COLUMN_CHANGE_UPDATED = "4";
 	public static final String COLUMN_CHANGE_TO_NULL = "2";
 	public static final String COLUMN_CHANGE_FROM_NULL = "3";
+	public static final String COLUMN_CHANGE_NONE_STILL_NULL = "5"; // FIXME add this to the extraction algorithm
 	private static final String COLUMN_PRESENT = "1";
 	private static final String COLUMN_MISSING = "0";
 	public static final String NEW_VALUES_PREFIX = "V_NEW_";
