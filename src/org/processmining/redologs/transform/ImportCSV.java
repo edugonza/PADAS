@@ -57,6 +57,9 @@ public class ImportCSV {
 					headerList.add(h.trim().replace("\r","").replace("\n",""));
 				}
 				Collections.sort(headerList);
+				System.out.println("Sorted list for "+className);
+				System.out.println(headerList);
+				
 				String[] changeVector = new String[headerList.size()];
 				
 				for (int j = 0; j < headerList.size(); j++) {
@@ -105,7 +108,11 @@ public class ImportCSV {
 						String vOld = r.get(h);
 						String vNew = record.get(h);
 						if (vNew.equals(vOld)) {
-							changeVector[j] = OracleLogMinerExtractor.COLUMN_CHANGE_NONE;
+							if (vNew.equals("NULL")) {
+								changeVector[j] = OracleLogMinerExtractor.COLUMN_CHANGE_NONE_STILL_NULL;
+							} else {
+								changeVector[j] = OracleLogMinerExtractor.COLUMN_CHANGE_NONE;
+							}
 						} else if (vOld != null && vOld.equals("NULL")) {
 							changeVector[j] = OracleLogMinerExtractor.COLUMN_CHANGE_FROM_NULL;
 						} else if (vNew.equals("NULL")){
@@ -152,112 +159,5 @@ public class ImportCSV {
 		}
 		
 		return i;
-	}
-	
-	public static void main(String[] args) {
-		String dir = "data";
-		
-		File f1 = new File("/home/eduardo/Code/datasets/Marcus/2015-04-15/PMDS_WW_ExtractEventLog Test/PMDS_WW_TestExtractEventLog_WWRecht_Hub_C01-no-bom.csv");
-		File f2 = new File("/home/eduardo/Code/datasets/Marcus/2015-04-15/PMDS_WW_ExtractEventLog Test/PMDS_WW_TestExtractEventLog_WWRecht_Sat_v1_C01-no-bom.csv");
-		File f3 = new File("/home/eduardo/Code/datasets/Marcus/2015-04-15/PMDS_WW_ExtractEventLog Test/PMDS_WW_TestExtractEventLog_WWRecht_WWSessie_Link_v1_C01-no-bom.csv");
-		File f4 = new File("/home/eduardo/Code/datasets/Marcus/2015-04-15/PMDS_WW_ExtractEventLog Test/PMDS_WW_TestExtractEventLog_WWSessie_Hub_C01-no-bom.csv");
-		File f5 = new File("/home/eduardo/Code/datasets/Marcus/2015-04-15/PMDS_WW_ExtractEventLog Test/PMDS_WW_TestExtractEventLog_WWSessie_Sat_v1_C01-no-bom.csv");
-		
-		File f = new File("data/marcus-imported-01.slexcol");
-		
-		try {
-			
-			SLEXStorageCollection st = new SLEXStorageImpl(dir,f.getName(),SLEXStorage.TYPE_COLLECTION);
-			
-			SLEXEventCollection evCol = st.createEventCollection("UWV-01");
-			st.setAutoCommit(false);
-			
-			ImportCSV imp = new ImportCSV(evCol);
-			
-			int index = imp.importCSVFile(f1,0,new String[] {"DVK_WWRecht_ID"},"WWRecht_Hub_C01","DVA_LaadDatum");
-			index = imp.importCSVFile(f2,index,new String[] {"DVK_WWRecht_ID"},"WWRecht_Sat_v1_C01","DVA_LaadDatum");
-			index = imp.importCSVFile(f4,index,new String[] {"DVK_WWSessie_ID"},"WWSessie_Hub_C01","DVA_LaadDatum");
-			index = imp.importCSVFile(f5,index,new String[] {"DVK_WWSessie_ID"},"WWSessie_Sat_v1_C01","DVA_LaadDatum");
-			index = imp.importCSVFile(f3,index,new String[] {"DVK_WWRecht_WWSessie_ID"},"WWRecht_WWSessie_Link_v1_C01","DVA_LaadDatum");
-			
-			evCol.commit();
-			
-			File fdm = new File("data/marcus-imported-01.slexdm");
-			SLEXStorageDataModel stDm = new SLEXStorageImpl(dir, fdm.getName(), SLEXStorage.TYPE_DATAMODEL);
-			
-			SLEXDMDataModel dm = stDm.createDMDataModel("UWV-DM-01");
-			
-			SLEXDMClass c1 = stDm.createDMClass(dm.getId(), "WWRecht_Hub_C01", false);
-			SLEXDMClass c2 = stDm.createDMClass(dm.getId(), "WWRecht_Sat_v1_C01", false);
-			SLEXDMClass c3 = stDm.createDMClass(dm.getId(), "WWRecht_WWSessie_Link_v1_C01", false);
-			SLEXDMClass c4 = stDm.createDMClass(dm.getId(), "WWSessie_Hub_C01", false);
-			SLEXDMClass c5 = stDm.createDMClass(dm.getId(), "WWSessie_Sat_v1_C01", false);
-			
-			
-			SLEXDMAttribute c1at01 = stDm.createDMAttribute(c1.getId(), "DVK_WWRecht_ID", false);
-			SLEXDMAttribute c1at02 = stDm.createDMAttribute(c1.getId(), "DVA_LaadDatum", false);
-			
-			SLEXDMAttribute c2at01 = stDm.createDMAttribute(c2.getId(), "DVK_WWRecht_ID", false);
-			SLEXDMAttribute c2at02 = stDm.createDMAttribute(c2.getId(), "DVA_LaadDatum", false);
-			SLEXDMAttribute c2at03 = stDm.createDMAttribute(c2.getId(), "FirstDayOfUnemployment", false);
-			SLEXDMAttribute c2at04 = stDm.createDMAttribute(c2.getId(), "Decision_ID", false);
-			SLEXDMAttribute c2at05 = stDm.createDMAttribute(c2.getId(), "DVA_BeginDatum", false);
-			SLEXDMAttribute c2at06 = stDm.createDMAttribute(c2.getId(), "DVA_EindDatum", false);
-			
-			SLEXDMAttribute c3at01 = stDm.createDMAttribute(c3.getId(), "DVK_WWRecht_WWSessie_ID", false);
-			SLEXDMAttribute c3at02 = stDm.createDMAttribute(c3.getId(), "DVK_WWRecht_ID", false);
-			SLEXDMAttribute c3at03 = stDm.createDMAttribute(c3.getId(), "DVK_WWSessie_ID", false);
-			SLEXDMAttribute c3at04 = stDm.createDMAttribute(c3.getId(), "DVA_LaadDatum", false);
-			SLEXDMAttribute c3at05 = stDm.createDMAttribute(c3.getId(), "DVA_BeginDatum", false);
-			SLEXDMAttribute c3at06 = stDm.createDMAttribute(c3.getId(), "DVA_EindDatum", false);
-			
-			SLEXDMAttribute c4at01 = stDm.createDMAttribute(c4.getId(), "DVK_WWSessie_ID", false);
-			SLEXDMAttribute c4at02 = stDm.createDMAttribute(c4.getId(), "DVA_LaadDatum", false);
-			
-			SLEXDMAttribute c5at01 = stDm.createDMAttribute(c5.getId(), "DVK_WWSessie_ID", false);
-			SLEXDMAttribute c5at02 = stDm.createDMAttribute(c5.getId(), "DVA_LaadDatum", false);
-			SLEXDMAttribute c5at03 = stDm.createDMAttribute(c5.getId(), "DateStartBenefits", false);
-			SLEXDMAttribute c5at04 = stDm.createDMAttribute(c5.getId(), "DateEndBenefits", false);
-			SLEXDMAttribute c5at05 = stDm.createDMAttribute(c5.getId(), "DateDecision", false);
-			SLEXDMAttribute c5at06 = stDm.createDMAttribute(c5.getId(), "DateDecisionBenefitsEnd", false);
-			SLEXDMAttribute c5at07 = stDm.createDMAttribute(c5.getId(), "DateOfClaim", false);
-			SLEXDMAttribute c5at08 = stDm.createDMAttribute(c5.getId(), "AverageNumberWorkingHours", false);
-			SLEXDMAttribute c5at09 = stDm.createDMAttribute(c5.getId(), "DaylyWages", false);
-			SLEXDMAttribute c5at10 = stDm.createDMAttribute(c5.getId(), "TimingOfNotificationOfUnemployment", false);
-			SLEXDMAttribute c5at11 = stDm.createDMAttribute(c5.getId(), "DVA_BeginDatum", false);
-			SLEXDMAttribute c5at12 = stDm.createDMAttribute(c5.getId(), "DVA_EindDatum", false);
-			
-			SLEXDMKey c1pk = stDm.createDMKey(c1.getId(), "WWRecht_Hub_C01_PK", SLEXDMKey.PRIMARY_KEY, SLEXDMKey.REFERS_TO_NULL);
-			SLEXDMKeyAttribute c1pkAt01 = stDm.createDMKeyAttribute(c1pk.getId(), c1at01.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 0);
-			
-			SLEXDMKey c2pk = stDm.createDMKey(c2.getId(), "WWRecht_Sat_v1_C01_PK", SLEXDMKey.PRIMARY_KEY, SLEXDMKey.REFERS_TO_NULL);
-			SLEXDMKeyAttribute c2pkAt01 = stDm.createDMKeyAttribute(c2pk.getId(), c2at01.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 0);
-			//SLEXDMKeyAttribute c2pkAt02 = stDm.createDMKeyAttribute(c2pk.getId(), c2at02.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 1);
-			
-			SLEXDMKey c3pk = stDm.createDMKey(c3.getId(), "WWRecht_WWSessie_Link_v1_C01_PK", SLEXDMKey.PRIMARY_KEY, SLEXDMKey.REFERS_TO_NULL);
-			SLEXDMKeyAttribute c3pkAt01 = stDm.createDMKeyAttribute(c3pk.getId(), c3at01.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 0);
-			
-			SLEXDMKey c4pk = stDm.createDMKey(c4.getId(), "WWSessie_Hub_C01_PK", SLEXDMKey.PRIMARY_KEY, SLEXDMKey.REFERS_TO_NULL);
-			SLEXDMKeyAttribute c4pkAt01 = stDm.createDMKeyAttribute(c4pk.getId(), c4at01.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 0);
-			
-			SLEXDMKey c5pk = stDm.createDMKey(c5.getId(), "WWSessie_Sat_v1_C01_PK", SLEXDMKey.PRIMARY_KEY, SLEXDMKey.REFERS_TO_NULL);
-			SLEXDMKeyAttribute c5pkAt01 = stDm.createDMKeyAttribute(c5pk.getId(), c5at01.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 0);
-			//SLEXDMKeyAttribute c5pkAt02 = stDm.createDMKeyAttribute(c5pk.getId(), c5at02.getId(), SLEXDMKeyAttribute.REFERS_TO_NULL, 1);
-			
-			SLEXDMKey c2fk = stDm.createDMKey(c2.getId(), "WWRecht_Sat_v1_C01_FK", SLEXDMKey.FOREIGN_KEY, c1pk.getId());
-			SLEXDMKeyAttribute c2fkAt01 = stDm.createDMKeyAttribute(c2fk.getId(), c2at01.getId(), c1pkAt01.getAttributeId(), 0);
-			
-			SLEXDMKey c3fk1 = stDm.createDMKey(c3.getId(), "WWRecht_WWSessie_Link_v1_C01_TO_WWRecht_FK", SLEXDMKey.FOREIGN_KEY, c1pk.getId());
-			SLEXDMKeyAttribute c3fk1At01 = stDm.createDMKeyAttribute(c3fk1.getId(), c3at02.getId(), c1pkAt01.getAttributeId(), 0);
-			
-			SLEXDMKey c3fk2 = stDm.createDMKey(c3.getId(), "WWRecht_WWSessie_Link_v1_C01_TO_WWSessie_FK", SLEXDMKey.FOREIGN_KEY, c4pk.getId());
-			SLEXDMKeyAttribute c3fk2At01 = stDm.createDMKeyAttribute(c3fk2.getId(), c3at01.getId(), c4pkAt01.getAttributeId(), 0);
-			
-			SLEXDMKey c5fk = stDm.createDMKey(c5.getId(), "WWSessie_Sat_v1_C01_FK", SLEXDMKey.FOREIGN_KEY, c4pk.getId());
-			SLEXDMKeyAttribute c5fkAt01 = stDm.createDMKeyAttribute(c5fk.getId(), c5at01.getId(), c4pkAt01.getAttributeId(), 0);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }
