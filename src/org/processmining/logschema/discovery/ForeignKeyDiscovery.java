@@ -75,10 +75,20 @@ public class ForeignKeyDiscovery {
 		
 		// Phase 2 TODO
 		
+		for (int i = 0; i < fks.size(); i++) {
+			// Single-column FK TODO
+			Key fki = fks.get(i);
+			QuantileHistogram qhfki = lquantileHistogram(l, fki.fields.toArray(new Column[] {}), values.getRowsForTable(fki.table));
+			int pkindex = pks.indexOf(fki.refers_to);
+			QuantileHistogram qhpki = pksQuantileHistogram.get(pkindex);
+			// Compute distribution histogram of F with respect to P TODO 
+		}
+		
 		for (int i = 0; i < pks.size(); i++) {
 			Key pki = pks.get(i);
 			if (pki.fields.size() == 1) {
 				// Single-column PK TODO
+				// Do nothing
 			} else {
 				// Multi-column PK TODO
 				
@@ -103,15 +113,16 @@ public class ForeignKeyDiscovery {
 		qh.sizeP = values.size();
 		
 		for (int i = 0; i < values.size(); i++) {
+			RowData rd = values.getNext();
 			
 			StringBuffer sv = new StringBuffer();
 			for (int j = 0; j < pCols.length; j++) {
-				sv.append(values[i][pCols[j]]+"#");
+				sv.append(rd.get(pCols[j])+"#");
 			}
 			int vHash = sv.toString().hashCode();
 			
 			for (int j = 0; j < pCols.length; j++) {
-				String v = values[i][p[j]];
+				String v = rd.get(pCols[j]);
 				ArrayList<Integer> di = qh.dist.get(j);
 				if (di == null) {
 					di = new ArrayList<>();

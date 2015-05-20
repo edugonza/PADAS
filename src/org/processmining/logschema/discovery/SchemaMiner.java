@@ -17,10 +17,16 @@ import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.openslex.SLEXDMClass;
+import org.processmining.openslex.SLEXDMClassResultSet;
 import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXStorageDataModel;
 import org.processmining.openslex.SLEXStorageImpl;
+import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.Key;
+import org.processmining.redologs.common.SLEXDataModelExportImport;
+import org.processmining.redologs.common.TableInfo;
 
 import com.bethecoder.ascii_table.ASCIITable;
 
@@ -63,6 +69,8 @@ public class SchemaMiner {
 			SLEXDMDataModel dm = st.createDMDataModel("Test-CF");
 			SchemaMiner sminer = new SchemaMiner(xlog, dm);
 			sminer.discoverClasses(1.0);
+			sminer.discoverKeys();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -375,6 +383,27 @@ public class SchemaMiner {
 	}
 	
 	public void discoverKeys() {
+		// TODO
+		
+		DataModel datamodel = SLEXDataModelExportImport.loadDataModelFromSLEXDM(dm);
+		
+		List<TableInfo> tables = datamodel.getTables();
+		List<Column> columns = new ArrayList<>();
+		List<Key> pks = new ArrayList<>();
+		pks.addAll(datamodel.getPrimaryKeys().values());
+		
+		for (TableInfo t: tables) {
+			columns.addAll(t.columns);
+		}
+		
+		ForeignKeyDiscovery fkd = new ForeignKeyDiscovery(tables, columns, pks);
+		
+		int k = 0; // FIXME
+		int l = 0; // FIXME
+		double inclusionCoefficient = 0.0; // FIXME
+		DataAccess values = new DataAccess(); // FIXME
+		
+		List<Key> fks = fkd.discoverForeignKeys(k, l, inclusionCoefficient, values);
 		
 	}
 	
