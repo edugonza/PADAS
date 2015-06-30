@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -44,6 +46,7 @@ import org.processmining.redologs.oracle.OracleRelationsExplorer;
 import org.processmining.redologs.ui.components.AskNameDialog;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.InfoDialog;
+import org.processmining.redologs.ui.components.TextDialog;
 
 public class FrameTables extends CustomInternalFrame {
 
@@ -57,6 +60,7 @@ public class FrameTables extends CustomInternalFrame {
 	private static FrameTables _instance;
 	private JComboBox comboBoxConnections;
 	private final String[] tablesTableColumnNames = new String[] {"Name","Database Name","Table Name"};
+	private List<String> redoLogFilesList = null;
 	
 	private OracleLogMinerExtractor extractor = null;
 	private boolean stopExtractor = false;
@@ -98,6 +102,14 @@ public class FrameTables extends CustomInternalFrame {
 	
 	public DatabaseConnectionData getSelectedConnection() {
 		return (DatabaseConnectionData) comboBoxConnections.getSelectedItem();
+	}
+	
+	public List<String> getRedoFilesFromUI() {
+		return this.redoLogFilesList;
+	}
+	
+	public void setRedoLogFiles(List<String> redoLogFiles) {
+		this.redoLogFilesList = redoLogFiles;
 	}
 	
 	private FrameTables() {		
@@ -269,8 +281,10 @@ public class FrameTables extends CustomInternalFrame {
 									getSelectedConnection(), tables);
 							extractor.setExtractionFlag(true);
 							if (extractor.connect()) {
-								List<String> redoFiles = extractor
-										.getRedoLogFiles();
+								List<String> redoFiles = getRedoFilesFromUI();
+								if (redoFiles == null || redoFiles.isEmpty()) {
+									redoFiles = extractor.getRedoLogFiles();
+								}
 								if (extractor.startLogMiner(redoFiles)) {
 									
 									SLEXEventCollection eventCollection = null;
@@ -348,5 +362,22 @@ public class FrameTables extends CustomInternalFrame {
 		gbc_btnStop.gridx = 0;
 		gbc_btnStop.gridy = 3;
 		panel_5.add(btnStop, gbc_btnStop);
+		
+		final TextDialog tdiag = new TextDialog(FrameTables.this);
+		JButton btnSetredologfiles = new JButton("Set Redo Log Files");
+		btnSetredologfiles.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String redoLogFilesStr = tdiag.showDialog();
+				if (redoLogFilesStr != null) {
+					String[] redoLogFilesArr = redoLogFilesStr.split("\\r?\\n");
+					List<String> redoLogFilesList = Arrays.asList(redoLogFilesArr);
+					setRedoLogFiles(redoLogFilesList);
+				}
+			}
+		});
+		GridBagConstraints gbc_btnSetredologfiles = new GridBagConstraints();
+		gbc_btnSetredologfiles.gridx = 1;
+		gbc_btnSetredologfiles.gridy = 3;
+		panel_5.add(btnSetredologfiles, gbc_btnSetredologfiles);
 	}
 }
