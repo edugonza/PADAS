@@ -654,6 +654,7 @@ public class OracleLogMinerExtractor {
 			Statement stm = con.createStatement();
 			ResultSet res = stm.executeQuery("select checkpoint_change# from v$database");
 			
+			res.next();
 			scn = res.getLong(1);
 			
 		} catch (SQLException e) {
