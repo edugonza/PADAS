@@ -561,7 +561,8 @@ public class OracleLogMinerExtractor {
 			}
 		}
 		
-		query += " SCN_TO_TIMESTAMP(V$LOGMNR_CONTENTS.SCN) AS SCN_TIMESTAMP ";
+		//query += " SCN_TO_TIMESTAMP(V$LOGMNR_CONTENTS.SCN) AS SCN_TIMESTAMP ";
+		query += " V$LOGMNR_CONTENTS.TIMESTAMP AS SCN_TIMESTAMP ";
 		
 		Hashtable<String,AliasColumnNameType> aliasTable = new Hashtable<>();
 		
