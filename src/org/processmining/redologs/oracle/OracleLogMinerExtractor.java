@@ -550,7 +550,7 @@ public class OracleLogMinerExtractor {
 		
 	}
 	
-	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses, HashMap<String,Integer> orderIds) {
+	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses, HashMap<String,Integer> orderIds, long scn_limit) {
 		String query = "SELECT ";
 		
 		if (allRedoFields) {
@@ -608,7 +608,7 @@ public class OracleLogMinerExtractor {
 			i++;
 		}
 		
-		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' ORDER BY SCN DESC";
+		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' AND SCN <= '"+scn_limit+"' ORDER BY SCN DESC";
 		
 		ResultSet res = null;
 		
@@ -644,6 +644,23 @@ public class OracleLogMinerExtractor {
 		} catch (UniversalConnectionPoolException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public long getSCNLastCheckpoint() {
+		long scn = 0L;
+		
+		try {
+			
+			Statement stm = con.createStatement();
+			ResultSet res = stm.executeQuery("select checkpoint_change# from v$database");
+			
+			scn = res.getLong(1);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return scn;
 	}
 	
 }

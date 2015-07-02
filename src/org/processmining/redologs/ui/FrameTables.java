@@ -303,6 +303,7 @@ public class FrameTables extends CustomInternalFrame {
 									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									
 									HashMap<String,Integer> orderIds = extractor.getOrderOfLogs(tables);
+									long scn_limit = extractor.getSCNLastCheckpoint();
 									
 									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
 										extractor.disconnect();
@@ -317,7 +318,7 @@ public class FrameTables extends CustomInternalFrame {
 										System.out.println("Table: "+t.name);
 										
 										extractor.getLogsForTableWithColumns(t,
-												null, eventCollection, false, true,orderIds);
+												null, eventCollection, false, true,orderIds, scn_limit);
 										progressBar_1.setValue((progress*100)/total);
 										progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									}
