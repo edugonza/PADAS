@@ -10,6 +10,8 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 
 import org.processmining.openslex.SLEXAttribute;
@@ -49,6 +51,8 @@ public class FrameMetrics extends CustomInternalFrame {
 	private SLEXEventCollection collection;
 	private DataModel datamodel;
 	private boolean histogramLoaded = false;
+	private String startDate = null;
+	private String endDate = null;
 	
 	public void calculateMetrics(final SLEXEventCollection collection, final DataModel model) {
 		btnCalculateMetrics.setEnabled(false);
@@ -64,9 +68,20 @@ public class FrameMetrics extends CustomInternalFrame {
 					histogramLoaded = true;
 				}
 				
-				Date[] dates = histogramPanel.getSelectedRange();
-				String startDate = dateFormat.format(dates[0]);
-				String endDate = dateFormat.format(dates[1]);
+				histogramPanel.addDateRangeChangeListener(new ChangeListener() {
+					
+					@Override
+					public void stateChanged(ChangeEvent e) {
+						Date[] dates = histogramPanel.getSelectedRange();
+						startDate = dateFormat.format(dates[0]);
+						endDate = dateFormat.format(dates[1]);
+					}
+					
+				});
+				
+				//Date[] dates = histogramPanel.getSelectedRange();
+				//String startDate = dateFormat.format(dates[0]);
+				//String endDate = dateFormat.format(dates[1]);
 				
 				if (collection != null) {
 					String title = "Metrics - Log: "+collection.getName();

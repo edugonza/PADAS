@@ -210,7 +210,7 @@ public class OracleRelationsExplorer {
 		Hashtable<TableInfo, List<Key>> keysPerTable = new Hashtable<>();
 		
 		try {
-			String queryStr = "SELECT PF.constraint_name,PF.table_name,PF.column_name,C.constraint_type,C.r_constraint_name,PF.position "+
+			String queryStr = "SELECT DISTINCT PF.constraint_name,PF.table_name,PF.column_name,C.constraint_type,C.r_constraint_name,PF.position "+
 							  "FROM all_cons_columns PF, all_constraints C "+
 							  "WHERE C.constraint_type IN ('U','P','R') "+
 							  "AND PF.constraint_name = C.constraint_name "+

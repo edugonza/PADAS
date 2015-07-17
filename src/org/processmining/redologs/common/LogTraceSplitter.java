@@ -159,7 +159,12 @@ public class LogTraceSplitter {
 		try {
 			Hashtable<SLEXAttribute,HashMap<String,Integer>> attributesValuesCount = new Hashtable<>();
 			Object[][] results = null;
-			SLEXEventResultSet erset = collection.getEventsResultSetBetweenDatesOrderedBy(null, startDate, endDate); //getEventsResultSet();
+			SLEXEventResultSet erset = null;
+			if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+				erset = collection.getEventsResultSetBetweenDatesOrderedBy(null, startDate, endDate); //getEventsResultSet();
+			} else {
+				erset = collection.getEventsResultSetOrderedBy(null);
+			}
 			SLEXEvent ev = null;
 			while ((ev = erset.getNext()) != null) {
 				Hashtable<SLEXAttribute, SLEXAttributeValue> attributeValues = ev.getAttributeValues();
