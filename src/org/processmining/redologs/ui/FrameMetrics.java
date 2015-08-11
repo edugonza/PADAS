@@ -16,7 +16,6 @@ import javax.swing.table.DefaultTableModel;
 
 import org.processmining.openslex.SLEXAttribute;
 import org.processmining.openslex.SLEXEventCollection;
-import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.openslex.SLEXStorageImpl;
 import org.processmining.redologs.common.DataModel;
@@ -24,12 +23,8 @@ import org.processmining.redologs.common.LogTraceSplitter;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.HistogramPanel;
 
-import com.sun.org.apache.xml.internal.security.keys.storage.StorageResolver;
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.FlowLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
