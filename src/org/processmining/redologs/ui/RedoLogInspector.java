@@ -295,6 +295,17 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmPersInteract);
 		
+		JMenuItem mntmMetaModel = new JMenuItem("MetaModel Computer");
+		mntmMetaModel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FrameMetaModel pMetaModel = new FrameMetaModel();
+				desktopPane.add(pMetaModel);
+				pMetaModel.setVisible(true);
+				pMetaModel.setFocusable(true);
+			}
+		});
+		mnTools.add(mntmMetaModel);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		
