@@ -143,4 +143,39 @@ public class TraceIDPattern {
 		setDirty(false);
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof TraceIDPattern) {
+			TraceIDPattern tpaux = (TraceIDPattern) obj;
+			if (super.equals(tpaux)) {
+				return true;
+			}
+			
+			if (tpaux.hashCode() == this.hashCode()) {
+				if (tpaux.getPAList().size() == this.getPAList().size()) {
+					for (Column caux: tpaux.getPAList()) {
+						if (!this.getPAList().contains(caux)) {
+							return false;
+						}
+					}
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		String rootHashStr = "null";
+		if (root != null) {
+			rootHashStr = String.valueOf(root.hashCode());
+		}
+		String paHashStr = "null";
+		if (pa != null) {
+			paHashStr = String.valueOf(getPAList().hashCode());
+		}
+		String aux = paHashStr+"#"+rootHashStr;
+		return aux.hashCode();
+	}
 }

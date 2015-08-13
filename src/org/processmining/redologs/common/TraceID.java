@@ -33,7 +33,18 @@ public class TraceID {
 		return newTID;
 	}
 	
-	public boolean equals(TraceID tid) {
+	@Override
+	public boolean equals(Object obj) {
+		TraceID tid = null;
+		if (obj instanceof TraceID) {
+			tid = (TraceID) obj;
+		} else {
+			return false;
+		}
+		
+		if (super.equals(tid)) {
+			return true;
+		}
 		
 		if (tp.equals(tid.tp)) {
 			if (tval.size() == tid.tval.size()) {

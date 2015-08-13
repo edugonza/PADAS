@@ -35,4 +35,9 @@ public class Key extends GraphNode {
 	public String toString() {
 		return "("+typeToString()+") "+name;
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
 }

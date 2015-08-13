@@ -63,11 +63,11 @@ public class Relation {
 	}
 	
 	public void setStartTargetObjectVersion(ObjectVersion v) {
-		this.start_source_obj_version = v;
+		this.start_target_obj_version = v;
 	}
 	
 	public void setEndTargetObjectVersion(ObjectVersion v) {
-		this.end_source_obj_version = v;
+		this.end_target_obj_version = v;
 	}
 	
 	public ObjectVersion getStartSourceObjectVersion() {

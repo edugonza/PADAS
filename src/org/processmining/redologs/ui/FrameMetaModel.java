@@ -270,6 +270,8 @@ public class FrameMetaModel extends CustomInternalFrame {
 						mmp.computeMetaModel();
 						
 						MetaModel mm = mmp.getMetaModel();
+						
+						mmp.saveMetaModelToDisk("metamodel-"+evCol.getName());
 						/**/
 						
 						

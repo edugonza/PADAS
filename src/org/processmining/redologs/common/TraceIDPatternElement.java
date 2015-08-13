@@ -33,4 +33,12 @@ public class TraceIDPatternElement {
 		return c;
 	}
 	
+	@Override
+	public int hashCode() {
+		if (isKey()) {
+			return k.hashCode();
+		} else {
+			return c.hashCode();
+		}
+	}
 }
