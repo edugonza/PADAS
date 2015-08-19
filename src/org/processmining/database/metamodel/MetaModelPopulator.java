@@ -462,19 +462,4 @@ public class MetaModelPopulator {
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		
-//		SLEXDMDataModel dm = null;
-//		SLEXEventCollection evCol = null;
-//	
-//		MetaModelPopulator mmp = new MetaModelPopulator(dm, evCol);		
-//		
-//		List<SLEXAttribute> orderAttributes = new ArrayList<>();
-//		
-//		mmp.computeMetaModel(orderAttributes);
-//	
-//		MetaModel mm = mmp.getMetaModel();
-//		
-//	}
-	
 }

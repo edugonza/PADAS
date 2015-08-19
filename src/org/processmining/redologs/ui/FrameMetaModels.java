@@ -17,6 +17,7 @@ import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventCollectionResultSet;
 import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.openslex.metamodel.SLEXMMStorageMetaModelImpl;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 
 import edu.uci.ics.jung.algorithms.metrics.Metrics;
@@ -100,10 +101,20 @@ public class FrameMetaModels extends CustomInternalFrame {
 		JButton btnShow = new JButton("Show Meta Model");
 		btnShow.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				FrameMetaModelInspect fmmins = new FrameMetaModelInspect(getMetaModelFromSelector());
-				RedoLogInspector.getInstance().addFrame(fmmins);
-				fmmins.setVisible(true);
-				fmmins.setFocusable(true);
+				SLEXMMStorageMetaModel mmstrg = getMetaModelFromSelector();
+				if (mmstrg != null) {
+					SLEXMMStorageMetaModel mmstrgAux;
+					try {
+						mmstrgAux = new SLEXMMStorageMetaModelImpl(mmstrg.getPath(),mmstrg.getFilename());
+						FrameMetaModelInspect fmmins = new FrameMetaModelInspect(mmstrgAux);
+						RedoLogInspector.getInstance().addFrame(fmmins);
+						fmmins.setVisible(true);
+						fmmins.setFocusable(true);
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
 			}
 		});
 		panel_4.add(btnShow);

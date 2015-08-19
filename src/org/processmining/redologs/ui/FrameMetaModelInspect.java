@@ -2,6 +2,12 @@ package org.processmining.redologs.ui;
 
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
+import org.processmining.openslex.metamodel.SLEXMMEvent;
+import org.processmining.openslex.metamodel.SLEXMMEventAttribute;
+import org.processmining.openslex.metamodel.SLEXMMEventAttributeValue;
+import org.processmining.openslex.metamodel.SLEXMMEventCollection;
+import org.processmining.openslex.metamodel.SLEXMMEventCollectionResultSet;
+import org.processmining.openslex.metamodel.SLEXMMEventResultSet;
 import org.processmining.openslex.metamodel.SLEXMMObject;
 import org.processmining.openslex.metamodel.SLEXMMObjectResultSet;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
@@ -10,6 +16,7 @@ import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
+import org.processmining.redologs.ui.components.DiagramComponent;
 
 import javax.swing.JSplitPane;
 
@@ -19,9 +26,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -44,6 +53,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private JTable tableObjects;
 	private JTable tableObjectVersions;
 	private JTable tableObjectRelations;
+	private JTable tableCollections;
+	private JTable tableEvents;
+	private JTable tableEventAttributes;
+	private JProgressBar topProgressBar;
 		
 	public FrameMetaModelInspect(SLEXMMStorageMetaModel mmstrg) {
 		super("MetaModel Inspector");
@@ -62,11 +75,68 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JSplitPane splitPane_1 = new JSplitPane();
 		splitPane.setLeftComponent(splitPane_1);
 		
-		JPanel leftTopPanel = new JPanel();
+		JPanel leftTopPanel = new JPanel(new BorderLayout(0,0));
 		splitPane_1.setLeftComponent(leftTopPanel);
+		
+		DiagramComponent datamodelPanel = new DiagramComponent();
+		leftTopPanel.add(datamodelPanel, BorderLayout.CENTER);
 		
 		JPanel rightTopPanel = new JPanel();
 		splitPane_1.setRightComponent(rightTopPanel);
+		rightTopPanel.setLayout(new BorderLayout(0, 0));
+		
+		topProgressBar = new JProgressBar();
+		rightTopPanel.add(topProgressBar,BorderLayout.NORTH);
+		
+		tableCollections = new JTable();
+		tableCollections.setFillsViewportHeight(true);
+		tableCollections.setModel(new CollectionsTableModel());
+		
+		tableCollections.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableCollections.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				int selected = getSelectedCollection();
+				setEventsTableContentFromCollection(selected);
+			}
+		});
+		
+		JSplitPane splitPanelTopLeft = new JSplitPane();
+		splitPanelTopLeft.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+		JScrollPane scrollPane_left = new JScrollPane(tableCollections);
+		scrollPane_left.setMinimumSize(new Dimension(220, 0));
+		splitPanelTopLeft.setLeftComponent(scrollPane_left);
+		rightTopPanel.add(splitPanelTopLeft, BorderLayout.CENTER);
+		
+		tableEvents = new JTable();
+		tableEvents.setFillsViewportHeight(true);
+		tableEvents.setModel(new EventsTableModel());
+		
+		tableEvents.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableEvents.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				int selected = getSelectedEvent();
+				setEventAttributesTableContent(selected);
+			}
+		});
+		
+		JSplitPane splitPanelTopRight = new JSplitPane();
+		splitPanelTopLeft.setRightComponent(splitPanelTopRight);
+		splitPanelTopRight.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+		JScrollPane scrollPane_center = new JScrollPane(tableEvents);
+		scrollPane_center.setMinimumSize(new Dimension(270, 0));
+		splitPanelTopRight.setLeftComponent(scrollPane_center);
+		
+		tableEventAttributes = new JTable();
+		tableEventAttributes.setFillsViewportHeight(true);
+		tableEventAttributes.setModel(new EventAttributesTableModel());
+		
+		JScrollPane scrollPane_right = new JScrollPane(tableEventAttributes);
+		//tableEventAttributes.setMinimumSize(new Dimension(300, 0));
+		splitPanelTopRight.setRightComponent(scrollPane_right);
 		
 		JSplitPane splitPane_2 = new JSplitPane();
 		splitPane.setRightComponent(splitPane_2);
@@ -78,7 +148,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		tableObjects = new JTable();
 		tableObjects.setFillsViewportHeight(true);
-		tableObjects.setModel(new CustomTableModel());
+		tableObjects.setModel(new ObjectsTableModel());
 		
 		tableObjects.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tableObjects.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -128,6 +198,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JScrollPane scrollPaneTableObjectRelations = new JScrollPane(tableObjectRelations);
 		bottomObjectVersionsPanel.add(scrollPaneTableObjectRelations);
 		
+		setCollectionsTableContent();
 		setObjectsTableContent();
 	}
 	
@@ -142,7 +213,19 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		return selected;
 	}
 	
-	private class CustomTableModel extends DefaultTableModel {
+	private int getSelectedCollection() {
+		int selectedRow = tableCollections.getSelectedRow();
+		
+		return (int) tableCollections.getModel().getValueAt(selectedRow, 0);
+	}
+	
+	private int getSelectedEvent() {
+		int selectedRow = tableEvents.getSelectedRow();
+		
+		return (int) tableEvents.getModel().getValueAt(selectedRow, 0);
+	}
+	
+	private class ObjectsTableModel extends DefaultTableModel {
 	
 		Class[] columnTypes = new Class[] {	Integer.class, Integer.class	};
 		boolean[] columnEditables = new boolean[] { false, false };
@@ -155,14 +238,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			return columnEditables[column];
 		}
 			
-		public CustomTableModel() {
+		public ObjectsTableModel() {
 			super(new String[] { "Object Id", "Class Id" }, 0);
 		}
 		
 	}
 	
 	public void setObjectsTableContent() {
-		CustomTableModel model = (CustomTableModel) tableObjects.getModel();
+		ObjectsTableModel model = (ObjectsTableModel) tableObjects.getModel();
 		tableObjects.getColumnModel().getColumn(0).setMinWidth(75);
 		tableObjects.getColumnModel().getColumn(1).setMinWidth(75);
 		
@@ -283,20 +366,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		SLEXMMRelationResultSet orrset = mmstrg.getRelationsForSourceObject(objectId);
 		SLEXMMRelation rel = null;
-		
-//		List<SLEXMMAttribute> attrs = mmstrg.getAttributesForClass(classId);
-//		List<String> attrsName = new ArrayList<>();
-//		
-//		for (SLEXMMAttribute at: attrs) {
-//			attrsName.add(at.getName());
-//		}
-//		Collections.sort(attrsName);
-//		
-//		for (String name: attrsName) {
-//			model.addColumn(name);
-//			model.addColumnClass(String.class);
-//		}
-				
+						
 		while ((rel = orrset.getNext()) != null) {
 			
 			Object[] row = new Object[model.getColumnCount()];
@@ -310,15 +380,136 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			row[6] = Integer.valueOf(rel.getStartTargetObjectVersionId());
 			row[7] = Integer.valueOf(rel.getEndTargetObjectVersionId());
 			row[8] = Integer.valueOf(rel.getEventId());
-			
-//			for (SLEXMMAttribute at: objv.getAttributeValues().keySet()) {
-//				String colName = at.getName();
-//				SLEXMMAttributeValue attrVal = objv.getAttributeValues().get(at);
-//				String value = attrVal.getValue();
-//				row[3+attrsName.indexOf(colName)] = value;
-//			}
-			
+						
 			model.addRow(row);
+		}
+		
+	}
+	
+	private class CollectionsTableModel extends DefaultTableModel {
+		
+		Class[] columnTypes = new Class[] {	Integer.class, String.class	};
+		boolean[] columnEditables = new boolean[] { false, false };
+		
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+		
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+			
+		public CollectionsTableModel() {
+			super(new String[] { "Collection Id", "Name" }, 0);
+		}
+		
+	}
+	
+	public void setCollectionsTableContent() {
+		CollectionsTableModel model = (CollectionsTableModel) tableCollections.getModel();
+		tableCollections.getColumnModel().getColumn(0).setMinWidth(75);
+		tableCollections.getColumnModel().getColumn(1).setMinWidth(75);
+		
+		SLEXMMEventCollectionResultSet orset = mmstrg.getEventCollections();
+		SLEXMMEventCollection evCol = null;
+		
+		while ((evCol = orset.getNext()) != null) {
+			model.addRow(new Object[] {evCol.getId(),evCol.getName()});
+		}
+		
+	}
+	
+	private class EventsTableModel extends DefaultTableModel {
+		
+		Class[] columnTypes = new Class[] {	Integer.class, Integer.class, Integer.class };
+		boolean[] columnEditables = new boolean[] { false, false, false };
+		
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+		
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+			
+		public EventsTableModel() {
+			super(new String[] { "Event Id", "Collection Id", "Ordering" }, 0);
+		}
+		
+	}
+	
+	public void setEventsTableContentFromCollection(final int colId) {
+		
+		Thread thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				try {
+					topProgressBar.setIndeterminate(true);
+					tableCollections.setEnabled(false);
+					
+					EventsTableModel model = new EventsTableModel();
+					
+					tableEvents.setModel(model);
+					
+					tableEvents.getColumnModel().getColumn(0).setMinWidth(75);
+					tableEvents.getColumnModel().getColumn(1).setMinWidth(75);
+					tableEvents.getColumnModel().getColumn(2).setMinWidth(75);
+				
+					SLEXMMEventResultSet orset = mmstrg.getEventsOfCollection(colId);
+					SLEXMMEvent ev = null;
+				
+					while ((ev = orset.getNext()) != null) {
+						model.addRow(new Object[] {ev.getId(),ev.getCollectionId(), ev.getOrder()});
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				topProgressBar.setIndeterminate(false);
+				tableCollections.setEnabled(true);
+			}
+		});
+		
+		thread.start();
+		
+	}
+	
+	private class EventAttributesTableModel extends DefaultTableModel {
+		
+		Class[] columnTypes = new Class[] {	String.class, String.class, String.class };
+		boolean[] columnEditables = new boolean[] { false, false, false };
+		
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+		
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+			
+		public EventAttributesTableModel() {
+			super(new String[] { "Attribute Name", "Value", "Type" }, 0);
+		}
+		
+	}
+	
+	public void setEventAttributesTableContent(int evId) {
+		
+		EventAttributesTableModel model = new EventAttributesTableModel();
+		
+		tableEventAttributes.setModel(model);
+		
+		tableEventAttributes.getColumnModel().getColumn(0).setMinWidth(75);
+		tableEventAttributes.getColumnModel().getColumn(1).setMinWidth(75);
+		tableEventAttributes.getColumnModel().getColumn(1).setMinWidth(75);
+		
+		HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attrs = mmstrg.getAttributeValuesForEvent(evId);
+		
+		for (SLEXMMEventAttribute at: attrs.keySet()) {
+			SLEXMMEventAttributeValue attV = attrs.get(at);
+			model.addRow(new Object[] {at.getName(),attV.getValue(),attV.getType()});
 		}
 		
 	}
