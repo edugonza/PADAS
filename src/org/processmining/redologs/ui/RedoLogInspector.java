@@ -30,6 +30,8 @@ import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.openslex.SLEXStorageDataModel;
 import org.processmining.openslex.SLEXStorageImpl;
 import org.processmining.openslex.SLEXStoragePerspective;
+import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.openslex.metamodel.SLEXMMStorageMetaModelImpl;
 import org.processmining.redologs.common.Constants;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.SLEXDataModelExportImport;
@@ -55,6 +57,7 @@ public class RedoLogInspector {
 	List<SLEXStorageCollection> colStorages = new Vector<>();
 	List<SLEXStoragePerspective> perStorages = new Vector<>();
 	List<SLEXStorageDataModel> dmStorages = new Vector<>();
+	List<SLEXMMStorageMetaModel> mmStorages = new Vector<>();
 	
 	public void closeStorages() {
 		for (SLEXStorageCollection st: colStorages) {
@@ -64,6 +67,9 @@ public class RedoLogInspector {
 			st.disconnect();
 		}
 		for (SLEXStorageDataModel st: dmStorages) {
+			st.disconnect();
+		}
+		for (SLEXMMStorageMetaModel st: mmStorages) {
 			st.disconnect();
 		}
 	}
@@ -156,6 +162,9 @@ public class RedoLogInspector {
 					} else if (f.getName().endsWith(SLEXStorage.PERSPECTIVE_FILE_EXTENSION)) {
 						SLEXStoragePerspective st = new SLEXStorageImpl(dir,f.getName(),SLEXStorage.TYPE_PERSPECTIVE);
 						perStorages.add(st);
+					} else if (f.getName().endsWith(SLEXMMStorageMetaModel.METAMODEL_FILE_EXTENSION)) {
+						SLEXMMStorageMetaModel st = new SLEXMMStorageMetaModelImpl(dir,f.getName());
+						mmStorages.add(st);
 					}
 				}
 			}
@@ -188,6 +197,10 @@ public class RedoLogInspector {
 					FrameDataModels.getInstance().addDataModel(dm);
 				}
 				dmrset.close();
+			}
+			
+			for (SLEXMMStorageMetaModel st: mmStorages) {
+				FrameMetaModels.getInstance().addMetaModel(st);
 			}
 			
 		} catch (ClassNotFoundException e) {
@@ -298,7 +311,7 @@ public class RedoLogInspector {
 		JMenuItem mntmMetaModel = new JMenuItem("MetaModel Computer");
 		mntmMetaModel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				FrameMetaModel pMetaModel = new FrameMetaModel();
+				FrameMetaModelGenerator pMetaModel = new FrameMetaModelGenerator();
 				desktopPane.add(pMetaModel);
 				pMetaModel.setVisible(true);
 				pMetaModel.setFocusable(true);
@@ -355,6 +368,14 @@ public class RedoLogInspector {
 		rDataModels.width = rEvCollections.width;
 		FrameDataModels.getInstance().setBounds(rDataModels);
 		FrameDataModels.getInstance().setVisible(true);
+		
+		desktopPane.add(FrameMetaModels.getInstance());
+		Rectangle rMetaModels = FrameMetaModels.getInstance().getBounds();
+		rMetaModels.height += 200;
+		rMetaModels.x = rDataModels.x + rDataModels.width + 30;
+		rMetaModels.y = rDataModels.y;
+		FrameMetaModels.getInstance().setBounds(rMetaModels);
+		FrameMetaModels.getInstance().setVisible(true);
 		
 		JPanel panel_StatusBar = new JPanel();
 		frmRedologInspector.getContentPane().add(panel_StatusBar, BorderLayout.SOUTH);

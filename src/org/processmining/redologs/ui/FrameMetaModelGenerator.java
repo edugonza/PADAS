@@ -78,7 +78,7 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.ListSelectionModel;
 
-public class FrameMetaModel extends CustomInternalFrame {
+public class FrameMetaModelGenerator extends CustomInternalFrame {
 
 	/**
 	 * 
@@ -110,7 +110,7 @@ public class FrameMetaModel extends CustomInternalFrame {
 		tree.setDataModel(model);
 	}
 	
-	public FrameMetaModel() {
+	public FrameMetaModelGenerator() {
 		super("MetaModel Computer");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
 		setBounds(715, 30, 820, 670);
@@ -305,8 +305,8 @@ public class FrameMetaModel extends CustomInternalFrame {
 							progressBar.setString("Loading...");
 							progressBar.setIndeterminate(true);
 							String title = "Log Splitter - Event Collection: "+eventCollection.getName()+" - Data Model: "+model.getName();
-							FrameMetaModel.this.setTitle(title);
-							FrameMetaModel.this.setDataModel(model);
+							FrameMetaModelGenerator.this.setTitle(title);
+							FrameMetaModelGenerator.this.setDataModel(model);
 							histogramPanel.setData(eventCollection,dateFormat);
 							progressBar.setIndeterminate(false);
 							progressBar.setString("Loaded");
@@ -315,7 +315,7 @@ public class FrameMetaModel extends CustomInternalFrame {
 					loadThread.start();
 					
 				} else {
-					JOptionPane.showMessageDialog(FrameMetaModel.this, "Data Model or Event Collection not selected");
+					JOptionPane.showMessageDialog(FrameMetaModelGenerator.this, "Data Model or Event Collection not selected");
 				}
 			}
 		});

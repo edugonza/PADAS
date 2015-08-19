@@ -75,7 +75,7 @@ public class MetaModelPopulator {
 		SLEXEventResultSet evrset = evCol.getEventsResultSetOrderedBy(orderAttributes);
 		
 		HashMap<TableInfo,HashSet<TraceID>> objects = new HashMap<>();
-		HashMap<TableInfo,HashMap<TraceID,HashMap<TraceID,Relation>>> relations = new HashMap<>();
+		HashMap<TableInfo,HashMap<TraceID,HashMap<Key,HashMap<TraceID,HashSet<Relation>>>>> relations = new HashMap<>();
 		HashMap<TableInfo,HashMap<TraceID,LinkedHashSet<ObjectVersion>>> objectVersions = new HashMap<>();
 		
 		this.mm.objects = objects;
@@ -183,19 +183,26 @@ public class MetaModelPopulator {
 				
 				// Search existing open (not ended) relation for this object
 				if (!relations.containsKey(t)) {
-					relations.put(t, new HashMap<TraceID,HashMap<TraceID,Relation>>());
+					relations.put(t, new HashMap<TraceID,HashMap<Key,HashMap<TraceID,HashSet<Relation>>>>());
 				}
-				HashMap<TraceID,HashMap<TraceID,Relation>> relsT = relations.get(t);
+				HashMap<TraceID,HashMap<Key,HashMap<TraceID,HashSet<Relation>>>> relsT = relations.get(t);
 				
 				if (!relsT.containsKey(eID)) {
-					relsT.put(eID, new HashMap<TraceID,Relation>());
+					relsT.put(eID, new HashMap<Key,HashMap<TraceID,HashSet<Relation>>>());
 				}
-				HashMap<TraceID,Relation> relsMap = relsT.get(eID);
+				HashMap<Key,HashMap<TraceID,HashSet<Relation>>> keysMap = relsT.get(eID);
 
+				if (!keysMap.containsKey(fk)) {
+					keysMap.put(fk, new HashMap<TraceID,HashSet<Relation>>());
+				}
+				
+				HashMap<TraceID,HashSet<Relation>> relsMap = keysMap.get(fk);
 				// If does not exist:
 				if (relsMap.isEmpty()) {
 					// Add relation and link to event
-					relsMap.put(referredPkID, r);
+					HashSet<Relation> relsSet = new HashSet<>();
+					relsSet.add(r);
+					relsMap.put(referredPkID, relsSet);
 					r.setFromEvent(e);
 					r.setStartSourceObjectVersion(objVersion);
 					r.setEndSourceObjectVersion(null);
@@ -203,23 +210,30 @@ public class MetaModelPopulator {
 					r.setEndTargetObjectVersion(null);
 				// else (If relation exists):
 				} else {
-					// If relation is equal:
-					if (relsMap.containsKey(referredPkID)) {
-						// Remain open
-					// Else (If relation is different):
-					} else {
-						Relation lastOpenRelation = null;
-						for (Relation oldR: relsMap.values()) {
+					// Find last open relation
+					Relation lastOpenRelation = null;
+					outOfLoops:
+					for (HashSet<Relation> set: relsMap.values()) {
+						for (Relation oldR: set) {
 							if (oldR.getEndSourceObjectVersion() == null) {
 								lastOpenRelation = oldR;
-								break;
+								break outOfLoops;
 							}
 						}
+					}
+					// If relation is equal: 
+					if (lastOpenRelation.getToObject().equals(referredPkID)) {
+						// Remain open
+					} else {
 						// Close previous relation (link to this event)
 						lastOpenRelation.setEndSourceObjectVersion(objVersion);
 						lastOpenRelation.setEndTargetObjectVersion(getLastObjectVersion(referred_pk.table,referredPkID,objectVersions));
 						// Add new relation and link to event
-						relsMap.put(referredPkID, r);
+						if (!relsMap.containsKey(referredPkID)) {
+							relsMap.put(referredPkID, new HashSet<Relation>());
+						}
+						HashSet<Relation> set = relsMap.get(referredPkID);
+						set.add(r);
 						r.setFromEvent(e);
 						r.setStartSourceObjectVersion(objVersion);
 						r.setEndSourceObjectVersion(null);
@@ -264,7 +278,7 @@ public class MetaModelPopulator {
 	public void saveMetaModelToDisk(String name) {
 		try {
 			SLEXMMStorageMetaModel strg = new SLEXMMStorageMetaModelImpl("data",name+"-"
-					+System.currentTimeMillis()+".db");
+					+System.currentTimeMillis()+SLEXMMStorageMetaModel.METAMODEL_FILE_EXTENSION);
 			
 			HashMap<TableInfo,SLEXMMClass> tableToClassMap = new HashMap<>();
 			HashMap<Column,SLEXMMAttribute> columnToAttributeMap = new HashMap<>();
@@ -382,69 +396,60 @@ public class MetaModelPopulator {
 			int j = 1;
 			
 			for (TableInfo t: mm.relations.keySet()) {
-				HashMap<TraceID,HashMap<TraceID,Relation>> tableRelations = mm.relations.get(t);
+				HashMap<TraceID,HashMap<Key,HashMap<TraceID,HashSet<Relation>>>> tableRelations = mm.relations.get(t);
 				for (TraceID tid: tableRelations.keySet()) {
-					HashMap<TraceID,Relation> sourceObjectRelations = tableRelations.get(tid);
-					for (TraceID tid2: sourceObjectRelations.keySet()) {
-						Relation r = sourceObjectRelations.get(tid2);
+					HashMap<Key,HashMap<TraceID,HashSet<Relation>>> sourceObjectRelations = tableRelations.get(tid);
+					for (Key k: sourceObjectRelations.keySet()) {
+						HashMap<TraceID,HashSet<Relation>> keyObjectRelations = sourceObjectRelations.get(k);
+						for (TraceID tid2: keyObjectRelations.keySet()) {
+							HashSet<Relation> setRelations = keyObjectRelations.get(tid2);
+							for (Relation r: setRelations) {
+								
+								SLEXMMRelationship mmRelationship = fkeyToRelationshipMap.get(r.getRelationshipKey());
+								SLEXMMObject sourceObject = mapTraceIdToObject.get(r.getFromObject());
+								SLEXMMObject targetObject = mapTraceIdToObject.get(r.getToObject());
+								SLEXMMObjectVersion startSourceObjectV = objVToMMObjVersionMap.get(r.getStartSourceObjectVersion());
+								int startSourceObjectVId = -1;
+								if (startSourceObjectV != null) {
+									startSourceObjectVId = startSourceObjectV.getId();
+								}
+								SLEXMMObjectVersion endSourceObjectV = objVToMMObjVersionMap.get(r.getEndSourceObjectVersion());
+								int endSourceObjectVId = -1;
+								if (endSourceObjectV != null) {
+									endSourceObjectVId = endSourceObjectV.getId();
+								}
+								SLEXMMObjectVersion startTargetObjectV = objVToMMObjVersionMap.get(r.getStartTargetObjectVersion());
+								int startTargetObjectVId = -1;
+								if (startTargetObjectV != null) {
+									startTargetObjectVId = startTargetObjectV.getId();
+								}
+								SLEXMMObjectVersion endTargetObjectV = objVToMMObjVersionMap.get(r.getEndTargetObjectVersion());
+								int endTargetObjectVId = -1;
+								if (endTargetObjectV != null) {
+									endTargetObjectVId = endTargetObjectV.getId();
+								}
+								SLEXMMEvent event = eventToMMEventMap.get(r.getEvent());
+								int eventId = -1;
+								if (event != null) {
+									eventId = event.getId();
+								}
+								SLEXMMRelation mmRel = strg.createRelation(mmRelationship.getId(),
+										sourceObject.getId(), targetObject.getId(),
+										startSourceObjectVId, endSourceObjectVId,
+										startTargetObjectVId, endTargetObjectVId,
+										eventId);
 						
-						if (r == null) {
-							if (sourceObjectRelations.containsKey(tid2)) {
-								System.out.println("Contained");
-							} else {
-								System.out.println("Not Contained");
+								for (Column srcC: r.getRelationshipKey().fields) {
+									Column trgC = r.getRelationshipKey().refers_to_column.get(srcC);
+									SLEXMMRelationshipAttribute mmRelAttr =
+											keyFieldToRelAttrMap.get(r.getRelationshipKey()).get(srcC);
+									String value = tid.getValue(srcC);
+									String type = "STRING";
+									SLEXMMRelationshipAttributeValue mmRelAttrVal =
+											strg.createRelationshipAttributeValue(mmRel.getId(), mmRelAttr.getId(), value, type);
+								}
 							}
-							System.out.println("NULL: "+j);
-							System.out.println(""+t+"#"+tid+"#"+tid2+"#");
-							j++;
-						} else {
-						
-						SLEXMMRelationship mmRelationship = fkeyToRelationshipMap.get(r.getRelationshipKey());
-						SLEXMMObject sourceObject = mapTraceIdToObject.get(r.getFromObject());
-						SLEXMMObject targetObject = mapTraceIdToObject.get(r.getToObject());
-						SLEXMMObjectVersion startSourceObjectV = objVToMMObjVersionMap.get(r.getStartSourceObjectVersion());
-						int startSourceObjectVId = -1;
-						if (startSourceObjectV != null) {
-							startSourceObjectVId = startSourceObjectV.getId();
 						}
-						SLEXMMObjectVersion endSourceObjectV = objVToMMObjVersionMap.get(r.getEndSourceObjectVersion());
-						int endSourceObjectVId = -1;
-						if (endSourceObjectV != null) {
-							endSourceObjectVId = endSourceObjectV.getId();
-						}
-						SLEXMMObjectVersion startTargetObjectV = objVToMMObjVersionMap.get(r.getStartTargetObjectVersion());
-						int startTargetObjectVId = -1;
-						if (startTargetObjectV != null) {
-							startTargetObjectVId = startTargetObjectV.getId();
-						}
-						SLEXMMObjectVersion endTargetObjectV = objVToMMObjVersionMap.get(r.getEndTargetObjectVersion());
-						int endTargetObjectVId = -1;
-						if (endTargetObjectV != null) {
-							endTargetObjectVId = endTargetObjectV.getId();
-						}
-						SLEXMMEvent event = eventToMMEventMap.get(r.getEvent());
-						int eventId = -1;
-						if (event != null) {
-							eventId = event.getId();
-						}
-						SLEXMMRelation mmRel = strg.createRelation(mmRelationship.getId(),
-								sourceObject.getId(), targetObject.getId(),
-								startSourceObjectVId, endSourceObjectVId,
-								startTargetObjectVId, endTargetObjectVId,
-								eventId);
-						
-						for (Column srcC: r.getRelationshipKey().fields) {
-							Column trgC = r.getRelationshipKey().refers_to_column.get(srcC);
-							SLEXMMRelationshipAttribute mmRelAttr =
-									keyFieldToRelAttrMap.get(r.getRelationshipKey()).get(srcC);
-							String value = tid.getValue(srcC);
-							String type = "STRING";
-							SLEXMMRelationshipAttributeValue mmRelAttrVal =
-									strg.createRelationshipAttributeValue(mmRel.getId(), mmRelAttr.getId(), value, type);
-						}
-						
-						}
-						
 					}
 				}
 			}
