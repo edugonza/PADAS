@@ -42,6 +42,11 @@ public class MetaModelPopulator {
 		this.mapper = mapper;
 		this.dm = dm;
 		this.commonTable = common;
+		
+		orderAttributes = new ArrayList<>();
+		for (Column ordC: orderColumns) {
+			orderAttributes.add(mapper.map(ordC));
+		}
 	}
 	
 	public TableInfo getTableFromEvent(SLEXEvent e, SLEXAttributeMapper m) {
@@ -65,11 +70,6 @@ public class MetaModelPopulator {
 	
 	public void computeMetaModel() {
 		
-		List<SLEXAttribute> orderAtts = new ArrayList<>();
-		for (Column ordC: orderColumns) {
-			orderAtts.add(mapper.map(ordC));
-		}
-		
 //		SLEXAttributeMapper mapper = LogTraceSplitter.computeMapping(evCol, dm.getTables());
 		
 		SLEXEventResultSet evrset = evCol.getEventsResultSetOrderedBy(orderAttributes);
@@ -88,7 +88,7 @@ public class MetaModelPopulator {
 		
 		SLEXEvent e = null;
 		
-		long order = 0;
+		int order = 0;
 		
 		while ((e = evrset.getNext()) != null) {
 			// Get the class for the event			
@@ -225,9 +225,9 @@ public class MetaModelPopulator {
 					if (lastOpenRelation.getToObject().equals(referredPkID)) {
 						// Remain open
 					} else {
-						// Close previous relation (link to this event)
+						// Close previous relation
 						lastOpenRelation.setEndSourceObjectVersion(objVersion);
-						lastOpenRelation.setEndTargetObjectVersion(getLastObjectVersion(referred_pk.table,referredPkID,objectVersions));
+						lastOpenRelation.setEndTargetObjectVersion(getLastObjectVersion(referred_pk.table,lastOpenRelation.getToObject(),objectVersions));
 						// Add new relation and link to event
 						if (!relsMap.containsKey(referredPkID)) {
 							relsMap.put(referredPkID, new HashSet<Relation>());
@@ -275,7 +275,7 @@ public class MetaModelPopulator {
 		return mm;
 	}
 	
-	public void saveMetaModelToDisk(String name) {
+	public SLEXMMStorageMetaModel saveMetaModelToDisk(String name) {
 		try {
 			SLEXMMStorageMetaModel strg = new SLEXMMStorageMetaModelImpl("data",name+"-"
 					+System.currentTimeMillis()+SLEXMMStorageMetaModel.METAMODEL_FILE_EXTENSION);
@@ -335,7 +335,7 @@ public class MetaModelPopulator {
 			
 			strg.setAutoCommit(false);
 			
-			int i = 0;
+			int i = 1;
 			while ((e = evrset.getNext()) != null) {
 				SLEXMMEvent mme = strg.createEvent(slxmmevCol.getId(),i);
 				eventToMMEventMap.put(e,mme);
@@ -457,9 +457,11 @@ public class MetaModelPopulator {
 			strg.commit();
 			strg.setAutoCommit(true);
 			
+			return strg;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 	
 }

@@ -2,6 +2,8 @@ package org.processmining.redologs.ui;
 
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
+import org.processmining.openslex.metamodel.SLEXMMDataModel;
+import org.processmining.openslex.metamodel.SLEXMMDataModelResultSet;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
 import org.processmining.openslex.metamodel.SLEXMMEventAttribute;
 import org.processmining.openslex.metamodel.SLEXMMEventAttributeValue;
@@ -57,6 +59,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private JTable tableEvents;
 	private JTable tableEventAttributes;
 	private JProgressBar topProgressBar;
+	private DiagramComponent datamodelPanel;
 		
 	public FrameMetaModelInspect(SLEXMMStorageMetaModel mmstrg) {
 		super("MetaModel Inspector");
@@ -78,7 +81,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JPanel leftTopPanel = new JPanel(new BorderLayout(0,0));
 		splitPane_1.setLeftComponent(leftTopPanel);
 		
-		DiagramComponent datamodelPanel = new DiagramComponent();
+		datamodelPanel = new DiagramComponent();
+		datamodelPanel.setMinimumSize(new Dimension(300,200));
 		leftTopPanel.add(datamodelPanel, BorderLayout.CENTER);
 		
 		JPanel rightTopPanel = new JPanel();
@@ -97,8 +101,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				int selected = getSelectedCollection();
-				setEventsTableContentFromCollection(selected);
+				Integer selected = getSelectedCollection();
+				if (selected != null) {
+					setEventsTableContentFromCollection(selected);
+				}
 			}
 		});
 		
@@ -118,8 +124,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				int selected = getSelectedEvent();
-				setEventAttributesTableContent(selected);
+				Integer selected = getSelectedEvent();
+				if (selected != null) {
+					setEventAttributesTableContent(selected);
+				}
 			}
 		});
 		
@@ -155,9 +163,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				int[] selected = getSelectedObject();
-				setObjectVersionsTableContent(selected[0],selected[1]);
-				setObjectRelationsTableContent(selected[0]);
+				Integer[] selected = getSelectedObject();
+				if (selected != null) {
+					setObjectVersionsTableContent(selected[0],selected[1]);
+					setObjectRelationsTableContent(selected[0]);
+				}
 			}
 		});
 		
@@ -200,29 +210,50 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		setCollectionsTableContent();
 		setObjectsTableContent();
+		
+		setDataModel();
 	}
 	
-	private int[] getSelectedObject() {
-		int[] selected = new int[2];
+	private void setDataModel() {
+		SLEXMMDataModelResultSet dmrset = mmstrg.getDataModels();
+		
+		SLEXMMDataModel dm = dmrset.getNext();
+		
+		if (dm != null) {
+			datamodelPanel.setDataModel(dm);
+		}
+	}
+	
+	private Integer[] getSelectedObject() {
+		Integer[] selected = new Integer[2];
 		
 		int selectedRow = tableObjects.getSelectedRow();
+		if (selectedRow >= 0) {
+			selected[0] = (int) tableObjects.getModel().getValueAt(selectedRow, 0);
+			selected[1] = (int) tableObjects.getModel().getValueAt(selectedRow, 1);
 		
-		selected[0] = (int) tableObjects.getModel().getValueAt(selectedRow, 0);
-		selected[1] = (int) tableObjects.getModel().getValueAt(selectedRow, 1);
-		
-		return selected;
+			return selected;
+		} else {
+			return null;
+		}
 	}
 	
-	private int getSelectedCollection() {
+	private Integer getSelectedCollection() {
 		int selectedRow = tableCollections.getSelectedRow();
-		
-		return (int) tableCollections.getModel().getValueAt(selectedRow, 0);
+		if (selectedRow >= 0) {
+			return (int) tableCollections.getModel().getValueAt(selectedRow, 0);
+		} else {
+			return null;
+		}
 	}
 	
-	private int getSelectedEvent() {
+	private Integer getSelectedEvent() {
 		int selectedRow = tableEvents.getSelectedRow();
-		
-		return (int) tableEvents.getModel().getValueAt(selectedRow, 0);
+		if (selectedRow >= 0) {
+			return (int) tableEvents.getModel().getValueAt(selectedRow, 0);
+		} else {
+			return null;
+		}
 	}
 	
 	private class ObjectsTableModel extends DefaultTableModel {
@@ -343,8 +374,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		public ObjectRelationsTableModel() {
 			super(new String[] { "Relation Id", "Relationship Id",
 					"Source Object Id", "Target Object Id",
-					"Start Source Object Version Id", "End Source Object Id",
-					"Start Target Object Version Id", "End Target Object Id",
+					"Start Source Object Version Id", "End Source Object Version Id",
+					"Start Target Object Version Id", "End Target Object Version Id",
 					"Event Id",}, 0);
 			columnTypes.add(Integer.class);
 			columnTypes.add(Integer.class);
@@ -364,7 +395,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		tableObjectRelations.setModel(model);
 		
-		SLEXMMRelationResultSet orrset = mmstrg.getRelationsForSourceObject(objectId);
+		SLEXMMRelationResultSet orrset = mmstrg.getRelationsForSourceObjectOrdered(objectId);
 		SLEXMMRelation rel = null;
 						
 		while ((rel = orrset.getNext()) != null) {

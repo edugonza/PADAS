@@ -26,6 +26,7 @@ import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.openslex.SLEXStorageImpl;
+import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.EventAttributeColumn;
@@ -77,6 +78,10 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.ListSelectionModel;
+import java.awt.FlowLayout;
+import javax.swing.SwingConstants;
+import javax.swing.JSeparator;
+import java.awt.GridLayout;
 
 public class FrameMetaModelGenerator extends CustomInternalFrame {
 
@@ -89,10 +94,6 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 	private DataModelList listSortField = new DataModelList();
 	
 	private Object selectedRoot = null;
-	private JLabel processedEventsLabel;
-	private JLabel generatedTracesLabel;
-	private JLabel removedTracesLabel;
-	private HistogramPanel histogramPanel;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 	
 	private JLabel lblStartdatevalue = null;
@@ -113,7 +114,9 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 	public FrameMetaModelGenerator() {
 		super("MetaModel Computer");
 		BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(715, 30, 820, 670);
+		borderLayout.setHgap(5);
+		borderLayout.setVgap(5);
+		setBounds(715, 30, 361, 371);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
@@ -127,35 +130,19 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 		
 		JPanel panel_1 = new JPanel();
 		panel.add(panel_1);
+		panel_1.setLayout(new GridLayout(0, 1, 2, 3));
 		
 		final JButton btnLoad = new JButton("Load Data Model & Event Collection");
+		btnLoad.setAlignmentX(Component.CENTER_ALIGNMENT);
 		panel_1.add(btnLoad);
 		
 		JButton btnComputeMetaModel = new JButton("Compute MetaModel");
+		btnComputeMetaModel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		panel_1.add(btnComputeMetaModel);
 		
-		JButton btnVisualizeDataModel = new JButton("Visualize Data Model");
-		btnVisualizeDataModel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (model != null) {
-					FrameRelationsGraph relations = new FrameRelationsGraph(true,null);
-					RedoLogInspector.getInstance().addFrame(relations);
-					relations.setVisible(true);
-					relations.setFocusable(true);
-					relations.reloadGraph(model);
-				}
-			}
-		});
-		
-		panel_1.add(btnVisualizeDataModel);
-		
-		JPanel panel_2 = new JPanel();
-		panel.add(panel_2);
-		panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.X_AXIS));
-		
 		final JProgressBar progressBar = new JProgressBar();
+		panel_1.add(progressBar);
 		progressBar.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel_2.add(progressBar);
 		
 		
 		btnComputeMetaModel.addActionListener(new ActionListener() {
@@ -221,31 +208,31 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 //						tp.add((Key) n);
 //					}
 //				}
-				
-				final ProgressHandler progressHandler = new ProgressHandler() {
-					public void refreshValue(final String key, final String value) {
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-
-								if (key != null) {
-									if (key.compareTo("Traces") == 0) {
-										generatedTracesLabel.setText(value);
-									} else if (key.compareTo("Events") == 0) {
-										processedEventsLabel.setText(value);
-									} else if (key.compareTo("RemovedTraces") == 0) {
-										removedTracesLabel.setText(value);
-									} else if (key.compareTo("DAGTasks") == 0) {
-										//dagTasksLabel.setText(value);
-									}
-								}
-							}
-						});
-					}
-				};
-				
-				final String startDate = lblStartdatevalue.getText();
-				final String endDate = lblEnddatevalue.getText();
-				
+//				
+//				final ProgressHandler progressHandler = new ProgressHandler() {
+//					public void refreshValue(final String key, final String value) {
+//						SwingUtilities.invokeLater(new Runnable() {
+//							public void run() {
+//
+//								if (key != null) {
+//									if (key.compareTo("Traces") == 0) {
+//										generatedTracesLabel.setText(value);
+//									} else if (key.compareTo("Events") == 0) {
+//										processedEventsLabel.setText(value);
+//									} else if (key.compareTo("RemovedTraces") == 0) {
+//										removedTracesLabel.setText(value);
+//									} else if (key.compareTo("DAGTasks") == 0) {
+//										//dagTasksLabel.setText(value);
+//									}
+//								}
+//							}
+//						});
+//					}
+//				};
+//				
+//				final String startDate = lblStartdatevalue.getText();
+//				final String endDate = lblEnddatevalue.getText();
+//				
 				Thread logSplitThread = new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -271,7 +258,11 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 						
 						MetaModel mm = mmp.getMetaModel();
 						
-						mmp.saveMetaModelToDisk("metamodel-"+evCol.getName());
+						SLEXMMStorageMetaModel mmstrg = mmp.saveMetaModelToDisk("metamodel-"+evCol.getName());
+						
+						if (mmstrg != null) {
+							FrameMetaModels.getInstance().addMetaModel(mmstrg);
+						}
 						/**/
 						
 						
@@ -304,10 +295,10 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 							progressBar.setStringPainted(true);
 							progressBar.setString("Loading...");
 							progressBar.setIndeterminate(true);
-							String title = "Log Splitter - Event Collection: "+eventCollection.getName()+" - Data Model: "+model.getName();
+							String title = "Meta Model Generator - Event Collection: "+eventCollection.getName()+" - Data Model: "+model.getName();
 							FrameMetaModelGenerator.this.setTitle(title);
 							FrameMetaModelGenerator.this.setDataModel(model);
-							histogramPanel.setData(eventCollection,dateFormat);
+//							histogramPanel.setData(eventCollection,dateFormat);
 							progressBar.setIndeterminate(false);
 							progressBar.setString("Loaded");
 						}
@@ -320,139 +311,23 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 			}
 		});
 		
-		JPanel panel_3 = new JPanel();
-		getContentPane().add(panel_3, BorderLayout.EAST);
-		panel_3.setLayout(new BorderLayout(0, 0));
-		
 		JPanel panel_side = new JPanel();
-		panel_3.add(panel_side);
-		GridBagLayout gbl_panel_side = new GridBagLayout();
-		gbl_panel_side.columnWidths = new int[] {100, 200};
-		gbl_panel_side.rowHeights = new int[] {60, 100, 40, 30, 30, 30, 30, 30, 30, 0};
-		gbl_panel_side.columnWeights = new double[]{1.0, 1.0};
-		gbl_panel_side.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
-		panel_side.setLayout(gbl_panel_side);
+		getContentPane().add(panel_side, BorderLayout.SOUTH);
+		panel_side.setLayout(new BorderLayout(0, 0));
 		
 		JLabel lblNewLabel_1 = new JLabel("Order");
-		GridBagConstraints gbc_lblNewLabel_1 = new GridBagConstraints();
-		gbc_lblNewLabel_1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblNewLabel_1.insets = new Insets(0, 5, 5, 5);
-		gbc_lblNewLabel_1.gridx = 0;
-		gbc_lblNewLabel_1.gridy = 0;
-		panel_side.add(lblNewLabel_1, gbc_lblNewLabel_1);
+		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_side.add(lblNewLabel_1, BorderLayout.NORTH);
+		listSortField.setVisibleRowCount(4);
 		listSortField.setModel(new DefaultListModel<>());
 		listSortField.setDropMode(DropMode.INSERT);
 		
 		JScrollPane scrollPane_0 = new JScrollPane(listSortField);
-		GridBagConstraints gbc_scrollPane_0 = new GridBagConstraints();
-		gbc_scrollPane_0.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane_0.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane_0.gridx = 1;
-		gbc_scrollPane_0.gridy = 0;
-		panel_side.add(scrollPane_0, gbc_scrollPane_0);
+		panel_side.add(scrollPane_0);
 		GridBagConstraints gbc_listActivityNameFields = new GridBagConstraints();
 		gbc_listActivityNameFields.insets = new Insets(0, 0, 5, 0);
 		gbc_listActivityNameFields.gridx = 1;
 		gbc_listActivityNameFields.gridy = 2;
-		
-		JLabel lblProcessedEvents = new JLabel("Processed Events");
-		GridBagConstraints gbc_lblProcessedEvents = new GridBagConstraints();
-		gbc_lblProcessedEvents.insets = new Insets(0, 0, 5, 5);
-		gbc_lblProcessedEvents.gridx = 0;
-		gbc_lblProcessedEvents.gridy = 3;
-		panel_side.add(lblProcessedEvents, gbc_lblProcessedEvents);
-		
-		processedEventsLabel = new JLabel("0");
-		GridBagConstraints gbc_processedEventsLabel = new GridBagConstraints();
-		gbc_processedEventsLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_processedEventsLabel.gridx = 1;
-		gbc_processedEventsLabel.gridy = 3;
-		panel_side.add(processedEventsLabel, gbc_processedEventsLabel);
-		
-		JLabel lblGeneratedTraces = new JLabel("Generated Traces");
-		GridBagConstraints gbc_lblGeneratedTraces = new GridBagConstraints();
-		gbc_lblGeneratedTraces.insets = new Insets(0, 0, 5, 5);
-		gbc_lblGeneratedTraces.gridx = 0;
-		gbc_lblGeneratedTraces.gridy = 4;
-		panel_side.add(lblGeneratedTraces, gbc_lblGeneratedTraces);
-		
-		generatedTracesLabel = new JLabel("0");
-		GridBagConstraints gbc_generatedTracesLabel = new GridBagConstraints();
-		gbc_generatedTracesLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_generatedTracesLabel.gridx = 1;
-		gbc_generatedTracesLabel.gridy = 4;
-		panel_side.add(generatedTracesLabel, gbc_generatedTracesLabel);
-		
-		JLabel lblRemovedTraces = new JLabel("Removed Traces");
-		GridBagConstraints gbc_lblRemovedTraces = new GridBagConstraints();
-		gbc_lblRemovedTraces.insets = new Insets(0, 0, 5, 5);
-		gbc_lblRemovedTraces.gridx = 0;
-		gbc_lblRemovedTraces.gridy = 5;
-		panel_side.add(lblRemovedTraces, gbc_lblRemovedTraces);
-		
-		removedTracesLabel = new JLabel("0");
-		GridBagConstraints gbc_removedTracesLabel = new GridBagConstraints();
-		gbc_removedTracesLabel.insets = new Insets(0, 0, 5, 0);
-		gbc_removedTracesLabel.gridx = 1;
-		gbc_removedTracesLabel.gridy = 5;
-		panel_side.add(removedTracesLabel, gbc_removedTracesLabel);
-		
-		JLabel lblStartDate = new JLabel("Start Date");
-		GridBagConstraints gbc_lblStartDate = new GridBagConstraints();
-		gbc_lblStartDate.insets = new Insets(0, 0, 5, 5);
-		gbc_lblStartDate.gridx = 0;
-		gbc_lblStartDate.gridy = 6;
-		panel_side.add(lblStartDate, gbc_lblStartDate);
-		
-		lblStartdatevalue = new JLabel("");
-		GridBagConstraints gbc_lblStartdatevalue = new GridBagConstraints();
-		gbc_lblStartdatevalue.insets = new Insets(0, 0, 5, 0);
-		gbc_lblStartdatevalue.gridx = 1;
-		gbc_lblStartdatevalue.gridy = 6;
-		panel_side.add(lblStartdatevalue, gbc_lblStartdatevalue);
-		
-		JLabel lblEndDate = new JLabel("End Date");
-		GridBagConstraints gbc_lblEndDate = new GridBagConstraints();
-		gbc_lblEndDate.insets = new Insets(0, 0, 5, 5);
-		gbc_lblEndDate.gridx = 0;
-		gbc_lblEndDate.gridy = 7;
-		panel_side.add(lblEndDate, gbc_lblEndDate);
-		
-		lblEnddatevalue = new JLabel("");
-		GridBagConstraints gbc_lblEnddatevalue = new GridBagConstraints();
-		gbc_lblEnddatevalue.insets = new Insets(0, 0, 5, 0);
-		gbc_lblEnddatevalue.gridx = 1;
-		gbc_lblEnddatevalue.gridy = 7;
-		panel_side.add(lblEnddatevalue, gbc_lblEnddatevalue);
-		
-		JPanel panel_4 = new JPanel();
-		GridBagLayout gbl_panel_4 = new GridBagLayout();
-		gbl_panel_4.columnWidths = new int[] {0};
-		gbl_panel_4.rowHeights = new int[] {5, 60, 0};
-		gbl_panel_4.columnWeights = new double[]{1.0};
-		gbl_panel_4.rowWeights = new double[]{0.0, 0.0, 0.0};
-		panel_4.setLayout(gbl_panel_4);
-		getContentPane().add(panel_4, BorderLayout.SOUTH);
-		histogramPanel = new HistogramPanel();
-		GridBagLayout gridBagLayout = (GridBagLayout) histogramPanel.getLayout();
-		gridBagLayout.rowHeights = new int[] {0, 0, 0};
-		GridBagConstraints gbc_histogramPanel = new GridBagConstraints();
-		gbc_histogramPanel.anchor = GridBagConstraints.NORTH;
-		gbc_histogramPanel.fill = GridBagConstraints.BOTH;
-		gbc_histogramPanel.gridx = 0;
-		gbc_histogramPanel.gridy = 1;
-		panel_4.add(histogramPanel, gbc_histogramPanel);
-		
-		histogramPanel.addDateRangeChangeListener(new ChangeListener() {
-			
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				Date[] dates = histogramPanel.getSelectedRange();
-				lblStartdatevalue.setText(dateFormat.format(dates[0]));
-				lblEnddatevalue.setText(dateFormat.format(dates[1]));
-			}
-			
-		});
 		
 	}
 }

@@ -10,9 +10,9 @@ public class ObjectVersion {
 	private TraceID objectId;
 	private SLEXEvent event;
 	private HashMap<Column,String> attributeValues;
-	private long order;
+	private int order;
 	
-	public ObjectVersion(TraceID objID, SLEXEvent event, long order) {
+	public ObjectVersion(TraceID objID, SLEXEvent event, int order) {
 		this.objectId = objID;
 		this.event = event;
 		this.attributeValues = new HashMap<>();
@@ -35,7 +35,7 @@ public class ObjectVersion {
 		return this.event;
 	}
 	
-	public long getOrder() {
+	public int getOrder() {
 		return order;
 	}
 }
