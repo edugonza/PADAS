@@ -100,6 +100,7 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 	private JLabel lblEnddatevalue = null;
 	private SLEXEventCollection eventCollection;
 	private SLEXStorageCollection storage;
+	private SLEXPerspective perspective;
 	
 	DataModelTree tree = new DataModelTree();
 	
@@ -191,6 +192,7 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 				tables.add(tree.getCommonTable());
 				
 				final SLEXAttributeMapper mapper = LogTraceSplitter.computeMapping(evCol, tables);
+				
 //				final TraceIDPattern tp = new TraceIDPattern(model);
 				
 //				if (selectedRoot instanceof EventAttributeColumn) {
@@ -252,7 +254,29 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 //						}
 //						
 						/**/
-						MetaModelPopulator mmp = new MetaModelPopulator(tree.getCommonTable(), model, evCol, sortFields, mapper);
+						List<Column> activityColumns = new ArrayList<>();
+						Column c1 = null, c2 = null, c3 = null;
+						for (Column c: tree.getCommonTable().columns) {
+							if (c.name.equals("TABLE_NAME")) {
+								c1 = c;
+							} else if (c.name.equals("OPERATION")) {
+								c2 = c;
+							} else if (c.name.equals("COLUMN_CHANGES")) {
+								c3 = c;
+							}
+						}
+						if (c1 != null) {
+							activityColumns.add(c1);
+						}
+						if (c2 != null) {
+							activityColumns.add(c2);
+						}
+						if (c3 != null) {
+							activityColumns.add(c3);
+						}
+						
+						MetaModelPopulator mmp = new MetaModelPopulator(tree.getCommonTable(),
+								model, evCol, sortFields, mapper, activityColumns,perspective);
 					
 						mmp.computeMetaModel();
 						
@@ -279,7 +303,7 @@ public class FrameMetaModelGenerator extends CustomInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				final DataModel model = FrameDataModels.getInstance().getSelectedDataModel();
 				final SLEXEventCollection evcol = FrameEventCollections.getInstance().getEventCollectionFromSelector();
-				
+				perspective = FramePerspectives.getInstance().getPerspectiveFromSelector();
 				if (model != null && evcol != null) {
 					Thread loadThread = new Thread(new Runnable() {
 						
