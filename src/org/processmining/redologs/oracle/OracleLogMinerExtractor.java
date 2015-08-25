@@ -179,6 +179,7 @@ public class OracleLogMinerExtractor {
 				result.add(res.getString(1));
 			}
 			
+			stm.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -219,6 +220,7 @@ public class OracleLogMinerExtractor {
 //					+" + DBMS_LOGMNR.COMMITTED_DATA_ONLY  "
 					+" ); end;");
 			
+			stm.close();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -235,6 +237,7 @@ public class OracleLogMinerExtractor {
 			
 			printResultSet(res);
 			
+			stm.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -262,7 +265,7 @@ public class OracleLogMinerExtractor {
 			
 			t.columns = columns;
 			
-			res.close();
+			stm.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -479,16 +482,15 @@ public class OracleLogMinerExtractor {
 	private Map<String, String> getFieldsForRowId(TableInfo t, String rowid) {
 		Map<String,String> result = new HashMap<>();
 		String query = "SELECT * FROM "+t.db+"."+t.name+" WHERE ROWID='"+rowid+"'";
-		Statement stm;
 		try {
-			stm = con.createStatement();
+			Statement stm = con.createStatement();
 			ResultSet res = stm.executeQuery(query);
 			if (res.next()) {
 				for (int i = 0; i < t.columns.size(); i++) {
 					result.put(t.columns.get(i).name,res.getString(t.columns.get(i).name));
 				}
 			}
-			res.close();
+			stm.close();
 			return result;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -519,11 +521,9 @@ public class OracleLogMinerExtractor {
 		
 		query += ")";
 		
-		ResultSet res = null;
-		
 		try {
 			Statement stm = con.createStatement();
-			res = stm.executeQuery(query);
+			ResultSet res = stm.executeQuery(query);
 
 			int order = 0;
 			while (res.next()) {
@@ -533,17 +533,10 @@ public class OracleLogMinerExtractor {
 				idsOrderMap.put(ssn+"#"+rs_id, order);
 			}
 
+			stm.close();
 		} catch (SQLException e) {
 			System.out.println("Error: "+query);
 			e.printStackTrace();
-		}
-		
-		if (res != null) {
-			try {
-				res.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
 		}
 		
 		return idsOrderMap;
@@ -610,32 +603,21 @@ public class OracleLogMinerExtractor {
 		
 		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' AND SCN <= '"+scn_limit+"' ORDER BY SCN DESC";
 		
-		ResultSet res = null;
+		
 		
 		try {
 			Statement stm = con.createStatement();
-			res = stm.executeQuery(query);
+			ResultSet res = stm.executeQuery(query);
 
-//			if (outputCSVFile == null) {
-//				printResultSet(res);
-//			} else {
-				
-				saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses,orderIds);
-//			}
+			saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses,orderIds);
+
 			
-			//res.close();
+			stm.close();
 		} catch (SQLException e) {
 			System.out.println("Error: "+query);
 			e.printStackTrace();
 		}
 		
-		if (res != null) {
-			try {
-				res.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 	
 	public void disconnect() {
@@ -657,6 +639,7 @@ public class OracleLogMinerExtractor {
 			res.next();
 			scn = res.getLong(1);
 			
+			stm.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

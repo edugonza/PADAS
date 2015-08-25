@@ -306,9 +306,9 @@ public class FrameTables extends CustomInternalFrame {
 									long scn_limit = extractor.getSCNLastCheckpoint();
 									
 									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
-										extractor.disconnect();
-										extractor.connect();
-										extractor.startLogMiner(redoFiles);
+										//extractor.disconnect();
+										//extractor.connect();
+										//extractor.startLogMiner(redoFiles);
 										//for (TableInfo t : tables) {
 										TableInfo t = tables.get(it);
 										progress++;
