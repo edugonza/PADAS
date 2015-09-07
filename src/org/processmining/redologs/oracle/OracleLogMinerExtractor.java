@@ -604,9 +604,9 @@ public class OracleLogMinerExtractor {
 		query +=" FROM V$LOGMNR_CONTENTS WHERE SEG_OWNER='"+t.db+"' AND TABLE_NAME='"+t.name+"' AND SCN <= '"+scn_limit+"' ORDER BY SCN DESC";
 		
 		
-		
+		Statement stm = null;
 		try {
-			Statement stm = con.createStatement();
+			stm = con.createStatement();
 			ResultSet res = stm.executeQuery(query);
 
 			saveResultSet(t,aliasTable,res,outputCSVFile,eventCollection,computeEventClasses,orderIds);
@@ -616,6 +616,14 @@ public class OracleLogMinerExtractor {
 		} catch (SQLException e) {
 			System.out.println("Error: "+query);
 			e.printStackTrace();
+		} finally {
+			try {
+				if (stm != null) {
+					stm.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 	}

@@ -69,7 +69,7 @@ public class SchemaMiner {
 			SLEXDMDataModel dm = st.createDMDataModel("Test-CF");
 			SchemaMiner sminer = new SchemaMiner(xlog, dm);
 			sminer.discoverClasses(1.0);
-			sminer.discoverKeys();
+			//sminer.discoverKeys();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
