@@ -481,7 +481,9 @@ public class OracleLogMinerExtractor {
 	
 	private Map<String, String> getFieldsForRowId(TableInfo t, String rowid) {
 		Map<String,String> result = new HashMap<>();
-		String query = "SELECT * FROM "+t.db+"."+t.name+" WHERE ROWID='"+rowid+"'";
+		String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from ALL_TAB_COLUMNS where TABLE_NAME = '"+
+				t.name+"' AND OWNER='"+t.db+"'";
+
 		try {
 			Statement stm = con.createStatement();
 			ResultSet res = stm.executeQuery(query);
@@ -498,7 +500,7 @@ public class OracleLogMinerExtractor {
 			e.printStackTrace();
 		}
 		
-		return null;
+		return result;
 	}
 	
 	public class AliasColumnNameType {
@@ -543,8 +545,37 @@ public class OracleLogMinerExtractor {
 		
 	}
 	
+	public HashMap<Column,String> getColumnDataTypes(TableInfo t) {
+		HashMap<Column,String> columnTypes = new HashMap<>();
+		
+		String query = "DESC '"+t.db+"."+t.name+"'";
+		
+		try {
+			Statement stm = con.createStatement();
+			ResultSet res = stm.executeQuery(query);
+
+			while (res.next()) {
+				String columnName = res.getString("Name");
+				String type = res.getString("Type");
+				Column c = new Column();
+				c.table = t;
+				c.name = columnName;
+				columnTypes.put(c, type);
+			}
+
+			stm.close();
+		} catch (SQLException e) {
+			System.out.println("Error: "+query);
+			e.printStackTrace();
+		}
+		
+		return columnTypes;
+	}
+	
 	public void getLogsForTableWithColumns(TableInfo t, File outputCSVFile, SLEXEventCollection eventCollection, boolean allRedoFields, boolean computeEventClasses, HashMap<String,Integer> orderIds, long scn_limit) {
 		String query = "SELECT ";
+		
+		HashMap<Column,String> columnTypes = getColumnDataTypes(t);
 		
 		if (allRedoFields) {
 			query += " V$LOGMNR_CONTENTS.*, ";
@@ -562,13 +593,39 @@ public class OracleLogMinerExtractor {
 		int i = 0;
 		for (Column c: t.columns) {
 			
+			String type = columnTypes.get(c);
+			boolean ignore = false;
+			if (type != null) {
+				if (type.equalsIgnoreCase("LOB")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("CLOB")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("BFILE")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("BLOB")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("NCLOB")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("ADT")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("LONG")) {
+					ignore = true;
+				} else if (type.equalsIgnoreCase("COLLECTION")) {
+					ignore = true;
+				}
+			}
+			
 			AliasColumnNameType ac1 = new AliasColumnNameType();
 			AliasColumnNameType ac2 = new AliasColumnNameType();
 			AliasColumnNameType ac3 = new AliasColumnNameType();
 			AliasColumnNameType ac4 = new AliasColumnNameType();
 			
 			query += ", ";
-			query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			if (ignore) {
+				query += " '"+type+"' AS ALIAS_"+i+", ";
+			} else {
+				query += " (DBMS_LOGMNR.MINE_VALUE(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			}
 			
 			ac1.isCP = false;
 			ac1.isNewValue = true;
@@ -576,7 +633,11 @@ public class OracleLogMinerExtractor {
 			aliasTable.put("ALIAS_"+i, ac1);
 			i++;
 			
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			if (ignore) {
+				query += " '1' AS ALIAS_"+i+", ";
+			} else {
+				query += " (DBMS_LOGMNR.COLUMN_PRESENT(REDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			}
 			
 			ac2.isCP = true;
 			ac2.isNewValue = true;
@@ -584,7 +645,11 @@ public class OracleLogMinerExtractor {
 			aliasTable.put("ALIAS_"+i, ac2);
 			i++;
 			
-			query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			if (ignore) {
+				query += " '"+type+"' AS ALIAS_"+i+", ";
+			} else {
+				query += " (DBMS_LOGMNR.MINE_VALUE(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i+", ";
+			}
 			
 			ac3.isCP = false;
 			ac3.isNewValue = false;
@@ -592,7 +657,11 @@ public class OracleLogMinerExtractor {
 			aliasTable.put("ALIAS_"+i, ac3);
 			i++;
 			
-			query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i;
+			if (ignore) {
+				query += " '1' AS ALIAS_"+i+", ";
+			} else {
+				query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i;
+			}
 			
 			ac4.isCP = true;
 			ac4.isNewValue = false;

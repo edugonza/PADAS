@@ -35,8 +35,6 @@ import org.processmining.openslex.metamodel.SLEXMMClassResultSet;
 import org.processmining.openslex.metamodel.SLEXMMDataModel;
 import org.processmining.openslex.metamodel.SLEXMMRelationship;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
-import org.processmining.redologs.ui.SceneSupport;
-import org.processmining.redologs.ui.VMDTest;
 
 public class DiagramComponent extends JPanel {
 	
