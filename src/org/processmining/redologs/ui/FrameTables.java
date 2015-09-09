@@ -6,10 +6,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -18,21 +18,12 @@ import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.deckfour.xes.model.XAttributeMap;
-import org.deckfour.xes.model.XLog;
-import org.deckfour.xes.model.XTrace;
-import org.deckfour.xes.model.impl.XAttributeMapImpl;
-import org.deckfour.xes.model.impl.XLogImpl;
-import org.deckfour.xes.model.impl.XTraceImpl;
-import org.deckfour.xes.out.XSerializer;
-import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXFactory;
@@ -303,6 +294,23 @@ public class FrameTables extends CustomInternalFrame {
 									progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									
 									HashMap<String,Integer> orderIds = extractor.getOrderOfLogs(tables);
+									try {
+										String orderFilePath = eventCollection.getStorage().getPath();
+										String orderFileName = eventCollection.getStorage().getFilename()+".ordering.csv";
+										File orderFile = new File(orderFilePath+File.separator+orderFileName);
+										OutputStream out = new FileOutputStream(orderFile);
+										BufferedOutputStream bos = new BufferedOutputStream(out);
+										String header = "SSN-RSID;Order\n";
+										bos.write(header.getBytes());
+										for (String key: orderIds.keySet()) {
+											String line = key+";"+orderIds.get(key)+"\n";
+											bos.write(line.getBytes());
+										}
+										bos.close();
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+									
 									long scn_limit = extractor.getSCNLastCheckpoint();
 									
 									for (int it = 0; (it < tables.size()) && !stopExtractor; it++) {
