@@ -9,6 +9,7 @@ import javax.swing.DropMode;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -61,6 +62,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -72,12 +75,18 @@ import java.awt.Component;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.TableColumnModelListener;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.ListSelectionModel;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 public class FramePerspectivesDetector extends CustomInternalFrame {
 
@@ -104,10 +113,9 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 	private SLEXEventCollection eventCollection;
 	private SLEXStorageCollection storage;
 	
-	private List<Set<TableInfo>> subgraphs;
-	
 	DataModelTree tree = new DataModelTree();
 	JTree resultTree = new JTree();
+	private JTable resultTable;
 	
 	private void setDataModel(DataModel model) {
 		if (model != this.model) {
@@ -132,16 +140,33 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 		getContentPane().add(splitPane, BorderLayout.CENTER);
 		
 		JScrollPane scrollPane = new JScrollPane(tree);
+		splitPane.setTopComponent(scrollPane);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+		splitPane.setBottomComponent(tabbedPane);
+		
 		resultTree.setModel(new DefaultTreeModel(
 			new DefaultMutableTreeNode("Subgraphs") {
 				{
 				}
 			}
 		));
+		
 		JScrollPane scrollPaneResult = new JScrollPane(resultTree);
-		splitPane.setTopComponent(scrollPane);
-		splitPane.setBottomComponent(scrollPaneResult);
-		//getContentPane().add(scrollPane, BorderLayout.CENTER);
+		tabbedPane.addTab("Subgraphs Tree", null, scrollPaneResult, null);
+		
+		resultTable = new JTable();
+		resultTable.setModel(new DefaultTableModel(
+			new Object[][] {
+			},
+				new String[] { "Subgraph", "Table Name", "In arcs", "Out arcs",
+						"# Events", "Start Date", "End Date" }
+		));
+		resultTable.getColumnModel().getColumn(5).setPreferredWidth(103);
+		resultTable.setFillsViewportHeight(true);
+		JScrollPane scrollPaneResultTable = new JScrollPane(resultTable);
+		
+		tabbedPane.addTab("Subgraphs Table", null, scrollPaneResultTable, null);
 		
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.NORTH);
@@ -153,7 +178,7 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 		final JButton btnLoad = new JButton("Load Data Model & Event Collection");
 		panel_1.add(btnLoad);
 		
-		JButton btnSplitLog = new JButton("Split Log");
+		JButton btnSplitLog = new JButton("Compute Subgraphs");
 		panel_1.add(btnSplitLog);
 		
 //		JButton btnVisualizeDataModel = new JButton("Visualize Data Model");
@@ -278,10 +303,25 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 						
 						PerspectiveDetector dec = new PerspectiveDetector(evCol, model, mapper);
 						
-						subgraphs = dec.getSubgraphs();
+						List<Set<TableInfo>> subgraphs = dec.getSubgraphs();
+						HashMap<TableInfo, Integer> eventsPerTable = dec.getEventsPerTable();
+						HashMap<TableInfo, Integer> inArcs = dec.getInArcs();
+						HashMap<TableInfo, Integer> outArcs = dec.getOutArcs();
+						//startDates = dec.getStartDates();
+						//endDates = dec.getEndDates();
 						
 						DefaultTreeModel treeModel = (DefaultTreeModel) resultTree.getModel();
 						MutableTreeNode root = (MutableTreeNode) treeModel.getRoot();
+						
+						resultTable.setModel(new DefaultTableModel(
+								new Object[][] {
+								},
+									new String[] { "Subgraph", "Table Name", "In arcs", "Out arcs",
+											"# Events", "Start Date", "End Date" }
+							));
+							resultTable.getColumnModel().getColumn(5).setPreferredWidth(103);
+						DefaultTableModel tabModel = (DefaultTableModel) resultTable.getModel();
+						
 						int i = 0;
 						for (Set<TableInfo> s: subgraphs) {
 							MutableTreeNode n = new DefaultMutableTreeNode("Subgraph "+i, true);
@@ -290,7 +330,14 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 							int j = 0;
 							for (TableInfo t: s) {
 								MutableTreeNode c = new DefaultMutableTreeNode(t, true);
+								Integer amount = eventsPerTable.get(t);
+								MutableTreeNode c1 = new DefaultMutableTreeNode("# Events: "+amount, false);
 								treeModel.insertNodeInto(c,n,j);
+								treeModel.insertNodeInto(c1, c, 0);
+								
+								/* Table */
+								tabModel.addRow(new Object[] {i,t.name,inArcs.get(t),outArcs.get(t),amount,0,0});
+								
 								j++;
 							}
 							
@@ -340,7 +387,7 @@ public class FramePerspectivesDetector extends CustomInternalFrame {
 							String title = "Log Splitter - Event Collection: "+eventCollection.getName()+" - Data Model: "+model.getName();
 							FramePerspectivesDetector.this.setTitle(title);
 							FramePerspectivesDetector.this.setDataModel(model);
-							histogramPanel.setData(eventCollection,dateFormat);
+							//histogramPanel.setData(eventCollection,dateFormat); FIXME
 							progressBar.setIndeterminate(false);
 							progressBar.setString("Loaded");
 						}
