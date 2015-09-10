@@ -319,6 +319,17 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmMetaModel);
 		
+		JMenuItem mntmPerspectiveDetector = new JMenuItem("Perspectives Detector");
+		mntmPerspectiveDetector.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				FramePerspectivesDetector pPersDetec = new FramePerspectivesDetector();
+				desktopPane.add(pPersDetec);
+				pPersDetec.setVisible(true);
+				pPersDetec.setFocusable(true);
+			}
+		});
+		mnTools.add(mntmPerspectiveDetector);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		
