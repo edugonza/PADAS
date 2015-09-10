@@ -481,8 +481,8 @@ public class OracleLogMinerExtractor {
 	
 	private Map<String, String> getFieldsForRowId(TableInfo t, String rowid) {
 		Map<String,String> result = new HashMap<>();
-		String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from ALL_TAB_COLUMNS where TABLE_NAME = '"+
-				t.name+"' AND OWNER='"+t.db+"'";
+		String query = "SELECT * FROM "+t.db+"."+t.name+" WHERE ROWID='"+rowid+"'";
+
 
 		try {
 			Statement stm = con.createStatement();
@@ -548,7 +548,8 @@ public class OracleLogMinerExtractor {
 	public HashMap<Column,String> getColumnDataTypes(TableInfo t) {
 		HashMap<Column,String> columnTypes = new HashMap<>();
 		
-		String query = "DESC '"+t.db+"."+t.name+"'";
+		String query = "select COLUMN_NAME, DATA_TYPE, DATA_LENGTH, NULLABLE from ALL_TAB_COLUMNS where TABLE_NAME = '"+
+				t.name+"' AND OWNER='"+t.db+"'";
 		
 		try {
 			Statement stm = con.createStatement();
