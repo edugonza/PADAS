@@ -358,15 +358,9 @@ public class OracleLogMinerExtractor {
 			String rs_id = "";
 			
 			while (res.next() && !stopExtraction) {
-				SLEXEvent event = storage.createEvent(eventCollection.getId());
-				
-				SLEXAttributeValue[] attributeValues = new SLEXAttributeValue[numAttributes];
 				
 				for (int c = 1; c <= meta.getColumnCount(); c++) {
 					line[c] = res.getString(c);
-					if (c <= scnTimestampColNum) {
-						attributeValues[c] = storage.createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
-					}
 				}
 				
 				/**/
@@ -375,7 +369,6 @@ public class OracleLogMinerExtractor {
 				ssn = line[ssnColNum];
 				rs_id = line[rs_idColNum];
 				
-				storage.createAttributeValue(orderAttribute.getId(), event.getId(), String.valueOf(orderIds.get(ssn+"#"+rs_id)));
 				
 				/**/
 				
@@ -383,6 +376,25 @@ public class OracleLogMinerExtractor {
 						|| operation.equalsIgnoreCase("UPDATE")
 						|| operation.equalsIgnoreCase("DELETE")) {
 
+					/**/
+					
+					SLEXEvent event = storage.createEvent(eventCollection.getId());
+					
+					SLEXAttributeValue[] attributeValues = new SLEXAttributeValue[numAttributes];
+					
+					for (int c = 1; c <= meta.getColumnCount(); c++) {
+						line[c] = res.getString(c);
+						if (c <= scnTimestampColNum) {
+							attributeValues[c] = storage.createAttributeValue(attributeNames[c].getId(), event.getId(), line[c]);
+						}
+					}
+					
+					storage.createAttributeValue(orderAttribute.getId(), event.getId(), String.valueOf(orderIds.get(ssn+"#"+rs_id)));
+					
+					/**/
+					
+					
+					
 					Map<String, String> fields = null;
 
 					if (!records.containsKey(rowid)) {
