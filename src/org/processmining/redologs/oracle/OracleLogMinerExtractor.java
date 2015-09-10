@@ -568,8 +568,8 @@ public class OracleLogMinerExtractor {
 			ResultSet res = stm.executeQuery(query);
 
 			while (res.next()) {
-				String columnName = res.getString("Name");
-				String type = res.getString("Type");
+				String columnName = res.getString("COLUMN_NAME");
+				String type = res.getString("DATA_TYPE");
 				Column c = new Column();
 				c.table = t;
 				c.name = columnName;
