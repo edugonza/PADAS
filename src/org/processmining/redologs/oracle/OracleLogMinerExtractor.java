@@ -671,7 +671,7 @@ public class OracleLogMinerExtractor {
 			i++;
 			
 			if (ignore) {
-				query += " '1' AS ALIAS_"+i+", ";
+				query += " '1' AS ALIAS_"+i;
 			} else {
 				query += " (DBMS_LOGMNR.COLUMN_PRESENT(UNDO_VALUE,'"+t.db+"."+t.name+"."+c.name+"')) AS ALIAS_"+i;
 			}
