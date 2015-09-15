@@ -1,12 +1,13 @@
 package org.processmining.database.metamodel;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.TraceID;
 
-public class ObjectVersion {
+public class ObjectVersion implements Serializable,Comparable {
 	private TraceID objectId;
 	private SLEXEvent event;
 	private HashMap<Column,String> attributeValues;
@@ -37,5 +38,18 @@ public class ObjectVersion {
 	
 	public int getOrder() {
 		return order;
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		if (this.equals(o)) {
+			return 0;
+		} else {
+			if (this.hashCode() > o.hashCode()) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
 	}
 }

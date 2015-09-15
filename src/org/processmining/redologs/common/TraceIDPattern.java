@@ -1,5 +1,6 @@
 package org.processmining.redologs.common;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
-public class TraceIDPattern {
+public class TraceIDPattern implements Serializable {
 	
 	private DataModel dm = null;
 	private List<TraceIDPatternElement> pe = new  ArrayList<TraceIDPatternElement>();

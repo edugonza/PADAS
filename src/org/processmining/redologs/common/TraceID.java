@@ -1,12 +1,13 @@
 package org.processmining.redologs.common;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Vector;
 
-public class TraceID {
+public class TraceID implements Serializable, Comparable {
 	
 	private TraceIDPattern tp = null;
 	private HashMap<Column,String> tval = new HashMap<>();
@@ -81,5 +82,18 @@ public class TraceID {
 		}
 		
 		return tidValues.toString();
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		if (this.equals(o)) {
+			return 0;
+		} else {
+			if (this.hashCode() > o.hashCode()) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
 	}
 }

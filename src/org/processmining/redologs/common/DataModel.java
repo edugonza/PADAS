@@ -1,10 +1,11 @@
 package org.processmining.redologs.common;
 
+import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-public class DataModel {
+public class DataModel implements Serializable {
 
 	private String name;
 	private List<TableInfo> tables;

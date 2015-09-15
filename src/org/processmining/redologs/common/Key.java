@@ -1,9 +1,10 @@
 package org.processmining.redologs.common;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 
-public class Key extends GraphNode {
+public class Key extends GraphNode implements Serializable{
 	
 	public static final int UNIQUE_KEY = 1;
 	public static final int PRIMARY_KEY = 2;

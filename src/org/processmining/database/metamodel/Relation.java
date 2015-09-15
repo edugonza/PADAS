@@ -1,6 +1,8 @@
 package org.processmining.database.metamodel;
 
-public class Relation {
+import java.io.Serializable;
+
+public class Relation implements Serializable {
 	
 	private ObjectVersion from_object_version;
 	private ObjectVersion to_object_version;

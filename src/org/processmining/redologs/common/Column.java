@@ -1,6 +1,8 @@
 package org.processmining.redologs.common;
 
-public class Column extends GraphNode implements Comparable<Column> {
+import java.io.Serializable;
+
+public class Column extends GraphNode implements Comparable<Column>,Serializable {
 	
 	public TableInfo table;
 	public String name;

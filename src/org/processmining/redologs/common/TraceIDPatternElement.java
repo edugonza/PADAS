@@ -1,6 +1,8 @@
 package org.processmining.redologs.common;
 
-public class TraceIDPatternElement {
+import java.io.Serializable;
+
+public class TraceIDPatternElement implements Serializable {
 
 	private Column c = null;
 	private Key k = null;
