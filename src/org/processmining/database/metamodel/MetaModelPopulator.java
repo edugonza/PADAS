@@ -256,10 +256,9 @@ public class MetaModelPopulator {
 				}
 				if (objects.get(referred_pk.table).contains(creferredID)) {
 					//System.out.println("Contained");
-					System.out.println("Exists");
 				} else {
 					//System.out.println("Not Contained");
-					//objects.get(referred_pk.table).add(creferredID); FIXME
+					objects.get(referred_pk.table).add(creferredID);
 				}
 				/**/
 				
