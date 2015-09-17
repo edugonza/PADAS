@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 import org.mapdb.BTreeKeySerializer;
+import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Fun;
 import org.mapdb.Fun.Tuple2;
@@ -89,26 +90,28 @@ public class MetaModelPopulator {
 	
 	public void computeMetaModel() {
 		
+		DB db = DBMaker.newTempFileDB().transactionDisable().mmapFileEnableIfSupported().make();
+		
 		SLEXEventResultSet evrset = evCol.getEventsResultSetOrderedBy(orderAttributes);
 		
-		//HashMap<TableInfo,HashSet<TraceID>> objects = new HashMap<>();
-		//HashSet<Relation> relationsSet = new HashSet<>();
-		//HashMap<TableInfo,HashMap<TraceID,LinkedHashSet<ObjectVersion>>> objectVersions = new HashMap<>();
-		//HashMap<SLEXEvent,ActivityInstance> eventActivityInstanceMap = new HashMap<>();
+		HashMap<TableInfo,CompactTableInfo> tablesCompactMap = new HashMap<>();
+		HashMap<Column,CompactColumn> columnsCompactMap = new HashMap<>();
+		HashMap<CompactColumn,Column> columnsCompactReverseMap = new HashMap<>();
+		
 		HashSet<String> activitySet = new HashSet<>();
-		//HashMap<SLEXTrace,HashSet<ActivityInstance>> caseToActivityInstancesMap = new HashMap<>(); 
 		
 		// import org.mapdb.*;
-		HTreeMap<Integer,ActivityInstance> eventActivityInstanceMap = DBMaker.newTempHashMap();
-		Set<Relation> relationsSet = DBMaker.newTempHashSet();
-		HashMap<TableInfo,Set<TraceID>> objects = new HashMap<>();
-		HTreeMap<SLEXTrace,HashSet<ActivityInstance>> caseToActivityInstancesMap = DBMaker.newTempHashMap();
+		HTreeMap<Integer,CompactActivityInstance> eventActivityInstanceMap =
+				db.createHashMap("eventActivityInstanceMap"+System.currentTimeMillis()).make();
+		Set<CompactRelation> relationsSet = db.createHashSet("relationsSet"+System.currentTimeMillis()).make();
+		HashMap<TableInfo,Set<CompactObjectID>> objects = new HashMap<>();
+		HTreeMap<SLEXTrace,HashSet<CompactActivityInstance>> caseToActivityInstancesMap =
+				db.createHashMap("caseToActivityInstancesMap"+System.currentTimeMillis()).make();
 		
-		HashMap<TableInfo,NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>>> objectVersions = new HashMap<>();
-		//NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>> navigableSet = DBMaker.newTempTreeSet();
-		//navigableSet.add(new Fun.Tuple2<TraceID, ObjectVersion>(new TraceID(null), new ObjectVersion(null,null,0)));
-		//Fun.filter(navigableSet, new TraceID(null));
-		
+		HashMap<TableInfo,NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>>> objectVersions = new HashMap<>();
+				
+		this.mm.columnsCompactMap = columnsCompactMap;
+		this.mm.columnsCompactReverseMap = columnsCompactReverseMap;
 		this.mm.objects = objects;
 		this.mm.relations = relationsSet;
 		this.mm.objectVersions = objectVersions;
@@ -119,6 +122,22 @@ public class MetaModelPopulator {
 		this.mm.activitySet = activitySet;
 		this.mm.caseToActivityInstancesMap = caseToActivityInstancesMap;
 		this.mm.eventActivityInstanceMap = eventActivityInstanceMap;
+				
+		int ctid = 0;
+		for (TableInfo t: dm.getTables()) {
+			CompactTableInfo ct = new CompactTableInfo();
+			ct.db = t.db;
+			ct.name = t.name;
+			ct.id = ctid++;
+			tablesCompactMap.put(t,ct);
+			for (Column c: t.columns) {
+				CompactColumn cc = new CompactColumn();
+				cc.tableId = ct.id;
+				cc.name = c.name;
+				columnsCompactMap.put(c, cc);
+				columnsCompactReverseMap.put(cc, c);
+			}
+		}
 		
 		SLEXEvent e = null;
 		
@@ -127,13 +146,15 @@ public class MetaModelPopulator {
 		while ((e = evrset.getNext()) != null) {
 			// Get the class for the event			
 			TableInfo t = getTableFromEvent(e,mapper);
+			CompactTableInfo ct = tablesCompactMap.get(t);
 
 			// Find event Activity and create ActivityInstance
 			String activityName = getActivityNameFromEvent(e,activityAttributes);
 			if (!activitySet.contains(activityName)) {
 				activitySet.add(activityName);
 			}
-			ActivityInstance actIns = new ActivityInstance(activityName); 
+			CompactActivityInstance actIns = new CompactActivityInstance();
+			actIns.activityName = activityName; 
 			eventActivityInstanceMap.put(e.getId(),actIns);
 			
 			List<Key> fks = new ArrayList<>();
@@ -160,42 +181,50 @@ public class MetaModelPopulator {
 			// If object does not exist
 			if (!objects.containsKey(t)) {
 				//objects.put(t, new HashSet<TraceID>());
-				Set<TraceID> set = DBMaker.newTempHashSet();
+				Set<CompactObjectID> set = DBMaker.newTempHashSet();
 				objects.put(t, set);
 			}
-			Set<TraceID> objs = objects.get(t);
+			Set<CompactObjectID> objs = objects.get(t);
 			
-			if (!objs.contains(eID)) {
+			CompactObjectID oID = new CompactObjectID();
+			oID.tableId = ct.id;
+			oID.valuesId = new HashMap<>();
+			for (Column c: eID.getPA()) {
+				String v = eID.getValue(c);
+				CompactColumn cc = columnsCompactMap.get(c);
+				oID.valuesId.put(cc, v);
+			}
+			
+			if (!objs.contains(oID)) {
 				// Create Object
-				objs.add(eID);
+				objs.add(oID);
 			}
 			
 			// Create version for object
 			// Link event to version
-			ObjectVersion objVersion = new ObjectVersion(eID, e, order);
+			CompactObjectVersion cobjVersion = new CompactObjectVersion();
+			cobjVersion.id = order;
+			cobjVersion.eventId = e.getId();
+			
 			order++;
 			if (!objectVersions.containsKey(t)) {
-				//objectVersions.put(t, new HashMap<TraceID,LinkedHashSet<ObjectVersion>>());
-				NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>> navigableSet = DBMaker.newTempTreeSet();
+				NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>> navigableSet =
+						db.createTreeSet("obj-v-for-"+t.toString()+System.currentTimeMillis()).make();
 				objectVersions.put(t, navigableSet);
 			}
-			NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>> objectsForTable = objectVersions.get(t);
-//			if (!objectsForTable.containsKey(eID)) {
-//				objectsForTable.put(eID, new LinkedHashSet<ObjectVersion>());
-//			}
-//			LinkedHashSet<ObjectVersion> objVersions = objectsForTable.get(eID);
-//			objVersions.add(objVersion);
-//						
+			NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>> objectsForTable = objectVersions.get(t);
+
 			for (SLEXAttribute a: e.getAttributeValues().keySet()) {
 				Column c = mapper.map(a);
 				if (c != null && c.table == t) {
 					SLEXAttributeValue v = e.getAttributeValues().get(a);
 					String vStr = v.getValue();
-					objVersion.addAttributeValue(c, vStr);
+					CompactColumn cc = columnsCompactMap.get(c);
+					cobjVersion.attributeValues.put(cc, vStr);
 				}				
 			}
 			
-			objectsForTable.add(new Fun.Tuple2<TraceID, ObjectVersion>(eID, objVersion));
+			objectsForTable.add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, cobjVersion));
 			
 			// Get FKs of class
 			// Get relations. For each:
@@ -203,34 +232,66 @@ public class MetaModelPopulator {
 				// Find relation and referred object
 				TraceIDPattern tpfk = new TraceIDPattern(dm);
 				tpfk.add(fk);
+				tpfk.add(fk.refers_to);
 				TraceID fkeID = LogTraceSplitter.generateTraceID(tpfk, mapper, e);
 				
 				Key referred_pk = fk.refers_to;
 				
-				TraceIDPattern referredPKTP = new TraceIDPattern(dm);
-				referredPKTP.add(referred_pk);
-				TraceID referredPkID = new TraceID(referredPKTP);
-				for (Column lc: fk.fields) {
-					Column rc = fk.refers_to_column.get(lc);
-					referredPkID.setValue(rc, fkeID.getValue(lc));
+				CompactObjectID creferredID = new CompactObjectID();
+				CompactTableInfo creferredTable = tablesCompactMap.get(referred_pk.table);
+				creferredID.tableId = creferredTable.id;
+				creferredID.valuesId = new HashMap<>();
+				for (Column c: fkeID.getPA()) {
+					String v = fkeID.getValue(c);
+					CompactColumn cc = columnsCompactMap.get(c);
+					creferredID.valuesId.put(cc, v);
 				}
 				
 				/**/
 				if (!objects.containsKey(referred_pk.table)) {
-					objects.put(referred_pk.table, new HashSet<TraceID>());
+					Set<CompactObjectID> set = db.createHashSet(
+							"objects-set-for-table-"+creferredTable.db+"-"+creferredTable.name+System.currentTimeMillis()
+							).make();
+					objects.put(referred_pk.table, set);
 				}
-				if (objects.get(referred_pk.table).contains(referredPkID)) {
+				if (objects.get(referred_pk.table).contains(creferredID)) {
 					//System.out.println("Contained");
+					System.out.println("Exists");
 				} else {
 					//System.out.println("Not Contained");
-					objects.get(referred_pk.table).add(referredPkID);
+					//objects.get(referred_pk.table).add(creferredID); FIXME
 				}
 				/**/
 				
-				Relation r = new Relation(objVersion,getLastObjectVersion(referred_pk.table,referredPkID,objectVersions));
-				
-				relationsSet.add(r);
+				CompactRelation r = new CompactRelation();
+				r.sourceObjectVersionId = cobjVersion.id;
+				CompactObjectVersion targetObjectVersion = getLastObjectVersion(referred_pk.table,creferredID,objectVersions);
+				if (targetObjectVersion != null) {
+					r.targetObjectVersionId = targetObjectVersion.id;
+					relationsSet.add(r);
+				}
 								
+				/**/
+//				CompactObjectID a = new CompactObjectID();
+//				CompactObjectID b = new CompactObjectID();
+//				a.tableId = 3;
+//				b.tableId = 3;
+//				CompactColumn cc = new CompactColumn();
+//				cc.tableId = 3;
+//				cc.name = "cc1";
+//				a.valuesId.put(cc, "v1");
+//				b.valuesId.put(cc, "v1");
+//				System.out.println(a.compareTo(b));
+//				
+//				HashSet<CompactObjectID> setObIDTest = new HashSet<>();
+//				setObIDTest.add(a);
+//				if (setObIDTest.contains(b)) {
+//					System.out.println("YES");
+//				} else {
+//					System.out.println("NO");
+//				}
+				/**/
+				
 			}
 			
 		}
@@ -240,12 +301,12 @@ public class MetaModelPopulator {
 			SLEXTraceResultSet trset = perspective.getTracesResultSet();
 			SLEXTrace tr = null;
 			while ((tr = trset.getNext()) != null) {
-				HashSet<ActivityInstance> aiSet = new HashSet<>();
+				HashSet<CompactActivityInstance> aiSet = new HashSet<>();
 			
 				SLEXEventResultSet erset = tr.getEventsResultSet();
 				SLEXEvent ev = null;
 				while ((ev = erset.getNext()) != null) {
-					ActivityInstance ai = eventActivityInstanceMap.get(ev.getId());
+					CompactActivityInstance ai = eventActivityInstanceMap.get(ev.getId());
 					if (ai != null) {
 						aiSet.add(ai);
 					}
@@ -275,29 +336,19 @@ public class MetaModelPopulator {
 		return name.toString();
 	}
 
-	public ObjectVersion getLastObjectVersion(TableInfo t, TraceID objId,
-			HashMap<TableInfo,NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>>> objectVersions) {
-		ObjectVersion objV = null;
+	public CompactObjectVersion getLastObjectVersion(TableInfo t, CompactObjectID objId,
+			HashMap<TableInfo,NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>>> objectVersions) {
+		CompactObjectVersion objV = null;
 		
 		if (objectVersions.containsKey(t)) {
-			NavigableSet<Fun.Tuple2<TraceID, ObjectVersion>> objsT = objectVersions.get(t);
+			NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>> objsT = objectVersions.get(t);
 			
-			for (ObjectVersion v: Fun.filter(objsT,objId)) {
-				if (objV == null || v.getOrder() > objV.getOrder()) {
+			for (CompactObjectVersion v: Fun.filter(objsT,objId)) {
+				if (objV == null || v.order > objV.order) {
 					objV = v;
 				}
 			}
 			
-//			if (objsT.containsKey(objId)) {
-//				LinkedHashSet<ObjectVersion> versionsObj = objsT.get(objId);
-//				if (versionsObj != null && !versionsObj.isEmpty()) {
-//					
-//					Iterator<ObjectVersion> it = versionsObj.iterator();
-//					while (it.hasNext()) {
-//						objV = it.next();
-//					}
-//				}
-//			}
 		}
 		
 		return objV;
@@ -368,11 +419,10 @@ public class MetaModelPopulator {
 			// Save Cases and Activity Instances			
 			for (SLEXTrace tr : mm.caseToActivityInstancesMap.keySet()) {
 				SLEXMMCase pcase = strg.createCase(tr.getCaseId());
-				for (ActivityInstance ai : mm.caseToActivityInstancesMap
+				for (CompactActivityInstance ai : mm.caseToActivityInstancesMap
 						.get(tr)) {
 					if (!activityInstancesMap.containsKey(ai.hashCode())) {
-						SLEXMMActivity act = activityMap.get(ai
-								.getActivityName());
+						SLEXMMActivity act = activityMap.get(ai.activityName);
 						SLEXMMActivityInstance mmai = strg
 								.createActivityInstance(act);
 						activityInstancesMap.put(ai.hashCode(), mmai.getId());
@@ -393,9 +443,9 @@ public class MetaModelPopulator {
 			int i = 1;
 			while ((e = evrset.getNext()) != null) {
 				
-				ActivityInstance ai = mm.eventActivityInstanceMap.get(e.getId());
-				if (!activityInstancesMap.containsKey(ai)) {
-					SLEXMMActivity act = activityMap.get(ai.getActivityName());
+				CompactActivityInstance ai = mm.eventActivityInstanceMap.get(e.getId());
+				if (!activityInstancesMap.containsKey(ai.hashCode())) {
+					SLEXMMActivity act = activityMap.get(ai.activityName);
 					SLEXMMActivityInstance mmai = strg.createActivityInstance(act);
 					activityInstancesMap.put(ai.hashCode(), mmai.getId());
 				}
@@ -428,47 +478,29 @@ public class MetaModelPopulator {
 			
 			for (TableInfo t: mm.objects.keySet()) {
 				SLEXMMClass c = tableToClassMap.get(t);
-				for (TraceID objTraceId: mm.objects.get(t)) {
+				for (CompactObjectID objId: mm.objects.get(t)) {
 					SLEXMMObject obj = strg.createObject(c.getId());
 					
 					// Save ObjectVersions
 					if (mm.objectVersions.containsKey(t)) {
 						
-						NavigableSet<Tuple2<TraceID, ObjectVersion>> objectVersionsPerObject = mm.objectVersions.get(t);
+						NavigableSet<Tuple2<CompactObjectID, CompactObjectVersion>> objectVersionsPerObject = mm.objectVersions.get(t);
 						
-						for (ObjectVersion objV: Fun.filter(objectVersionsPerObject, objTraceId)) {
-							Integer evId = eventToMMEventMap.get(objV.getEvent().getId());
-							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, null,null,null); // FIXME
-							objVToMMObjVersionMap.put(objV.hashCode(),mmObjV.getId());
+						for (CompactObjectVersion objV: Fun.filter(objectVersionsPerObject, objId)) {
+							Integer evId = eventToMMEventMap.get(objV.eventId);
+							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, objV.label,objV.startDate,objV.endDate); // FIXME
+							objVToMMObjVersionMap.put(objV.id,mmObjV.getId());
 							
 							// Save Attribute values for Object version
-							
-							for (Column ck: objV.getAttributeValues().keySet()) {
+							for (CompactColumn cc: objV.attributeValues.keySet()) {
+								Column ck = mm.columnsCompactReverseMap.get(cc);
 								SLEXMMAttribute mmAttr = columnToAttributeMap.get(ck);
-								String value = objV.getAttributeValues().get(ck);
+								String value = objV.attributeValues.get(cc);
 								String type = "STRING";
 								SLEXMMAttributeValue attVal =
 										strg.createAttributeValue(mmAttr.getId(), mmObjV.getId(), value, type);
 							}
 						}
-						
-						//if (mm.objectVersions.get(t).containsKey(objTraceId)) {
-						//	for (ObjectVersion objV: mm.objectVersions.get(t).get(objTraceId)) {
-//								Integer evId = eventToMMEventMap.get(objV.getEvent().getId());
-//								SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, null,null,null); // FIXME
-//								objVToMMObjVersionMap.put(objV.hashCode(),mmObjV.getId());
-//								
-//								// Save Attribute values for Object version
-//								
-//								for (Column ck: objV.getAttributeValues().keySet()) {
-//									SLEXMMAttribute mmAttr = columnToAttributeMap.get(ck);
-//									String value = objV.getAttributeValues().get(ck);
-//									String type = "STRING";
-//									SLEXMMAttributeValue attVal =
-//											strg.createAttributeValue(mmAttr.getId(), mmObjV.getId(), value, type);
-//								}
-//							}
-//						}
 					}
 				}
 			}
@@ -476,14 +508,12 @@ public class MetaModelPopulator {
 			strg.commit();
 			
 			// Save Relations			
-			for (Relation r: mm.relations) {								
-				ObjectVersion sourceObjVersion = r.getFromObjectVersion();
-				ObjectVersion targetObjVersion = r.getToObjectVersion();
+			for (CompactRelation r: mm.relations) {								
 				
-				if (sourceObjVersion != null && targetObjVersion != null) {
+				if (r.sourceObjectVersionId >= 0 && r.targetObjectVersionId >= 0) {
 									
-					Integer sourceObjectVersionId = objVToMMObjVersionMap.get(sourceObjVersion.hashCode());
-					Integer targetObjectVersionId = objVToMMObjVersionMap.get(targetObjVersion.hashCode());
+					Integer sourceObjectVersionId = objVToMMObjVersionMap.get(r.sourceObjectVersionId);
+					Integer targetObjectVersionId = objVToMMObjVersionMap.get(r.targetObjectVersionId);
 				
 					if (sourceObjectVersionId != null && targetObjectVersionId != null) {
 						SLEXMMRelation mmRel = strg.createRelation(
