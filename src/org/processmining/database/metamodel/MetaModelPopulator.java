@@ -1,6 +1,8 @@
 package org.processmining.database.metamodel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -34,6 +36,7 @@ import org.processmining.redologs.common.SLEXAttributeMapper;
 import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.common.TraceID;
 import org.processmining.redologs.common.TraceIDPattern;
+import org.processmining.redologs.oracle.OracleLogMinerExtractor;
 
 public class MetaModelPopulator {
 
@@ -84,10 +87,91 @@ public class MetaModelPopulator {
 		return t;
 	}
 	
+	public long getEventTimestamp(SLEXEvent e, SLEXAttributeMapper m) {
+		
+		try {
+			for (Column c : commonTable.columns) {
+				if (c.name == OracleLogMinerExtractor.COLUMN_TIMESTAMP) {
+					SLEXAttributeValue vAttr = e.getAttributeValues().get(
+							m.map(c));
+					if (vAttr != null) {
+						String v = vAttr.getValue();
+						// 2014-11-27 15:55:34.0
+						SimpleDateFormat sdf = new SimpleDateFormat(
+								"yyyy-MM-dd HH:mm:ss.S");
+						Date date = sdf.parse(v);
+						return date.getTime();
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return -1L;
+	}
+	
+	public String getEventLabel(SLEXEvent e, SLEXAttributeMapper m) {
+		
+		try {
+			for (Column c : commonTable.columns) {
+				if (c.name == OracleLogMinerExtractor.COLUMN_OPERATION) {
+					SLEXAttributeValue vAttr = e.getAttributeValues().get(
+							m.map(c));
+					if (vAttr != null) {
+						return vAttr.getValue();
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public String getEventResource(SLEXEvent e, SLEXAttributeMapper m) {
+		
+		try {
+			for (Column c : commonTable.columns) {
+				if (c.name == OracleLogMinerExtractor.COLUMN_SEG_OWNER) {
+					SLEXAttributeValue vAttr = e.getAttributeValues().get(
+							m.map(c));
+					if (vAttr != null) {
+						return vAttr.getValue();
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public String getEventLifecycle(SLEXEvent e, SLEXAttributeMapper m) {
+		
+		try {
+			for (Column c : commonTable.columns) {
+				if (c.name == OracleLogMinerExtractor.COLUMN_OPERATION) {
+					SLEXAttributeValue vAttr = e.getAttributeValues().get(
+							m.map(c));
+					if (vAttr != null) {
+						return vAttr.getValue();
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	public DataModel getDataModel() {
 		return this.dm;
 	}
-	
+		
 	public void computeMetaModel() {
 		
 		DB db = DBMaker.newTempFileDB().transactionDisable().mmapFileEnableIfSupported().make();
@@ -109,6 +193,9 @@ public class MetaModelPopulator {
 				db.createHashMap("caseToActivityInstancesMap"+System.currentTimeMillis()).make();
 		
 		HashMap<TableInfo,NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>>> objectVersions = new HashMap<>();
+		
+		HashMap<Integer,Key> keyIndexMap = new HashMap<>();
+		HashMap<Key,Integer> keyIndexReverseMap = new HashMap<>();
 				
 		this.mm.columnsCompactMap = columnsCompactMap;
 		this.mm.columnsCompactReverseMap = columnsCompactReverseMap;
@@ -122,7 +209,10 @@ public class MetaModelPopulator {
 		this.mm.activitySet = activitySet;
 		this.mm.caseToActivityInstancesMap = caseToActivityInstancesMap;
 		this.mm.eventActivityInstanceMap = eventActivityInstanceMap;
-				
+		this.mm.keyIndexMap = keyIndexMap;
+		this.mm.keyIndexReverseMap = keyIndexReverseMap;
+		
+		int kindex = 0;
 		int ctid = 0;
 		for (TableInfo t: dm.getTables()) {
 			CompactTableInfo ct = new CompactTableInfo();
@@ -136,6 +226,14 @@ public class MetaModelPopulator {
 				cc.name = c.name;
 				columnsCompactMap.put(c, cc);
 				columnsCompactReverseMap.put(cc, c);
+			}
+			
+			for (Key k: dm.getKeysPerTable(t)) {
+				if (k.type == Key.FOREIGN_KEY) {
+					keyIndexMap.put(kindex,k);
+					keyIndexReverseMap.put(k,kindex);
+					kindex++;
+				}
 			}
 		}
 		
@@ -205,6 +303,19 @@ public class MetaModelPopulator {
 			CompactObjectVersion cobjVersion = new CompactObjectVersion();
 			cobjVersion.id = order;
 			cobjVersion.eventId = e.getId();
+			cobjVersion.label = getEventLabel(e,mapper);
+			cobjVersion.startDate = getEventTimestamp(e,mapper);
+			cobjVersion.endDate = -1L;
+			cobjVersion.order = order;
+			
+			/**/
+			CompactObjectVersion prevObjVersion = getLastObjectVersion(t, oID, objectVersions);
+			if (prevObjVersion != null) {
+				objectVersions.get(t).remove(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID,prevObjVersion));
+				prevObjVersion.endDate = cobjVersion.startDate;
+				objectVersions.get(t).add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, prevObjVersion));
+			}
+			/**/
 			
 			order++;
 			if (!objectVersions.containsKey(t)) {
@@ -267,30 +378,11 @@ public class MetaModelPopulator {
 				CompactObjectVersion targetObjectVersion = getLastObjectVersion(referred_pk.table,creferredID,objectVersions);
 				if (targetObjectVersion != null) {
 					r.targetObjectVersionId = targetObjectVersion.id;
+					r.startTimestamp = cobjVersion.startDate;
+					r.endTimestamp = -1L; // FIXME
+					r.relationshipId = keyIndexReverseMap.get(fk);
 					relationsSet.add(r);
 				}
-								
-				/**/
-//				CompactObjectID a = new CompactObjectID();
-//				CompactObjectID b = new CompactObjectID();
-//				a.tableId = 3;
-//				b.tableId = 3;
-//				CompactColumn cc = new CompactColumn();
-//				cc.tableId = 3;
-//				cc.name = "cc1";
-//				a.valuesId.put(cc, "v1");
-//				b.valuesId.put(cc, "v1");
-//				System.out.println(a.compareTo(b));
-//				
-//				HashSet<CompactObjectID> setObIDTest = new HashSet<>();
-//				setObIDTest.add(a);
-//				if (setObIDTest.contains(b)) {
-//					System.out.println("YES");
-//				} else {
-//					System.out.println("NO");
-//				}
-				/**/
-				
 			}
 			
 		}
@@ -341,7 +433,7 @@ public class MetaModelPopulator {
 		
 		if (objectVersions.containsKey(t)) {
 			NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>> objsT = objectVersions.get(t);
-			
+
 			for (CompactObjectVersion v: Fun.filter(objsT,objId)) {
 				if (objV == null || v.order > objV.order) {
 					objV = v;
@@ -450,7 +542,10 @@ public class MetaModelPopulator {
 				}
 				Integer mmaiId = activityInstancesMap.get(ai.hashCode());
 				
-				SLEXMMEvent mme = strg.createEvent(i,mmaiId);
+				String lifecycle = getEventLifecycle(e,mm.mapper);
+				String resource = getEventResource(e,mm.mapper);
+				long timestamp = getEventTimestamp(e,mm.mapper);
+				SLEXMMEvent mme = strg.createEvent(i,mmaiId,lifecycle,resource,timestamp);
 				eventToMMEventMap.put(e.getId(),mme.getId());
 				
 				i++;
@@ -515,8 +610,16 @@ public class MetaModelPopulator {
 					Integer targetObjectVersionId = objVToMMObjVersionMap.get(r.targetObjectVersionId);
 				
 					if (sourceObjectVersionId != null && targetObjectVersionId != null) {
+						int relationshipId = -1;
+						Key k = mm.keyIndexMap.get(r.relationshipId);
+						if (k != null) {
+							SLEXMMRelationship relshp = fkeyToRelationshipMap.get(k);
+							if (relshp != null) {
+								relationshipId = relshp.getId();
+							}
+						}
 						SLEXMMRelation mmRel = strg.createRelation(
-								sourceObjectVersionId, targetObjectVersionId);
+								sourceObjectVersionId, targetObjectVersionId, relationshipId, r.startTimestamp, r.endTimestamp);
 					}
 				}
 			}

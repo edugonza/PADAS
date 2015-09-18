@@ -37,4 +37,7 @@ public class MetaModel {
 	
 	public HashMap<Column,CompactColumn> columnsCompactMap;
 	public HashMap<CompactColumn,Column> columnsCompactReverseMap;
+	
+	public HashMap<Integer,Key> keyIndexMap;
+	public HashMap<Key,Integer> keyIndexReverseMap;
 }

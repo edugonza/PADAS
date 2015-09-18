@@ -53,6 +53,7 @@ public class OracleLogMinerExtractor {
 	public static final String COLUMN_OPERATION = "OPERATION";
 	public static final String COLUMN_TABLE_NAME = "TABLE_NAME";
 	public static final String COLUMN_TIMESTAMP = "TIMESTAMP";
+	public static final String COLUMN_SEG_OWNER = "SEG_OWNER";
 	public static final String COLUMN_CHANGE_NONE = "1";
 	public static final String COLUMN_CHANGE_UPDATED = "4";
 	public static final String COLUMN_CHANGE_TO_NULL = "2";

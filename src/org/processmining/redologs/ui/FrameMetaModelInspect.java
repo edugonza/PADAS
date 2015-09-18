@@ -324,10 +324,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		}
 			
 		public ObjectVersionsTableModel() {
-			super(new String[] { "Version Id", "Object Id", "Event Id" }, 0);
+			super(new String[] { "Version Id", "Object Id", "Event Label", "Event Id",
+					"Start Timestamp", "End Timestamp"}, 0);
 			columnTypes.add(Integer.class);
 			columnTypes.add(Integer.class);
+			columnTypes.add(String.class);
 			columnTypes.add(Integer.class);
+			columnTypes.add(Long.class);
+			columnTypes.add(Long.class);
 		}
 		
 	}
@@ -359,13 +363,16 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			
 			row[0] = Integer.valueOf(objv.getId());
 			row[1] = Integer.valueOf(objv.getObjectId());
-			row[2] = Integer.valueOf(objv.getEventId());
+			row[2] = objv.getEventLabel();
+			row[3] = Integer.valueOf(objv.getEventId());
+			row[4] = Long.valueOf(objv.getStartTimestamp());
+			row[5] = Long.valueOf(objv.getEndTimestamp());
 			
 			for (SLEXMMAttribute at: objv.getAttributeValues().keySet()) {
 				String colName = at.getName();
 				SLEXMMAttributeValue attrVal = objv.getAttributeValues().get(at);
 				String value = attrVal.getValue();
-				row[3+attrsName.indexOf(colName)] = value;
+				row[6+attrsName.indexOf(colName)] = value;
 			}
 			
 			model.addRow(row);
@@ -390,10 +397,15 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		}
 			
 		public ObjectRelationsTableModel() {
-			super(new String[] { "Relation Id", "Source Object Version Id", "Target Object Version Id"}, 0);
+			super(new String[] { "Relation Id", "Relationship Id",
+					"Source Object Version Id", "Target Object Version Id",
+					"Start Timestamp", "End Timestamp"}, 0);
 			columnTypes.add(Integer.class);
 			columnTypes.add(Integer.class);
 			columnTypes.add(Integer.class);
+			columnTypes.add(Integer.class);
+			columnTypes.add(Long.class);
+			columnTypes.add(Long.class);
 		}
 		
 	}
@@ -411,9 +423,12 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			Object[] row = new Object[model.getColumnCount()];
 			
 			row[0] = Integer.valueOf(rel.getId());
-			row[1] = Integer.valueOf(rel.getSourceObjectVersionId());
-			row[2] = Integer.valueOf(rel.getTargetObjectVersionId());
-						
+			row[1] = Integer.valueOf(rel.getRelationshipId());
+			row[2] = Integer.valueOf(rel.getSourceObjectVersionId());
+			row[3] = Integer.valueOf(rel.getTargetObjectVersionId());
+			row[4] = Long.valueOf(rel.getStartTimestamp());
+			row[5] = Long.valueOf(rel.getEndTimestamp());
+			
 			model.addRow(row);
 		}
 		
@@ -425,8 +440,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			Object[] row = new Object[model.getColumnCount()];
 			
 			row[0] = Integer.valueOf(rel.getId());
-			row[1] = Integer.valueOf(rel.getSourceObjectVersionId());
-			row[2] = Integer.valueOf(rel.getTargetObjectVersionId());
+			row[1] = Integer.valueOf(rel.getRelationshipId());
+			row[2] = Integer.valueOf(rel.getSourceObjectVersionId());
+			row[3] = Integer.valueOf(rel.getTargetObjectVersionId());
+			row[4] = Long.valueOf(rel.getStartTimestamp());
+			row[5] = Long.valueOf(rel.getEndTimestamp());
 						
 			model.addRow(row);
 		}
@@ -594,6 +612,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			SLEXMMEventAttributeValue attV = attrs.get(at);
 			model.addRow(new Object[] {at.getName(),attV.getValue(),attV.getType()});
 		}
+		
+		SLEXMMEvent e = mmstrg.getEventForId(evId);
+		model.addRow(new Object[] {"Event Lifecycle", e.getLifecycle(), "STRING"});
+		model.addRow(new Object[] {"Event Resource", e.getResource(), "STRING"});
+		model.addRow(new Object[] {"Event Timestamp", e.getTimestamp(), "LONG"});
 		
 	}
 }
