@@ -40,4 +40,5 @@ public class MetaModel {
 	
 	public HashMap<Integer,Key> keyIndexMap;
 	public HashMap<Key,Integer> keyIndexReverseMap;
+	public HTreeMap<Integer, Long> endDateObjectVersionsMap;
 }

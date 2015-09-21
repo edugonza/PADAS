@@ -135,10 +135,12 @@ public class MetaModelPopulator {
 		try {
 			for (Column c : commonTable.columns) {
 				if (c.name == OracleLogMinerExtractor.COLUMN_SEG_OWNER) {
-					SLEXAttributeValue vAttr = e.getAttributeValues().get(
-							m.map(c));
-					if (vAttr != null) {
-						return vAttr.getValue();
+					SLEXAttribute at = m.map(c);
+					if (at != null) {
+						SLEXAttributeValue vAttr = e.getAttributeValues().get(at);
+						if (vAttr != null) {
+							return vAttr.getValue();
+						}
 					}
 				}
 			}
@@ -193,6 +195,8 @@ public class MetaModelPopulator {
 				db.createHashMap("caseToActivityInstancesMap"+System.currentTimeMillis()).make();
 		
 		HashMap<TableInfo,NavigableSet<Fun.Tuple2<CompactObjectID, CompactObjectVersion>>> objectVersions = new HashMap<>();
+		HTreeMap<Integer,Long> endDateObjectVersionsMap =
+				db.createHashMap("endDateObjectVersionsMap"+System.currentTimeMillis()).make();
 		
 		HashMap<Integer,Key> keyIndexMap = new HashMap<>();
 		HashMap<Key,Integer> keyIndexReverseMap = new HashMap<>();
@@ -211,6 +215,7 @@ public class MetaModelPopulator {
 		this.mm.eventActivityInstanceMap = eventActivityInstanceMap;
 		this.mm.keyIndexMap = keyIndexMap;
 		this.mm.keyIndexReverseMap = keyIndexReverseMap;
+		this.mm.endDateObjectVersionsMap = endDateObjectVersionsMap;
 		
 		int kindex = 0;
 		int ctid = 0;
@@ -311,9 +316,10 @@ public class MetaModelPopulator {
 			/**/
 			CompactObjectVersion prevObjVersion = getLastObjectVersion(t, oID, objectVersions);
 			if (prevObjVersion != null) {
-				objectVersions.get(t).remove(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID,prevObjVersion));
-				prevObjVersion.endDate = cobjVersion.startDate;
-				objectVersions.get(t).add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, prevObjVersion));
+				//objectVersions.get(t).remove(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID,prevObjVersion));
+				endDateObjectVersionsMap.put(prevObjVersion.id, cobjVersion.startDate);
+				//prevObjVersion.endDate = cobjVersion.startDate;
+				//objectVersions.get(t).add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, prevObjVersion));
 			}
 			/**/
 			
@@ -582,7 +588,11 @@ public class MetaModelPopulator {
 						
 						for (CompactObjectVersion objV: Fun.filter(objectVersionsPerObject, objId)) {
 							Integer evId = eventToMMEventMap.get(objV.eventId);
-							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, objV.label,objV.startDate,objV.endDate); // FIXME
+							Long endDate = mm.endDateObjectVersionsMap.get(objV.id);
+							if (endDate == null) {
+								endDate = -1L;
+							}
+							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, objV.label,objV.startDate,endDate);
 							objVToMMObjVersionMap.put(objV.id,mmObjV.getId());
 							
 							// Save Attribute values for Object version
