@@ -1,5 +1,10 @@
 package org.processmining.database.metamodel;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -245,8 +250,27 @@ public class MetaModelPopulator {
 		SLEXEvent e = null;
 		
 		int order = 0;
-		
+		int eventCounter = 0;
+		File fdLog = new File("mmcomp.log");
+		BufferedOutputStream bos = null;
+		long startTime = System.currentTimeMillis();
+		try {
+			bos = new BufferedOutputStream(new FileOutputStream(fdLog));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		while ((e = evrset.getNext()) != null) {
+			eventCounter++;
+			if (bos != null) {
+				String strout = eventCounter+" ; "+(System.currentTimeMillis()-startTime)+"\n";
+				try {
+					bos.write(strout.getBytes());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
 			// Get the class for the event			
 			TableInfo t = getTableFromEvent(e,mapper);
 			CompactTableInfo ct = tablesCompactMap.get(t);
@@ -410,6 +434,15 @@ public class MetaModelPopulator {
 				}
 				
 				caseToActivityInstancesMap.put(tr, aiSet);
+			}
+		}
+		
+		if (bos != null) {
+			try {
+				bos.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 		}
 	}
