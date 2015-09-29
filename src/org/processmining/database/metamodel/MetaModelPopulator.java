@@ -198,6 +198,7 @@ public class MetaModelPopulator {
 				db.hashMap("objectVersionsToId"+System.currentTimeMillis());
 		
 		HashMap<TableInfo,HashMap<CompactObjectID,LinkedHashSet<Integer>>> objectVersions = new HashMap<>();
+		HashMap<TableInfo,HashMap<CompactObjectID,Integer>> objectVersionsLast = new HashMap<>();
 		
 		//HashMap<TableInfo,NavigableSet<CompactObject[]>> objectVersions = new HashMap<>();
 		
@@ -338,29 +339,6 @@ public class MetaModelPopulator {
 			cobjVersion.startDate = getEventTimestamp(e,mapper);
 			cobjVersion.endDate = -1L;
 			cobjVersion.order = order;
-			objectVersionsId.put(cobjVersion.id, cobjVersion);
-			
-			/**/
-			CompactObjectVersion prevObjVersion = getLastObjectVersion(t, oID, objectVersions, objectVersionsId);
-			if (prevObjVersion != null) {
-				//objectVersions.get(t).remove(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID,prevObjVersion));
-				endDateObjectVersionsMap.put(prevObjVersion.id, cobjVersion.startDate);
-				//prevObjVersion.endDate = cobjVersion.startDate;
-				//objectVersions.get(t).add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, prevObjVersion));
-			}
-			/**/
-			
-			order++;
-			if (!objectVersions.containsKey(t)) {
-				HashMap<CompactObjectID,LinkedHashSet<Integer>> versionsMap = new HashMap<>();
-				objectVersions.put(t, versionsMap);
-			}
-			HashMap<CompactObjectID,LinkedHashSet<Integer>> objectsForTable = objectVersions.get(t);
-			if (!objectsForTable.containsKey(oID)) {
-				LinkedHashSet<Integer> versionsForObject = new LinkedHashSet<>();
-				objectsForTable.put(oID, versionsForObject);
-			}
-			LinkedHashSet<Integer> versionsForObject = objectsForTable.get(oID);
 			
 			for (SLEXAttribute a: e.getAttributeValues().keySet()) {
 				Column c = mapper.map(a);
@@ -372,7 +350,36 @@ public class MetaModelPopulator {
 				}				
 			}
 			
+			objectVersionsId.put(cobjVersion.id, cobjVersion);
+			order++;
+			
+			/**/
+			CompactObjectVersion prevObjVersion = getLastObjectVersion(t, oID, objectVersionsLast, objectVersionsId);
+			if (prevObjVersion != null) {
+				//objectVersions.get(t).remove(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID,prevObjVersion));
+				endDateObjectVersionsMap.put(prevObjVersion.id, cobjVersion.startDate);
+				//prevObjVersion.endDate = cobjVersion.startDate;
+				//objectVersions.get(t).add(new Fun.Tuple2<CompactObjectID, CompactObjectVersion>(oID, prevObjVersion));
+			}
+			/**/
+			
+			
+			if (!objectVersions.containsKey(t)) {
+				HashMap<CompactObjectID,LinkedHashSet<Integer>> versionsMap = new HashMap<>();
+				objectVersions.put(t, versionsMap);
+				
+				objectVersionsLast.put(t, new HashMap<CompactObjectID,Integer>());
+			}
+			HashMap<CompactObjectID,LinkedHashSet<Integer>> objectsForTable = objectVersions.get(t);
+			if (!objectsForTable.containsKey(oID)) {
+				LinkedHashSet<Integer> versionsForObject = new LinkedHashSet<>();
+				objectsForTable.put(oID, versionsForObject);
+			}
+			LinkedHashSet<Integer> versionsForObject = objectsForTable.get(oID);
+			
 			versionsForObject.add(cobjVersion.id);
+			
+			objectVersionsLast.get(t).put(oID, cobjVersion.id);
 			
 			// Get FKs of class
 			// Get relations. For each:
@@ -411,7 +418,7 @@ public class MetaModelPopulator {
 				
 				CompactRelation r = new CompactRelation();
 				r.sourceObjectVersionId = cobjVersion.id;
-				CompactObjectVersion targetObjectVersion = getLastObjectVersion(referred_pk.table,creferredID,objectVersions,objectVersionsId);
+				CompactObjectVersion targetObjectVersion = getLastObjectVersion(referred_pk.table,creferredID,objectVersionsLast,objectVersionsId);
 				if (targetObjectVersion != null) {
 					r.targetObjectVersionId = targetObjectVersion.id;
 					r.startTimestamp = cobjVersion.startDate;
@@ -473,19 +480,16 @@ public class MetaModelPopulator {
 	}
 
 	public CompactObjectVersion getLastObjectVersion(TableInfo t, CompactObjectID objId,
-			HashMap<TableInfo,HashMap<CompactObjectID,LinkedHashSet<Integer>>> objectVersions,
+			HashMap<TableInfo,HashMap<CompactObjectID,Integer>> objectVersionsLast,
 			HTreeMap<Integer,CompactObjectVersion> objectVersionsId) {
 		CompactObjectVersion objV = null;
 		
-		if (objectVersions.containsKey(t)) {
-			HashMap<CompactObjectID,LinkedHashSet<Integer>> objsT = objectVersions.get(t);
+		if (objectVersionsLast.containsKey(t)) {
+			HashMap<CompactObjectID,Integer> objsT = objectVersionsLast.get(t);
 			
 			if (objsT.containsKey(objId)) {
-				LinkedHashSet<Integer> versionsSet = objsT.get(objId);
-				
-				for (Integer o: versionsSet) {
-					objV = objectVersionsId.get(o);
-				}
+				Integer o = objsT.get(objId);
+				objV = objectVersionsId.get(o);
 			}
 			
 		}
