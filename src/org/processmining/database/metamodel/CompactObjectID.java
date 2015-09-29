@@ -3,7 +3,7 @@ package org.processmining.database.metamodel;
 import java.io.Serializable;
 import java.util.HashMap;
 
-public class CompactObjectID implements Serializable, Comparable {
+public class CompactObjectID extends CompactObject implements Serializable, Comparable {
 	public int tableId = -1;
 	public HashMap<CompactColumn,String> valuesId = new HashMap<>();
 	

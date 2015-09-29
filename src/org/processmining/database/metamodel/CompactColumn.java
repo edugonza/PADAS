@@ -7,6 +7,11 @@ public class CompactColumn implements Serializable {
 	public String name = null;
 	
 	@Override
+	public int hashCode() {
+		return (tableId+"#"+name).hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof CompactColumn) {
 			CompactColumn cc = (CompactColumn) obj;

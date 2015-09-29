@@ -10,6 +10,12 @@ public class CompactRelation implements Serializable {
 	public int relationshipId = -1;
 	
 	@Override
+	public int hashCode() {
+		String strHash = sourceObjectVersionId+"#"+targetObjectVersionId+"#"+startTimestamp+"#"+endTimestamp+"#"+relationshipId;
+		return strHash.hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof CompactRelation) {
 			CompactRelation cr = (CompactRelation) obj;

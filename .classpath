@@ -59,7 +59,7 @@
 	<classpathentry kind="lib" path="lib/netbeans/org-openide-util-lookup.jar"/>
 	<classpathentry kind="lib" path="lib/netbeans/org-openide-modules.jar"/>
 	<classpathentry kind="lib" path="lib/jgrapht-core-0.9.1.jar"/>
-	<classpathentry kind="lib" path="lib/mapdb-1.0.5.jar"/>
+	<classpathentry kind="lib" path="lib/mapdb-2.0-beta7.jar" sourcepath="/home/eduardo/Software/Libraries/mapdb-mapdb-2.0-beta7/src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OpenSLEX"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
