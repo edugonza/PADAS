@@ -253,6 +253,7 @@ public class MetaModelPopulator {
 		SLEXEvent e = null;
 		
 		int order = 0;
+		int actInsCounter = 0;
 		int eventCounter = 0;
 		File fdLog = new File("mmcomp.log");
 		BufferedOutputStream bos = null;
@@ -284,6 +285,7 @@ public class MetaModelPopulator {
 				activitySet.add(activityName);
 			}
 			CompactActivityInstance actIns = new CompactActivityInstance();
+			actIns.id = actInsCounter++;
 			actIns.activityName = activityName; 
 			eventActivityInstanceMap.put(e.getId(),actIns);
 			
@@ -389,6 +391,10 @@ public class MetaModelPopulator {
 				tpfk.add(fk);
 				tpfk.add(fk.refers_to);
 				TraceID fkeID = LogTraceSplitter.generateTraceID(tpfk, mapper, e);
+			
+				if (fkeID == null) {
+					continue;
+				}
 				
 				Key referred_pk = fk.refers_to;
 				
