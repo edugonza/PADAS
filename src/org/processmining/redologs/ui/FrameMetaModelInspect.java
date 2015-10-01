@@ -1,5 +1,6 @@
 package org.processmining.redologs.ui;
 
+import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMCase;
@@ -61,13 +62,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private JProgressBar topProgressBar;
 	private DiagramComponent datamodelPanel;
 	private JPanel processModelPanel;
+	private JTable processActivitiesTable;
 		
 	public FrameMetaModelInspect(SLEXMMStorageMetaModel mmstrg) {
 		super("MetaModel Inspector");
 		this.mmstrg = mmstrg;
 		
 		//BorderLayout borderLayout = (BorderLayout) getContentPane().getLayout();
-		setBounds(715, 30, 820, 670);
+		setBounds(715, 30, 1207, 669);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
@@ -85,6 +87,13 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		processModelPanel = new JPanel(new BorderLayout(0,0));
 		processModelPanel.setMinimumSize(new Dimension(300,200));
 		leftTopPanel.add(processModelPanel, BorderLayout.CENTER);
+		
+		JScrollPane scrollPaneProcessModel = new JScrollPane();
+		processModelPanel.add(scrollPaneProcessModel, BorderLayout.CENTER);
+		processActivitiesTable = new JTable();
+		processActivitiesTable.setFillsViewportHeight(true);
+		processActivitiesTable.setModel(new ActivitiesTableModel());
+		scrollPaneProcessModel.setViewportView(processActivitiesTable);
 		
 		JPanel rightTopPanel = new JPanel();
 		splitPane_1.setRightComponent(rightTopPanel);
@@ -216,6 +225,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JScrollPane scrollPaneTableObjectRelations = new JScrollPane(tableObjectRelations);
 		bottomObjectVersionsPanel.add(scrollPaneTableObjectRelations);
 		
+		setActivitiesTableContent();
 		setCasesTableContent();
 		setObjectsTableContent();
 		setEventsTableContent();
@@ -272,6 +282,39 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		} else {
 			return null;
 		}
+	}
+	
+	private class ActivitiesTableModel extends DefaultTableModel {
+		
+		Class[] columnTypes = new Class[] {	Integer.class, String.class, Integer.class };
+		boolean[] columnEditables = new boolean[] { false, false, false };
+		
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+		
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+			
+		public ActivitiesTableModel() {
+			super(new String[] { "Activity Id", "Name", "Process Id" }, 0);
+		}
+		
+	}
+	
+	public void setActivitiesTableContent() {
+		ActivitiesTableModel model = (ActivitiesTableModel) processActivitiesTable.getModel();
+		processActivitiesTable.getColumnModel().getColumn(0).setMinWidth(75);
+		processActivitiesTable.getColumnModel().getColumn(1).setMinWidth(75);
+		processActivitiesTable.getColumnModel().getColumn(2).setMinWidth(75);
+		
+		List<SLEXMMActivity> activitiesList = mmstrg.getActivities();
+		
+		for (SLEXMMActivity act: activitiesList) {
+			model.addRow(new Object[] {act.getId(),act.getName(),act.getProcessId()});
+		}
+		
 	}
 	
 	private class ObjectsTableModel extends DefaultTableModel {
