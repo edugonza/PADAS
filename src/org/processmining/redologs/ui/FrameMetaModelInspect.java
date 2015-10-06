@@ -1,5 +1,7 @@
 package org.processmining.redologs.ui;
 
+import org.processmining.database.metamodel.poql.POQLRunner;
+import org.processmining.database.metamodel.poql.QueryResult;
 import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
@@ -45,6 +47,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JButton;
 import javax.swing.BoxLayout;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 
 public class FrameMetaModelInspect extends CustomInternalFrame {
 
@@ -361,6 +366,40 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		setActivitiesTableContent();
 		setCasesTableContent(tableCasesAll);
+		
+		JPanel panel = new JPanel();
+		getContentPane().add(panel, BorderLayout.SOUTH);
+		panel.setLayout(new BorderLayout(0, 0));
+		
+		JScrollPane scrollPane = new JScrollPane();
+		panel.add(scrollPane, BorderLayout.CENTER);
+		
+		final JTextArea textArea = new JTextArea();
+		textArea.setRows(5);
+		scrollPane.setViewportView(textArea);
+		
+		JButton btnExecuteQuery = new JButton("Execute Query");
+		btnExecuteQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Thread queryPOQLThread = new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						String query = textArea.getText();
+						POQLRunner runner = new POQLRunner();
+						QueryResult qr = runner.executeQuery(FrameMetaModelInspect.this.mmstrg, query);
+						
+						if (qr.type == SLEXMMObject.class) {
+							setObjectsTableContentFiltered(qr.result);
+						} else {
+							System.err.println("Unknown type of result");
+						}
+					}
+				});
+				queryPOQLThread.start();
+			}
+		});
+		panel.add(btnExecuteQuery, BorderLayout.EAST);
 		setObjectsTableContentAll();
 		setEventsTableContent();
 		setDataModel();
@@ -497,6 +536,20 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		SLEXMMObject obj = null;
 		
 		while ((obj = orset.getNext()) != null) {
+			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
+		}
+		
+	}
+	
+	public void setObjectsTableContentFiltered(List<Object> list) {
+		ObjectsTableModel model = new ObjectsTableModel();
+		tableObjectsFiltered.setModel(model);
+		tableObjectsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
+		tableObjectsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
+		
+		SLEXMMObject obj = null;
+		for (Object o: list) {
+			obj = (SLEXMMObject) o;
 			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
 		}
 		

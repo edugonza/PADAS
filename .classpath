@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="src" path="target/generated-sources/antlr4"/>
 	<classpathentry kind="lib" path="lib/ucp.jar"/>
 	<classpathentry kind="lib" path="lib/ojdbc5.jar"/>
 	<classpathentry kind="lib" path="lib/opencsv-2.3.jar">
@@ -60,6 +61,7 @@
 	<classpathentry kind="lib" path="lib/netbeans/org-openide-modules.jar"/>
 	<classpathentry kind="lib" path="lib/jgrapht-core-0.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/mapdb-2.0-beta7.jar" sourcepath="/home/eduardo/Software/Libraries/mapdb-mapdb-2.0-beta7/src"/>
+	<classpathentry kind="lib" path="lib/antlr-4.5.1-complete.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OpenSLEX"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
