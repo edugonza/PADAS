@@ -72,10 +72,6 @@ objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_FUNCTION t1=thin
 	| t3=objects f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
  	
-//filtered_objects returns [List<Object> list, Class type]: t3=objects f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
-//	| t1=objects {$list=$t1.list; $type = $t1.type;}
-//	;
- 	
 cases returns [List<Object> list, Class type] : CASESOF OPEN_FUNCTION t1=things_no_case CLOSE_FUNCTION { $list = poql.casesOf($t1.list,$t1.type); $type=SLEXMMCase.class; }
 	| t2=allCases{ $list = $t2.list; $type = $t2.type; }
 	| t3=cases f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
@@ -106,14 +102,18 @@ filter returns [FilterTree conditions]: WHERE f=filter_expression { $conditions 
 
 filter_expression returns [FilterTree tree]: f1=filter_expression AND f2=filter_expression { $tree = poql.createAndNode($f1.tree,$f2.tree); }
 	| f3=filter_expression OR f4=filter_expression { $tree = poql.createOrNode($f3.tree,$f4.tree); }
-	| ID EQUAL STRING { $tree = poql.createEqualTerminalFilter($ID.text,$STRING.text); }
-	| ID DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($ID.text,$STRING.text); }
-	| ID EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($ID.text,$STRING.text); }
-	| ID EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($ID.text,$STRING.text); }
-	| ID GREATER STRING { $tree = poql.createGreaterTerminalFilter($ID.text,$STRING.text); }
-	| ID SMALLER STRING { $tree = poql.createSmallerTerminalFilter($ID.text,$STRING.text); }
-	| ID CONTAINS STRING { $tree = poql.createContainsTerminalFilter($ID.text,$STRING.text); }
+	| f5=id EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.name,$STRING.text,$f5.att); }
+	| f6=id DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.name,$STRING.text,$f6.att); }
+	| f7=id EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.name,$STRING.text,$f7.att); }
+	| f8=id EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.name,$STRING.text,$f8.att); }
+	| f9=id GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.name,$STRING.text,$f9.att); }
+	| f10=id SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.name,$STRING.text,$f10.att); }
+	| f11=id CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.name,$STRING.text,$f11.att); }
 	;
+
+id returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
+	| IDNOATT {$name = $IDNOATT.text; $att = false;}
+	; 
 
 allObjects returns [List<Object> list, Class type]: 'allObjects' { $list = poql.getAllObjects(); $type=SLEXMMObject.class;};
 allCases returns [List<Object> list, Class type]: 'allCases' { $list = poql.getAllCases(); $type=SLEXMMCase.class;};
@@ -145,5 +145,6 @@ AND: 'AND';
 OR: 'OR';
 STRING: '"' ~('\r' | '\n' | '"')* '"' { setText(getText().substring(1, getText().length() - 1)); };
 
-ID : [a-z,0-9,_]+ ;
+IDATT : 'at.'IDNOATT { setText(getText().substring(3, getText().length())); };
+IDNOATT : [a-z,0-9,_,A-Z]+ ;
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines

@@ -20,6 +20,7 @@ public class FilterTree {
 	String key = null;
 	String value = null;
 	int operator = 0;
+	boolean att = false;
 	
 	public FilterTree getLeft() {
 		return leftChild;
@@ -43,6 +44,10 @@ public class FilterTree {
 	
 	public int getNode() {
 		return node;
+	}
+	
+	public boolean isAttribute() {
+		return att;
 	}
 	
 	public boolean isTerminal() {

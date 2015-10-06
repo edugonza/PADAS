@@ -2,12 +2,15 @@ package org.processmining.database.metamodel.poql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
 import org.processmining.openslex.metamodel.SLEXMMActivityInstanceResultSet;
+import org.processmining.openslex.metamodel.SLEXMMAttribute;
+import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMCase;
 import org.processmining.openslex.metamodel.SLEXMMClass;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
@@ -33,7 +36,11 @@ public class POQLFunctions {
 			for (Object o: list) {
 				SLEXMMObject ob = (SLEXMMObject) o;
 				String v = null;
-				if (condition.getKey().equals("classid")) {
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Object");
+					return list;
+				} else if (condition.getKey().equals("classid")) {
 					v = String.valueOf(ob.getClassId());
 				} else if (condition.getKey().equals("id")) {
 					v = String.valueOf(ob.getId());
@@ -48,11 +55,29 @@ public class POQLFunctions {
 				}
 				
 			}
-		} else if (type == SLEXMMObjectVersion.class) {
+		} else if (type == SLEXMMObjectVersion.class) {			
 			for (Object o: list) {
 				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
 				String v = null;
-				if (condition.getKey().equals("objectid")) {
+				if (condition.isAttribute()) {
+					HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attsMap = ob.getAttributeValues();
+					SLEXMMAttribute slxAtt = null;
+					
+					for (SLEXMMAttribute at: attsMap.keySet()) {
+						if (at.getName().equals(condition.getKey())) {
+							slxAtt = at;
+							break;
+						}
+					}
+					
+					if (slxAtt != null) {
+						SLEXMMAttributeValue slxAttVal = attsMap.get(slxAtt);
+						if (slxAttVal != null) {
+							v = slxAttVal.getValue();
+						}
+					}
+					
+				} else if (condition.getKey().equals("objectid")) {
 					v = String.valueOf(ob.getObjectId());
 				} else if (condition.getKey().equals("id")) {
 					v = String.valueOf(ob.getId());
@@ -66,7 +91,7 @@ public class POQLFunctions {
 					return list;
 				}
 				
-				if (filterOperation(v,condition.value,condition.operator)) {
+				if (v != null && filterOperation(v,condition.value,condition.operator)) {
 					filteredList.add(o);
 				}
 				
@@ -81,7 +106,11 @@ public class POQLFunctions {
 			for (Object o: list) {
 				SLEXMMActivity ob = (SLEXMMActivity) o;
 				String v = null;
-				if (condition.getKey().equals("name")) {
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Activity");
+					return list;
+				} else if (condition.getKey().equals("name")) {
 					v = String.valueOf(ob.getName());
 				} else if (condition.getKey().equals("id")) {
 					v = String.valueOf(ob.getId());
@@ -179,40 +208,41 @@ public class POQLFunctions {
 		return orNode;
 	}
 	
-	public FilterTree createEqualTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL);
+	public FilterTree createEqualTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL,att);
 	}
 	
-	public FilterTree createDifferentTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_DIFFERENT);
+	public FilterTree createDifferentTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_DIFFERENT,att);
 	}
 	
-	public FilterTree createEqualOrGreaterTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN);
+	public FilterTree createEqualOrGreaterTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN,att);
 	}
 	
-	public FilterTree createEqualOrSmallerTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN);
+	public FilterTree createEqualOrSmallerTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN,att);
 	}
 	
-	public FilterTree createGreaterTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_GREATER_THAN);
+	public FilterTree createGreaterTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_GREATER_THAN,att);
 	}
 	
-	public FilterTree createSmallerTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_SMALLER_THAN);
+	public FilterTree createSmallerTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_SMALLER_THAN,att);
 	}
 	
-	public FilterTree createContainsTerminalFilter(String key, String value) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_CONTAINS);
+	public FilterTree createContainsTerminalFilter(String key, String value, boolean att) {
+		return createTerminalFilter(key, value, FilterTree.OPERATOR_CONTAINS,att);
 	}
 	
-	public FilterTree createTerminalFilter(String key, String value, int operator) {
+	public FilterTree createTerminalFilter(String key, String value, int operator, boolean att) {
 		FilterTree node = new FilterTree();
 		node.node = FilterTree.NODE_TERMINAL;
 		node.operator = operator;
 		node.key = key;
 		node.value = value;
+		node.att = att;
 		return node;
 	}
 	
@@ -283,8 +313,13 @@ public class POQLFunctions {
 	}
 	
 	public List<Object> getAllVersions() {
-		// TODO
-		return null;
+		ArrayList<Object> list = new ArrayList<>();
+		SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersions();
+		SLEXMMObjectVersion ov = null;
+		while ((ov = ovrset.getNext()) != null) {
+			list.add(ov);
+		}
+		return list;
 	}
 	
 	public List<Object> getAllActivities() {

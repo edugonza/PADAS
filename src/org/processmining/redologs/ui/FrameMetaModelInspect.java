@@ -77,6 +77,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	
 	private JTable tableEventAttributes;
 	
+	private JTable tableObjectVersionAttributes;
+	
 	private JProgressBar topProgressBar;
 	private DiagramComponent datamodelPanel;
 	private JPanel processModelPanel;
@@ -278,7 +280,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			public void valueChanged(ListSelectionEvent e) {
 				Integer[] selected = getSelectedObject(tableObjectsAll);
 				if (selected != null) {
-					setObjectVersionsTableContent(selected[0],selected[1]);
+					setObjectVersionsTableContent(selected[0]);
 					setObjectRelationsTableContent(selected[0]);
 				}
 			}
@@ -295,7 +297,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			public void valueChanged(ListSelectionEvent e) {
 				Integer[] selected = getSelectedObject(tableObjectsPerClass);
 				if (selected != null) {
-					setObjectVersionsTableContent(selected[0],selected[1]);
+					setObjectVersionsTableContent(selected[0]);
 					setObjectRelationsTableContent(selected[0]);
 				}
 			}
@@ -312,7 +314,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			public void valueChanged(ListSelectionEvent e) {
 				Integer[] selected = getSelectedObject(tableObjectsFiltered);
 				if (selected != null) {
-					setObjectVersionsTableContent(selected[0],selected[1]);
+					setObjectVersionsTableContent(selected[0]);
 					setObjectRelationsTableContent(selected[0]);
 				}
 			}
@@ -343,12 +345,33 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		tabbedPane.addTab("Per Object", null, splitPane_3, null);
 		
 		JPanel topObjectVersionsPanel = new JPanel();
-		splitPane_3.setTopComponent(topObjectVersionsPanel);
 		topObjectVersionsPanel.setLayout(new BorderLayout(0, 0));
+		
+		tableObjectVersionAttributes = new JTable();
+		tableObjectVersionAttributes.setFillsViewportHeight(true);
+		tableObjectVersionAttributes.setModel(new ObjectVersionAttributesTableModel());
+		
+		JScrollPane objectVersionDetailsPanel = new JScrollPane(tableObjectVersionAttributes);
+		
+		JSplitPane splitPane_4 = new JSplitPane();
+		splitPane_4.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+		splitPane_3.setTopComponent(splitPane_4);
+		splitPane_4.setLeftComponent(topObjectVersionsPanel);
+		splitPane_4.setRightComponent(objectVersionDetailsPanel);
 		
 		tableObjectVersions = new JTable();
 		tableObjectVersions.setFillsViewportHeight(true);
 		tableObjectVersions.setModel(new ObjectVersionsTableModel());
+		tableObjectVersions.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+			
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				Integer selected = getSelectedEvent(tableObjectVersions);
+				if (selected != null) {
+					setObjectVersionAttributesTableContent(selected);
+				}
+			}
+		});
 		
 		JScrollPane scrollPaneTableObjectVersions = new JScrollPane(tableObjectVersions);
 		topObjectVersionsPanel.add(scrollPaneTableObjectVersions);
@@ -391,6 +414,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						
 						if (qr.type == SLEXMMObject.class) {
 							setObjectsTableContentFiltered(qr.result);
+						} else if (qr.type == SLEXMMObjectVersion.class) {
+							setObjectVersionsTableContent(qr.result); //FIXME
 						} else {
 							System.err.println("Unknown type of result");
 						}
@@ -584,7 +609,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 	}
 	
-	public void setObjectVersionsTableContent(int objectId, int classId) {
+	public void setObjectVersionsTableContent(int objectId) {
 		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
 		
 		tableObjectVersions.setModel(model);
@@ -592,19 +617,19 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		SLEXMMObjectVersionResultSet orset = mmstrg.getObjectVersionsForObjectOrdered(objectId);
 		SLEXMMObjectVersion objv = null;
 		
-		List<SLEXMMAttribute> attrs = mmstrg.getAttributesForClass(classId);
-		List<String> attrsName = new ArrayList<>();
+		//List<SLEXMMAttribute> attrs = mmstrg.getAttributesForClass(classId);
+		//List<String> attrsName = new ArrayList<>();
 		
-		for (SLEXMMAttribute at: attrs) {
-			attrsName.add(at.getName());
-		}
-		Collections.sort(attrsName);
-		
-		for (String name: attrsName) {
-			model.addColumn(name);
-			model.addColumnClass(String.class);
-		}
-				
+//		for (SLEXMMAttribute at: attrs) {
+//			attrsName.add(at.getName());
+//		}
+//		Collections.sort(attrsName);
+//		
+//		for (String name: attrsName) {
+//			model.addColumn(name);
+//			model.addColumnClass(String.class);
+//		}
+//				
 		while ((objv = orset.getNext()) != null) {
 			
 			Object[] row = new Object[model.getColumnCount()];
@@ -616,12 +641,34 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			row[4] = Long.valueOf(objv.getStartTimestamp());
 			row[5] = Long.valueOf(objv.getEndTimestamp());
 			
-			for (SLEXMMAttribute at: objv.getAttributeValues().keySet()) {
-				String colName = at.getName();
-				SLEXMMAttributeValue attrVal = objv.getAttributeValues().get(at);
-				String value = attrVal.getValue();
-				row[6+attrsName.indexOf(colName)] = value;
-			}
+//			for (SLEXMMAttribute at: objv.getAttributeValues().keySet()) {
+//				String colName = at.getName();
+//				SLEXMMAttributeValue attrVal = objv.getAttributeValues().get(at);
+//				String value = attrVal.getValue();
+//				row[6+attrsName.indexOf(colName)] = value;
+//			}
+//			
+			model.addRow(row);
+		}
+		
+	}
+	
+	public void setObjectVersionsTableContent(List<Object> list) {
+		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
+		
+		tableObjectVersions.setModel(model);
+		
+		for (Object o: list) {
+			SLEXMMObjectVersion objv = (SLEXMMObjectVersion) o;
+			
+			Object[] row = new Object[model.getColumnCount()];
+			
+			row[0] = Integer.valueOf(objv.getId());
+			row[1] = Integer.valueOf(objv.getObjectId());
+			row[2] = objv.getEventLabel();
+			row[3] = Integer.valueOf(objv.getEventId());
+			row[4] = Long.valueOf(objv.getStartTimestamp());
+			row[5] = Long.valueOf(objv.getEndTimestamp());
 			
 			model.addRow(row);
 		}
@@ -901,6 +948,44 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		model.addRow(new Object[] {"Event Lifecycle", e.getLifecycle(), "STRING"});
 		model.addRow(new Object[] {"Event Resource", e.getResource(), "STRING"});
 		model.addRow(new Object[] {"Event Timestamp", e.getTimestamp(), "LONG"});
+		
+	}
+	
+	private class ObjectVersionAttributesTableModel extends DefaultTableModel {
+		
+		Class[] columnTypes = new Class[] {	String.class, String.class, String.class };
+		boolean[] columnEditables = new boolean[] { false, false, false };
+		
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+		
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+			
+		public ObjectVersionAttributesTableModel() {
+			super(new String[] { "Attribute Name", "Value", "Type" }, 0);
+		}
+		
+	}
+	
+	public void setObjectVersionAttributesTableContent(int ovId) {
+		
+		ObjectVersionAttributesTableModel model = new ObjectVersionAttributesTableModel();
+		
+		tableObjectVersionAttributes.setModel(model);
+		
+		tableObjectVersionAttributes.getColumnModel().getColumn(0).setMinWidth(75);
+		tableObjectVersionAttributes.getColumnModel().getColumn(1).setMinWidth(75);
+		tableObjectVersionAttributes.getColumnModel().getColumn(1).setMinWidth(75);
+		
+		HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attrs = mmstrg.getAttributeValuesForObjectVersion(ovId);
+		
+		for (SLEXMMAttribute at: attrs.keySet()) {
+			SLEXMMAttributeValue attV = attrs.get(at);
+			model.addRow(new Object[] {at.getName(),attV.getValue(),attV.getType()});
+		}
 		
 	}
 }
