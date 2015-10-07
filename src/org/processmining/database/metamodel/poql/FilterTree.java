@@ -12,7 +12,8 @@ public class FilterTree {
 	
 	public static final int NODE_AND = 1;
 	public static final int NODE_OR = 2;
-	public static final int NODE_TERMINAL = 3;
+	public static final int NODE_NOT = 3;
+	public static final int NODE_TERMINAL = 4;
 		
 	int node = 0;
 	FilterTree leftChild = null;
@@ -52,6 +53,10 @@ public class FilterTree {
 	
 	public boolean isTerminal() {
 		return node == NODE_TERMINAL;
+	}
+	
+	public boolean isNot() {
+		return node == NODE_NOT;
 	}
 	
 	public boolean isAnd() {

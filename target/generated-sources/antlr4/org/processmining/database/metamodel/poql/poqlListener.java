@@ -38,66 +38,6 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitThings(poqlParser.ThingsContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_object}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_object(poqlParser.Things_no_objectContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_object}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_object(poqlParser.Things_no_objectContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_case}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_case(poqlParser.Things_no_caseContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_case}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_case(poqlParser.Things_no_caseContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_event}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_event(poqlParser.Things_no_eventContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_event}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_event(poqlParser.Things_no_eventContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_class}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_class(poqlParser.Things_no_classContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_class}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_class(poqlParser.Things_no_classContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_version}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_version(poqlParser.Things_no_versionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_version}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_version(poqlParser.Things_no_versionContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#things_no_activity}.
-	 * @param ctx the parse tree
-	 */
-	void enterThings_no_activity(poqlParser.Things_no_activityContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#things_no_activity}.
-	 * @param ctx the parse tree
-	 */
-	void exitThings_no_activity(poqlParser.Things_no_activityContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link poqlParser#objects}.
 	 * @param ctx the parse tree
 	 */

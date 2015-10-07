@@ -416,6 +416,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 							setObjectsTableContentFiltered(qr.result);
 						} else if (qr.type == SLEXMMObjectVersion.class) {
 							setObjectVersionsTableContent(qr.result); //FIXME
+						} else if (qr.type == SLEXMMEvent.class) {
+							setEventsTableContentFiltered(qr.result);
 						} else {
 							System.err.println("Unknown type of result");
 						}
@@ -895,6 +897,42 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					while ((ev = erset.getNext()) != null) {
 						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				topProgressBar.setIndeterminate(false);
+				casesTabbedPane.setEnabled(true);
+			}
+		});
+		
+		thread.start();
+		
+	}
+	
+	public void setEventsTableContentFiltered(final List<Object> list) {
+		
+		Thread thread = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				try {
+					topProgressBar.setIndeterminate(true);
+					casesTabbedPane.setEnabled(false);
+					
+					EventsTableModel model = new EventsTableModel();
+					
+					tableEventsFiltered.setModel(model);
+					
+					tableEventsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
+					tableEventsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
+				
+					for (Object o: list) {
+						SLEXMMEvent ev = (SLEXMMEvent) o;
+						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
+					}
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
