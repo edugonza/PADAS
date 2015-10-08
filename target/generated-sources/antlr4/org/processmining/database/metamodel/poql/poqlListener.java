@@ -108,6 +108,16 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitFilter(poqlParser.FilterContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link poqlParser#filter_versions}.
+	 * @param ctx the parse tree
+	 */
+	void enterFilter_versions(poqlParser.Filter_versionsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#filter_versions}.
+	 * @param ctx the parse tree
+	 */
+	void exitFilter_versions(poqlParser.Filter_versionsContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link poqlParser#filter_expression}.
 	 * @param ctx the parse tree
 	 */
@@ -117,6 +127,36 @@ public interface poqlListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFilter_expression(poqlParser.Filter_expressionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#filter_terminal}.
+	 * @param ctx the parse tree
+	 */
+	void enterFilter_terminal(poqlParser.Filter_terminalContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#filter_terminal}.
+	 * @param ctx the parse tree
+	 */
+	void exitFilter_terminal(poqlParser.Filter_terminalContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#filter_expression_versions}.
+	 * @param ctx the parse tree
+	 */
+	void enterFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#filter_expression_versions}.
+	 * @param ctx the parse tree
+	 */
+	void exitFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#filter_terminal_changed}.
+	 * @param ctx the parse tree
+	 */
+	void enterFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#filter_terminal_changed}.
+	 * @param ctx the parse tree
+	 */
+	void exitFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link poqlParser#id}.
 	 * @param ctx the parse tree

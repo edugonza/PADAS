@@ -13,9 +13,24 @@ grammar poql;
   import org.processmining.openslex.metamodel.SLEXMMClass; 
 }
 
+@lexer::members 
+{
+  @Override
+  public void recover(RecognitionException ex) 
+  {
+    throw new RuntimeException(ex.getMessage()); 
+  }
+}
+
 @parser::members {
   
   public POQLFunctions poql = new POQLFunctions();
+
+  @Override
+  public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException ex)
+  {
+    throw new RuntimeException(msg); 
+  }
   
 }
 
@@ -53,7 +68,7 @@ classes returns [List<Object> list, Class type]: CLASSESOF OPEN_PARENTHESIS t1=t
 versions returns [List<Object> list, Class type]: VERSIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.versionsOf($t1.list,$t1.type); $type=SLEXMMObjectVersion.class;}
 	| t2=allVersions{ $list = $t2.list; $type = $t2.type; }
 	| VERSIONS_RELATED_TO OPEN_PARENTHESIS t4=versions CLOSE_PARENTHESIS { $list = poql.versionsRelatedTo($t4.list,$t4.type); $type=SLEXMMObjectVersion.class; }
-	| t3=versions f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=versions f=filter_versions { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
 activities returns [List<Object> list, Class type]: ACTIVITIESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activitiesOf($t1.list,$t1.type); $type=SLEXMMActivity.class;}
@@ -63,19 +78,38 @@ activities returns [List<Object> list, Class type]: ACTIVITIESOF OPEN_PARENTHESI
 	
 filter returns [FilterTree conditions]: WHERE f=filter_expression { $conditions = $f.tree; }
 	;
+	
+filter_versions returns [FilterTree conditions]: WHERE f=filter_expression_versions { $conditions = $f.tree; }
+	;
 
-filter_expression returns [FilterTree tree]: NOT f0=filter_expression { $tree = poql.createNotNode($f0.tree); }
+filter_expression returns [FilterTree tree]:
+	  NOT f0=filter_expression { $tree = poql.createNotNode($f0.tree); }
 	| OPEN_PARENTHESIS f1=filter_expression AND f2=filter_expression CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
 	| OPEN_PARENTHESIS f3=filter_expression OR f4=filter_expression CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
-	| f5=id EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.name,$STRING.text,$f5.att); }
+	| f5=filter_terminal { $tree = $f5.tree; }
+	;
+
+filter_terminal returns [FilterTree tree]:
+	  f5=id EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.name,$STRING.text,$f5.att); }
 	| f6=id DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.name,$STRING.text,$f6.att); }
 	| f7=id EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.name,$STRING.text,$f7.att); }
 	| f8=id EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.name,$STRING.text,$f8.att); }
 	| f9=id GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.name,$STRING.text,$f9.att); }
 	| f10=id SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.name,$STRING.text,$f10.att); }
 	| f11=id CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.name,$STRING.text,$f11.att); }
-	| f12=id CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
+	; 
+
+filter_expression_versions returns [FilterTree tree]:
+	  NOT f0=filter_expression_versions { $tree = poql.createNotNode($f0.tree); }
+	| OPEN_PARENTHESIS f1=filter_expression_versions AND f2=filter_expression_versions CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
+	| OPEN_PARENTHESIS f3=filter_expression_versions OR f4=filter_expression_versions CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
+	| f5=filter_terminal { $tree = $f5.tree; }
+	| f6=filter_terminal_changed { $tree = $f6.tree; }
 	;
+
+filter_terminal_changed returns [FilterTree tree]: 
+	  f12=id CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
+	; 
 
 id returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
 	| IDNOATT {$name = $IDNOATT.text; $att = false;}

@@ -12,7 +12,11 @@ import org.processmining.openslex.metamodel.SLEXMMActivityInstanceResultSet;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMCase;
+import org.processmining.openslex.metamodel.SLEXMMCaseResultSet;
 import org.processmining.openslex.metamodel.SLEXMMClass;
+import org.processmining.openslex.metamodel.SLEXMMClassResultSet;
+import org.processmining.openslex.metamodel.SLEXMMDataModel;
+import org.processmining.openslex.metamodel.SLEXMMDataModelResultSet;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
 import org.processmining.openslex.metamodel.SLEXMMEventAttribute;
 import org.processmining.openslex.metamodel.SLEXMMEventAttributeValue;
@@ -26,6 +30,15 @@ import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 public class POQLFunctions {
 	
 	private SLEXMMStorageMetaModel slxmm = null;
+	private boolean checkerMode = false;
+	
+	public void setCheckerMode(boolean mode) {
+		this.checkerMode = mode;
+	}
+	
+	public boolean isCheckerModeEnabled() {
+		return this.checkerMode;
+	}
 	
 	public void setMetaModel(SLEXMMStorageMetaModel strg) {
 		this.slxmm = strg;
@@ -155,7 +168,30 @@ public class POQLFunctions {
 				
 			}
 		} else if (type == SLEXMMClass.class) {
-			// TODO
+			for (Object o: list) {
+				SLEXMMClass ob = (SLEXMMClass) o;
+				String v = null;
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Class");
+					return list;
+				} else if (condition.getKey().equals("name")) {
+					v = String.valueOf(ob.getName());
+				} else if (condition.getKey().equals("id")) {
+					v = String.valueOf(ob.getId());
+				} else if (condition.getKey().equals("datamodel_id")) {
+					v = String.valueOf(ob.getDataModelId());
+				} else {
+					// ERROR
+					System.err.println("Unknown key");
+					return list;
+				}
+				
+				if (filterOperation(v,condition.value,condition.operator)) {
+					filteredList.add(o);
+				}
+				
+			}
 		} else if (type == SLEXMMActivity.class) {
 			for (Object o: list) {
 				SLEXMMActivity ob = (SLEXMMActivity) o;
@@ -395,6 +431,17 @@ public class POQLFunctions {
 			
 		} else if (type == SLEXMMCase.class) {
 			// TODO
+		} else if (type == SLEXMMClass.class) {
+			for (Object o: list) {
+				SLEXMMClass c = (SLEXMMClass) o;
+				
+				SLEXMMObjectResultSet orset = slxmm.getObjectsPerClass(c.getId());
+				SLEXMMObject ob = null;
+				
+				while ((ob = orset.getNext()) != null) {
+					listResult.add(ob);
+				}
+			}
 		} else if (type == SLEXMMObject.class) {
 			return list;
 		} else {
@@ -426,8 +473,19 @@ public class POQLFunctions {
 		} else if (type == SLEXMMObject.class) {
 			// TODO
 		} else if (type == SLEXMMObjectVersion.class) {
-			// TODO
+			for (Object o: list) {
+				SLEXMMObjectVersion ov = (SLEXMMObjectVersion) o;
+				
+				SLEXMMEventResultSet erset = slxmm.getEventsForObjectVersion(ov.getId());
+				SLEXMMEvent ev = null;
+				
+				while ((ev = erset.getNext()) != null) {
+					listResult.add(ev);
+				}
+			}
 		} else if (type == SLEXMMCase.class) {
+			// TODO
+		} else if (type == SLEXMMClass.class) {
 			// TODO
 		} else {
 			// ERROR
@@ -510,47 +568,73 @@ public class POQLFunctions {
 	
 	public List<Object> getAllObjects() {
 		ArrayList<Object> list = new ArrayList<>();
-		SLEXMMObjectResultSet orset = slxmm.getObjects();
-		SLEXMMObject o = null;
-		while ((o = orset.getNext()) != null) {
-			list.add(o);
+		if (!isCheckerModeEnabled()) {
+			SLEXMMObjectResultSet orset = slxmm.getObjects();
+			SLEXMMObject o = null;
+			while ((o = orset.getNext()) != null) {
+				list.add(o);
+			}
 		}
 		return list;
 	}
 	
 	public List<Object> getAllCases() {
-		// TODO
-		return null;
+		ArrayList<Object> list = new ArrayList<>();
+		if (!isCheckerModeEnabled()) {
+			SLEXMMCaseResultSet crset = slxmm.getCases();
+			SLEXMMCase c = null;
+			while ((c = crset.getNext()) != null) {
+				list.add(c);
+			}
+		}
+		return list;
 	}
 	
 	public List<Object> getAllEvents() {
 		ArrayList<Object> list = new ArrayList<>();
-		SLEXMMEventResultSet erset = slxmm.getEvents();
-		SLEXMMEvent e = null;
-		while ((e = erset.getNext()) != null) {
-			list.add(e);
+		if (!isCheckerModeEnabled()) {
+			SLEXMMEventResultSet erset = slxmm.getEvents();
+			SLEXMMEvent e = null;
+			while ((e = erset.getNext()) != null) {
+				list.add(e);
+			}
 		}
 		return list;
 	}
 	
 	public List<Object> getAllVersions() {
 		ArrayList<Object> list = new ArrayList<>();
-		SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersions();
-		SLEXMMObjectVersion ov = null;
-		while ((ov = ovrset.getNext()) != null) {
-			list.add(ov);
+		if (!isCheckerModeEnabled()) {
+			SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersions();
+			SLEXMMObjectVersion ov = null;
+			while ((ov = ovrset.getNext()) != null) {
+				list.add(ov);
+			}
 		}
 		return list;
 	}
 	
 	public List<Object> getAllActivities() {
 		ArrayList<Object> list = new ArrayList<>();
-		list.addAll(slxmm.getActivities());
+		if (!isCheckerModeEnabled()) {
+			list.addAll(slxmm.getActivities());
+		}
 		return list;
 	}
 	
 	public List<Object> getAllClasses() {
-		// TODO
-		return null;
+		ArrayList<Object> list = new ArrayList<>();
+		if (!isCheckerModeEnabled()) {
+			SLEXMMDataModelResultSet dms = slxmm.getDataModels();
+			SLEXMMDataModel dm = null;
+			while ((dm = dms.getNext()) != null) {
+				SLEXMMClassResultSet crset = slxmm.getClassesForDataModel(dm);
+				SLEXMMClass cl = null;
+				while ((cl = crset.getNext()) != null) {
+					list.add(cl);
+				}
+			}
+		}
+		return list;
 	}
 }

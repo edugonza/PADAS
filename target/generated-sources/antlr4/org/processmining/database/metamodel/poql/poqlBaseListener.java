@@ -134,6 +134,18 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterFilter_versions(poqlParser.Filter_versionsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFilter_versions(poqlParser.Filter_versionsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFilter_expression(poqlParser.Filter_expressionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -141,6 +153,42 @@ public class poqlBaseListener implements poqlListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFilter_expression(poqlParser.Filter_expressionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFilter_terminal(poqlParser.Filter_terminalContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFilter_terminal(poqlParser.Filter_terminalContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -36,12 +36,15 @@ public class poqlParser extends Parser {
 	public static final int
 		RULE_prog = 0, RULE_things = 1, RULE_objects = 2, RULE_cases = 3, RULE_events = 4, 
 		RULE_classes = 5, RULE_versions = 6, RULE_activities = 7, RULE_filter = 8, 
-		RULE_filter_expression = 9, RULE_id = 10, RULE_allObjects = 11, RULE_allCases = 12, 
-		RULE_allEvents = 13, RULE_allClasses = 14, RULE_allVersions = 15, RULE_allActivities = 16;
+		RULE_filter_versions = 9, RULE_filter_expression = 10, RULE_filter_terminal = 11, 
+		RULE_filter_expression_versions = 12, RULE_filter_terminal_changed = 13, 
+		RULE_id = 14, RULE_allObjects = 15, RULE_allCases = 16, RULE_allEvents = 17, 
+		RULE_allClasses = 18, RULE_allVersions = 19, RULE_allActivities = 20;
 	public static final String[] ruleNames = {
 		"prog", "things", "objects", "cases", "events", "classes", "versions", 
-		"activities", "filter", "filter_expression", "id", "allObjects", "allCases", 
-		"allEvents", "allClasses", "allVersions", "allActivities"
+		"activities", "filter", "filter_versions", "filter_expression", "filter_terminal", 
+		"filter_expression_versions", "filter_terminal_changed", "id", "allObjects", 
+		"allCases", "allEvents", "allClasses", "allVersions", "allActivities"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
@@ -105,6 +108,12 @@ public class poqlParser extends Parser {
 
 	  
 	  public POQLFunctions poql = new POQLFunctions();
+
+	  @Override
+	  public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException ex)
+	  {
+	    throw new RuntimeException(msg); 
+	  }
 	  
 
 	public poqlParser(TokenStream input) {
@@ -138,7 +147,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(34);
+			setState(42);
 			((ProgContext)_localctx).t = things();
 			 ((ProgContext)_localctx).result =  ((ProgContext)_localctx).t.list; ((ProgContext)_localctx).type =  ((ProgContext)_localctx).t.type; 
 			}
@@ -199,13 +208,13 @@ public class poqlParser extends Parser {
 		ThingsContext _localctx = new ThingsContext(_ctx, getState());
 		enterRule(_localctx, 2, RULE_things);
 		try {
-			setState(55);
+			setState(63);
 			switch (_input.LA(1)) {
 			case CASESOF:
 			case ALLCASES:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(37);
+				setState(45);
 				((ThingsContext)_localctx).t1 = cases(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t1.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t1.type; 
 				}
@@ -214,7 +223,7 @@ public class poqlParser extends Parser {
 			case ALLOBJECTS:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(40);
+				setState(48);
 				((ThingsContext)_localctx).t2 = objects(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t2.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t2.type; 
 				}
@@ -223,7 +232,7 @@ public class poqlParser extends Parser {
 			case ALLEVENTS:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(43);
+				setState(51);
 				((ThingsContext)_localctx).t3 = events(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t3.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t3.type; 
 				}
@@ -232,7 +241,7 @@ public class poqlParser extends Parser {
 			case ALLCLASSES:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(46);
+				setState(54);
 				((ThingsContext)_localctx).t4 = classes(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t4.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t4.type; 
 				}
@@ -242,7 +251,7 @@ public class poqlParser extends Parser {
 			case ALLVERSIONS:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(49);
+				setState(57);
 				((ThingsContext)_localctx).t5 = versions(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t5.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t5.type; 
 				}
@@ -251,7 +260,7 @@ public class poqlParser extends Parser {
 			case ALLACTIVITIES:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(52);
+				setState(60);
 				((ThingsContext)_localctx).t6 = activities(0);
 				 ((ThingsContext)_localctx).list =  ((ThingsContext)_localctx).t6.list; ((ThingsContext)_localctx).type =  ((ThingsContext)_localctx).t6.type; 
 				}
@@ -322,24 +331,24 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(67);
+			setState(75);
 			switch (_input.LA(1)) {
 			case OBJECTSOF:
 				{
-				setState(58);
+				setState(66);
 				match(OBJECTSOF);
-				setState(59);
+				setState(67);
 				match(OPEN_PARENTHESIS);
-				setState(60);
+				setState(68);
 				((ObjectsContext)_localctx).t1 = things();
-				setState(61);
+				setState(69);
 				match(CLOSE_PARENTHESIS);
 				 ((ObjectsContext)_localctx).list =  poql.objectsOf(((ObjectsContext)_localctx).t1.list,((ObjectsContext)_localctx).t1.type); ((ObjectsContext)_localctx).type = SLEXMMObject.class; 
 				}
 				break;
 			case ALLOBJECTS:
 				{
-				setState(64);
+				setState(72);
 				((ObjectsContext)_localctx).t2 = allObjects();
 				 ((ObjectsContext)_localctx).list =  ((ObjectsContext)_localctx).t2.list; ((ObjectsContext)_localctx).type =  ((ObjectsContext)_localctx).t2.type; 
 				}
@@ -348,7 +357,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(75);
+			setState(83);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -361,15 +370,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_objects);
-					setState(69);
+					setState(77);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(70);
+					setState(78);
 					((ObjectsContext)_localctx).f = filter();
 					 ((ObjectsContext)_localctx).list =  poql.filter(((ObjectsContext)_localctx).t3.list,((ObjectsContext)_localctx).t3.type,((ObjectsContext)_localctx).f.conditions); ((ObjectsContext)_localctx).type =  ((ObjectsContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(77);
+				setState(85);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			}
@@ -437,24 +446,24 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(88);
+			setState(96);
 			switch (_input.LA(1)) {
 			case CASESOF:
 				{
-				setState(79);
+				setState(87);
 				match(CASESOF);
-				setState(80);
+				setState(88);
 				match(OPEN_PARENTHESIS);
-				setState(81);
+				setState(89);
 				((CasesContext)_localctx).t1 = things();
-				setState(82);
+				setState(90);
 				match(CLOSE_PARENTHESIS);
 				 ((CasesContext)_localctx).list =  poql.casesOf(((CasesContext)_localctx).t1.list,((CasesContext)_localctx).t1.type); ((CasesContext)_localctx).type = SLEXMMCase.class; 
 				}
 				break;
 			case ALLCASES:
 				{
-				setState(85);
+				setState(93);
 				((CasesContext)_localctx).t2 = allCases();
 				 ((CasesContext)_localctx).list =  ((CasesContext)_localctx).t2.list; ((CasesContext)_localctx).type =  ((CasesContext)_localctx).t2.type; 
 				}
@@ -463,7 +472,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(96);
+			setState(104);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,4,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -476,15 +485,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_cases);
-					setState(90);
+					setState(98);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(91);
+					setState(99);
 					((CasesContext)_localctx).f = filter();
 					 ((CasesContext)_localctx).list =  poql.filter(((CasesContext)_localctx).t3.list,((CasesContext)_localctx).t3.type,((CasesContext)_localctx).f.conditions); ((CasesContext)_localctx).type =  ((CasesContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(98);
+				setState(106);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,4,_ctx);
 			}
@@ -552,24 +561,24 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(109);
+			setState(117);
 			switch (_input.LA(1)) {
 			case EVENTSOF:
 				{
-				setState(100);
+				setState(108);
 				match(EVENTSOF);
-				setState(101);
+				setState(109);
 				match(OPEN_PARENTHESIS);
-				setState(102);
+				setState(110);
 				((EventsContext)_localctx).t1 = things();
-				setState(103);
+				setState(111);
 				match(CLOSE_PARENTHESIS);
 				 ((EventsContext)_localctx).list =  poql.eventsOf(((EventsContext)_localctx).t1.list,((EventsContext)_localctx).t1.type); ((EventsContext)_localctx).type = SLEXMMEvent.class;
 				}
 				break;
 			case ALLEVENTS:
 				{
-				setState(106);
+				setState(114);
 				((EventsContext)_localctx).t2 = allEvents();
 				 ((EventsContext)_localctx).list =  ((EventsContext)_localctx).t2.list; ((EventsContext)_localctx).type =  ((EventsContext)_localctx).t2.type; 
 				}
@@ -578,7 +587,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(117);
+			setState(125);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -591,15 +600,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_events);
-					setState(111);
+					setState(119);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(112);
+					setState(120);
 					((EventsContext)_localctx).f = filter();
 					 ((EventsContext)_localctx).list =  poql.filter(((EventsContext)_localctx).t3.list,((EventsContext)_localctx).t3.type,((EventsContext)_localctx).f.conditions); ((EventsContext)_localctx).type =  ((EventsContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(119);
+				setState(127);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			}
@@ -667,24 +676,24 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(130);
+			setState(138);
 			switch (_input.LA(1)) {
 			case CLASSESOF:
 				{
-				setState(121);
+				setState(129);
 				match(CLASSESOF);
-				setState(122);
+				setState(130);
 				match(OPEN_PARENTHESIS);
-				setState(123);
+				setState(131);
 				((ClassesContext)_localctx).t1 = things();
-				setState(124);
+				setState(132);
 				match(CLOSE_PARENTHESIS);
 				 ((ClassesContext)_localctx).list =  poql.classesOf(((ClassesContext)_localctx).t1.list,((ClassesContext)_localctx).t1.type); ((ClassesContext)_localctx).type = SLEXMMClass.class;
 				}
 				break;
 			case ALLCLASSES:
 				{
-				setState(127);
+				setState(135);
 				((ClassesContext)_localctx).t2 = allClasses();
 				 ((ClassesContext)_localctx).list =  ((ClassesContext)_localctx).t2.list; ((ClassesContext)_localctx).type =  ((ClassesContext)_localctx).t2.type; 
 				}
@@ -693,7 +702,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(138);
+			setState(146);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -706,15 +715,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_classes);
-					setState(132);
+					setState(140);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(133);
+					setState(141);
 					((ClassesContext)_localctx).f = filter();
 					 ((ClassesContext)_localctx).list =  poql.filter(((ClassesContext)_localctx).t3.list,((ClassesContext)_localctx).t3.type,((ClassesContext)_localctx).f.conditions); ((ClassesContext)_localctx).type =  ((ClassesContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(140);
+				setState(148);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			}
@@ -738,7 +747,7 @@ public class poqlParser extends Parser {
 		public ThingsContext t1;
 		public AllVersionsContext t2;
 		public VersionsContext t4;
-		public FilterContext f;
+		public Filter_versionsContext f;
 		public TerminalNode VERSIONSOF() { return getToken(poqlParser.VERSIONSOF, 0); }
 		public TerminalNode OPEN_PARENTHESIS() { return getToken(poqlParser.OPEN_PARENTHESIS, 0); }
 		public TerminalNode CLOSE_PARENTHESIS() { return getToken(poqlParser.CLOSE_PARENTHESIS, 0); }
@@ -752,8 +761,8 @@ public class poqlParser extends Parser {
 		public VersionsContext versions() {
 			return getRuleContext(VersionsContext.class,0);
 		}
-		public FilterContext filter() {
-			return getRuleContext(FilterContext.class,0);
+		public Filter_versionsContext filter_versions() {
+			return getRuleContext(Filter_versionsContext.class,0);
 		}
 		public VersionsContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -784,37 +793,37 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(157);
+			setState(165);
 			switch (_input.LA(1)) {
 			case VERSIONSOF:
 				{
-				setState(142);
+				setState(150);
 				match(VERSIONSOF);
-				setState(143);
+				setState(151);
 				match(OPEN_PARENTHESIS);
-				setState(144);
+				setState(152);
 				((VersionsContext)_localctx).t1 = things();
-				setState(145);
+				setState(153);
 				match(CLOSE_PARENTHESIS);
 				 ((VersionsContext)_localctx).list =  poql.versionsOf(((VersionsContext)_localctx).t1.list,((VersionsContext)_localctx).t1.type); ((VersionsContext)_localctx).type = SLEXMMObjectVersion.class;
 				}
 				break;
 			case ALLVERSIONS:
 				{
-				setState(148);
+				setState(156);
 				((VersionsContext)_localctx).t2 = allVersions();
 				 ((VersionsContext)_localctx).list =  ((VersionsContext)_localctx).t2.list; ((VersionsContext)_localctx).type =  ((VersionsContext)_localctx).t2.type; 
 				}
 				break;
 			case VERSIONS_RELATED_TO:
 				{
-				setState(151);
+				setState(159);
 				match(VERSIONS_RELATED_TO);
-				setState(152);
+				setState(160);
 				match(OPEN_PARENTHESIS);
-				setState(153);
+				setState(161);
 				((VersionsContext)_localctx).t4 = versions(0);
-				setState(154);
+				setState(162);
 				match(CLOSE_PARENTHESIS);
 				 ((VersionsContext)_localctx).list =  poql.versionsRelatedTo(((VersionsContext)_localctx).t4.list,((VersionsContext)_localctx).t4.type); ((VersionsContext)_localctx).type = SLEXMMObjectVersion.class; 
 				}
@@ -823,7 +832,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(165);
+			setState(173);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,10,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -836,15 +845,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_versions);
-					setState(159);
+					setState(167);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(160);
-					((VersionsContext)_localctx).f = filter();
+					setState(168);
+					((VersionsContext)_localctx).f = filter_versions();
 					 ((VersionsContext)_localctx).list =  poql.filter(((VersionsContext)_localctx).t3.list,((VersionsContext)_localctx).t3.type,((VersionsContext)_localctx).f.conditions); ((VersionsContext)_localctx).type =  ((VersionsContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(167);
+				setState(175);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,10,_ctx);
 			}
@@ -912,24 +921,24 @@ public class poqlParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(178);
+			setState(186);
 			switch (_input.LA(1)) {
 			case ACTIVITIESOF:
 				{
-				setState(169);
+				setState(177);
 				match(ACTIVITIESOF);
-				setState(170);
+				setState(178);
 				match(OPEN_PARENTHESIS);
-				setState(171);
+				setState(179);
 				((ActivitiesContext)_localctx).t1 = things();
-				setState(172);
+				setState(180);
 				match(CLOSE_PARENTHESIS);
 				 ((ActivitiesContext)_localctx).list =  poql.activitiesOf(((ActivitiesContext)_localctx).t1.list,((ActivitiesContext)_localctx).t1.type); ((ActivitiesContext)_localctx).type = SLEXMMActivity.class;
 				}
 				break;
 			case ALLACTIVITIES:
 				{
-				setState(175);
+				setState(183);
 				((ActivitiesContext)_localctx).t2 = allActivities();
 				 ((ActivitiesContext)_localctx).list =  ((ActivitiesContext)_localctx).t2.list; ((ActivitiesContext)_localctx).type =  ((ActivitiesContext)_localctx).t2.type; 
 				}
@@ -938,7 +947,7 @@ public class poqlParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(186);
+			setState(194);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -951,15 +960,15 @@ public class poqlParser extends Parser {
 					_localctx.t3 = _prevctx;
 					_localctx.t3 = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_activities);
-					setState(180);
+					setState(188);
 					if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-					setState(181);
+					setState(189);
 					((ActivitiesContext)_localctx).f = filter();
 					 ((ActivitiesContext)_localctx).list =  poql.filter(((ActivitiesContext)_localctx).t3.list,((ActivitiesContext)_localctx).t3.type,((ActivitiesContext)_localctx).f.conditions); ((ActivitiesContext)_localctx).type =  ((ActivitiesContext)_localctx).t3.type; 
 					}
 					} 
 				}
-				setState(188);
+				setState(196);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			}
@@ -1003,11 +1012,56 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(189);
+			setState(197);
 			match(WHERE);
-			setState(190);
+			setState(198);
 			((FilterContext)_localctx).f = filter_expression();
 			 ((FilterContext)_localctx).conditions =  ((FilterContext)_localctx).f.tree; 
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class Filter_versionsContext extends ParserRuleContext {
+		public FilterTree conditions;
+		public Filter_expression_versionsContext f;
+		public TerminalNode WHERE() { return getToken(poqlParser.WHERE, 0); }
+		public Filter_expression_versionsContext filter_expression_versions() {
+			return getRuleContext(Filter_expression_versionsContext.class,0);
+		}
+		public Filter_versionsContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_filter_versions; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).enterFilter_versions(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).exitFilter_versions(this);
+		}
+	}
+
+	public final Filter_versionsContext filter_versions() throws RecognitionException {
+		Filter_versionsContext _localctx = new Filter_versionsContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_filter_versions);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(201);
+			match(WHERE);
+			setState(202);
+			((Filter_versionsContext)_localctx).f = filter_expression_versions();
+			 ((Filter_versionsContext)_localctx).conditions =  ((Filter_versionsContext)_localctx).f.tree; 
 			}
 		}
 		catch (RecognitionException re) {
@@ -1028,17 +1082,7 @@ public class poqlParser extends Parser {
 		public Filter_expressionContext f2;
 		public Filter_expressionContext f3;
 		public Filter_expressionContext f4;
-		public IdContext f5;
-		public Token STRING;
-		public IdContext f6;
-		public IdContext f7;
-		public IdContext f8;
-		public IdContext f9;
-		public IdContext f10;
-		public IdContext f11;
-		public IdContext f12;
-		public Token f13;
-		public Token f14;
+		public Filter_terminalContext f5;
 		public TerminalNode NOT() { return getToken(poqlParser.NOT, 0); }
 		public List<Filter_expressionContext> filter_expression() {
 			return getRuleContexts(Filter_expressionContext.class);
@@ -1050,23 +1094,9 @@ public class poqlParser extends Parser {
 		public TerminalNode AND() { return getToken(poqlParser.AND, 0); }
 		public TerminalNode CLOSE_PARENTHESIS() { return getToken(poqlParser.CLOSE_PARENTHESIS, 0); }
 		public TerminalNode OR() { return getToken(poqlParser.OR, 0); }
-		public TerminalNode EQUAL() { return getToken(poqlParser.EQUAL, 0); }
-		public List<TerminalNode> STRING() { return getTokens(poqlParser.STRING); }
-		public TerminalNode STRING(int i) {
-			return getToken(poqlParser.STRING, i);
+		public Filter_terminalContext filter_terminal() {
+			return getRuleContext(Filter_terminalContext.class,0);
 		}
-		public IdContext id() {
-			return getRuleContext(IdContext.class,0);
-		}
-		public TerminalNode DIFFERENT() { return getToken(poqlParser.DIFFERENT, 0); }
-		public TerminalNode EQUAL_OR_GREATER() { return getToken(poqlParser.EQUAL_OR_GREATER, 0); }
-		public TerminalNode EQUAL_OR_SMALLER() { return getToken(poqlParser.EQUAL_OR_SMALLER, 0); }
-		public TerminalNode GREATER() { return getToken(poqlParser.GREATER, 0); }
-		public TerminalNode SMALLER() { return getToken(poqlParser.SMALLER, 0); }
-		public TerminalNode CONTAINS() { return getToken(poqlParser.CONTAINS, 0); }
-		public TerminalNode CHANGED() { return getToken(poqlParser.CHANGED, 0); }
-		public TerminalNode FROM() { return getToken(poqlParser.FROM, 0); }
-		public TerminalNode TO() { return getToken(poqlParser.TO, 0); }
 		public Filter_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1083,16 +1113,16 @@ public class poqlParser extends Parser {
 
 	public final Filter_expressionContext filter_expression() throws RecognitionException {
 		Filter_expressionContext _localctx = new Filter_expressionContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_filter_expression);
+		enterRule(_localctx, 20, RULE_filter_expression);
 		try {
-			setState(258);
-			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
+			setState(226);
+			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(193);
+				setState(205);
 				match(NOT);
-				setState(194);
+				setState(206);
 				((Filter_expressionContext)_localctx).f0 = filter_expression();
 				 ((Filter_expressionContext)_localctx).tree =  poql.createNotNode(((Filter_expressionContext)_localctx).f0.tree); 
 				}
@@ -1100,15 +1130,15 @@ public class poqlParser extends Parser {
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(197);
+				setState(209);
 				match(OPEN_PARENTHESIS);
-				setState(198);
+				setState(210);
 				((Filter_expressionContext)_localctx).f1 = filter_expression();
-				setState(199);
+				setState(211);
 				match(AND);
-				setState(200);
+				setState(212);
 				((Filter_expressionContext)_localctx).f2 = filter_expression();
-				setState(201);
+				setState(213);
 				match(CLOSE_PARENTHESIS);
 				 ((Filter_expressionContext)_localctx).tree =  poql.createAndNode(((Filter_expressionContext)_localctx).f1.tree,((Filter_expressionContext)_localctx).f2.tree); 
 				}
@@ -1116,15 +1146,15 @@ public class poqlParser extends Parser {
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(204);
+				setState(216);
 				match(OPEN_PARENTHESIS);
-				setState(205);
+				setState(217);
 				((Filter_expressionContext)_localctx).f3 = filter_expression();
-				setState(206);
+				setState(218);
 				match(OR);
-				setState(207);
+				setState(219);
 				((Filter_expressionContext)_localctx).f4 = filter_expression();
-				setState(208);
+				setState(220);
 				match(CLOSE_PARENTHESIS);
 				 ((Filter_expressionContext)_localctx).tree =  poql.createOrNode(((Filter_expressionContext)_localctx).f3.tree,((Filter_expressionContext)_localctx).f4.tree); 
 				}
@@ -1132,119 +1162,341 @@ public class poqlParser extends Parser {
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(211);
-				((Filter_expressionContext)_localctx).f5 = id();
-				setState(212);
+				setState(223);
+				((Filter_expressionContext)_localctx).f5 = filter_terminal();
+				 ((Filter_expressionContext)_localctx).tree =  ((Filter_expressionContext)_localctx).f5.tree; 
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class Filter_terminalContext extends ParserRuleContext {
+		public FilterTree tree;
+		public IdContext f5;
+		public Token STRING;
+		public IdContext f6;
+		public IdContext f7;
+		public IdContext f8;
+		public IdContext f9;
+		public IdContext f10;
+		public IdContext f11;
+		public TerminalNode EQUAL() { return getToken(poqlParser.EQUAL, 0); }
+		public TerminalNode STRING() { return getToken(poqlParser.STRING, 0); }
+		public IdContext id() {
+			return getRuleContext(IdContext.class,0);
+		}
+		public TerminalNode DIFFERENT() { return getToken(poqlParser.DIFFERENT, 0); }
+		public TerminalNode EQUAL_OR_GREATER() { return getToken(poqlParser.EQUAL_OR_GREATER, 0); }
+		public TerminalNode EQUAL_OR_SMALLER() { return getToken(poqlParser.EQUAL_OR_SMALLER, 0); }
+		public TerminalNode GREATER() { return getToken(poqlParser.GREATER, 0); }
+		public TerminalNode SMALLER() { return getToken(poqlParser.SMALLER, 0); }
+		public TerminalNode CONTAINS() { return getToken(poqlParser.CONTAINS, 0); }
+		public Filter_terminalContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_filter_terminal; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).enterFilter_terminal(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).exitFilter_terminal(this);
+		}
+	}
+
+	public final Filter_terminalContext filter_terminal() throws RecognitionException {
+		Filter_terminalContext _localctx = new Filter_terminalContext(_ctx, getState());
+		enterRule(_localctx, 22, RULE_filter_terminal);
+		try {
+			setState(263);
+			switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(228);
+				((Filter_terminalContext)_localctx).f5 = id();
+				setState(229);
 				match(EQUAL);
-				setState(213);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createEqualTerminalFilter(((Filter_expressionContext)_localctx).f5.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f5.att); 
+				setState(230);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createEqualTerminalFilter(((Filter_terminalContext)_localctx).f5.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f5.att); 
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(233);
+				((Filter_terminalContext)_localctx).f6 = id();
+				setState(234);
+				match(DIFFERENT);
+				setState(235);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createDifferentTerminalFilter(((Filter_terminalContext)_localctx).f6.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f6.att); 
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(238);
+				((Filter_terminalContext)_localctx).f7 = id();
+				setState(239);
+				match(EQUAL_OR_GREATER);
+				setState(240);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createEqualOrGreaterTerminalFilter(((Filter_terminalContext)_localctx).f7.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f7.att); 
+				}
+				break;
+			case 4:
+				enterOuterAlt(_localctx, 4);
+				{
+				setState(243);
+				((Filter_terminalContext)_localctx).f8 = id();
+				setState(244);
+				match(EQUAL_OR_SMALLER);
+				setState(245);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createEqualOrSmallerTerminalFilter(((Filter_terminalContext)_localctx).f8.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f8.att); 
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(216);
-				((Filter_expressionContext)_localctx).f6 = id();
-				setState(217);
-				match(DIFFERENT);
-				setState(218);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createDifferentTerminalFilter(((Filter_expressionContext)_localctx).f6.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f6.att); 
+				setState(248);
+				((Filter_terminalContext)_localctx).f9 = id();
+				setState(249);
+				match(GREATER);
+				setState(250);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createGreaterTerminalFilter(((Filter_terminalContext)_localctx).f9.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f9.att); 
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(221);
-				((Filter_expressionContext)_localctx).f7 = id();
-				setState(222);
-				match(EQUAL_OR_GREATER);
-				setState(223);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createEqualOrGreaterTerminalFilter(((Filter_expressionContext)_localctx).f7.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f7.att); 
+				setState(253);
+				((Filter_terminalContext)_localctx).f10 = id();
+				setState(254);
+				match(SMALLER);
+				setState(255);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createSmallerTerminalFilter(((Filter_terminalContext)_localctx).f10.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f10.att); 
 				}
 				break;
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(226);
-				((Filter_expressionContext)_localctx).f8 = id();
-				setState(227);
-				match(EQUAL_OR_SMALLER);
-				setState(228);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createEqualOrSmallerTerminalFilter(((Filter_expressionContext)_localctx).f8.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f8.att); 
-				}
-				break;
-			case 8:
-				enterOuterAlt(_localctx, 8);
-				{
-				setState(231);
-				((Filter_expressionContext)_localctx).f9 = id();
-				setState(232);
-				match(GREATER);
-				setState(233);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createGreaterTerminalFilter(((Filter_expressionContext)_localctx).f9.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f9.att); 
-				}
-				break;
-			case 9:
-				enterOuterAlt(_localctx, 9);
-				{
-				setState(236);
-				((Filter_expressionContext)_localctx).f10 = id();
-				setState(237);
-				match(SMALLER);
-				setState(238);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createSmallerTerminalFilter(((Filter_expressionContext)_localctx).f10.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f10.att); 
-				}
-				break;
-			case 10:
-				enterOuterAlt(_localctx, 10);
-				{
-				setState(241);
-				((Filter_expressionContext)_localctx).f11 = id();
-				setState(242);
+				setState(258);
+				((Filter_terminalContext)_localctx).f11 = id();
+				setState(259);
 				match(CONTAINS);
-				setState(243);
-				((Filter_expressionContext)_localctx).STRING = match(STRING);
-				 ((Filter_expressionContext)_localctx).tree =  poql.createContainsTerminalFilter(((Filter_expressionContext)_localctx).f11.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f11.att); 
+				setState(260);
+				((Filter_terminalContext)_localctx).STRING = match(STRING);
+				 ((Filter_terminalContext)_localctx).tree =  poql.createContainsTerminalFilter(((Filter_terminalContext)_localctx).f11.name,(((Filter_terminalContext)_localctx).STRING!=null?((Filter_terminalContext)_localctx).STRING.getText():null),((Filter_terminalContext)_localctx).f11.att); 
 				}
 				break;
-			case 11:
-				enterOuterAlt(_localctx, 11);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class Filter_expression_versionsContext extends ParserRuleContext {
+		public FilterTree tree;
+		public Filter_expression_versionsContext f0;
+		public Filter_expression_versionsContext f1;
+		public Filter_expression_versionsContext f2;
+		public Filter_expression_versionsContext f3;
+		public Filter_expression_versionsContext f4;
+		public Filter_terminalContext f5;
+		public Filter_terminal_changedContext f6;
+		public TerminalNode NOT() { return getToken(poqlParser.NOT, 0); }
+		public List<Filter_expression_versionsContext> filter_expression_versions() {
+			return getRuleContexts(Filter_expression_versionsContext.class);
+		}
+		public Filter_expression_versionsContext filter_expression_versions(int i) {
+			return getRuleContext(Filter_expression_versionsContext.class,i);
+		}
+		public TerminalNode OPEN_PARENTHESIS() { return getToken(poqlParser.OPEN_PARENTHESIS, 0); }
+		public TerminalNode AND() { return getToken(poqlParser.AND, 0); }
+		public TerminalNode CLOSE_PARENTHESIS() { return getToken(poqlParser.CLOSE_PARENTHESIS, 0); }
+		public TerminalNode OR() { return getToken(poqlParser.OR, 0); }
+		public Filter_terminalContext filter_terminal() {
+			return getRuleContext(Filter_terminalContext.class,0);
+		}
+		public Filter_terminal_changedContext filter_terminal_changed() {
+			return getRuleContext(Filter_terminal_changedContext.class,0);
+		}
+		public Filter_expression_versionsContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_filter_expression_versions; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).enterFilter_expression_versions(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).exitFilter_expression_versions(this);
+		}
+	}
+
+	public final Filter_expression_versionsContext filter_expression_versions() throws RecognitionException {
+		Filter_expression_versionsContext _localctx = new Filter_expression_versionsContext(_ctx, getState());
+		enterRule(_localctx, 24, RULE_filter_expression_versions);
+		try {
+			setState(289);
+			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
 				{
-				setState(246);
-				((Filter_expressionContext)_localctx).f12 = id();
-				setState(247);
-				match(CHANGED);
-				setState(250);
-				switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
-				case 1:
-					{
-					setState(248);
-					match(FROM);
-					setState(249);
-					((Filter_expressionContext)_localctx).f13 = match(STRING);
-					}
-					break;
-				}
-				setState(254);
-				switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
-				case 1:
-					{
-					setState(252);
-					match(TO);
-					setState(253);
-					((Filter_expressionContext)_localctx).f14 = match(STRING);
-					}
-					break;
-				}
-				 ((Filter_expressionContext)_localctx).tree =  poql.createChangedTerminalFilter(((Filter_expressionContext)_localctx).f12.name,(((Filter_expressionContext)_localctx).f13!=null?((Filter_expressionContext)_localctx).f13.getText():null),(((Filter_expressionContext)_localctx).f14!=null?((Filter_expressionContext)_localctx).f14.getText():null)); 
+				setState(265);
+				match(NOT);
+				setState(266);
+				((Filter_expression_versionsContext)_localctx).f0 = filter_expression_versions();
+				 ((Filter_expression_versionsContext)_localctx).tree =  poql.createNotNode(((Filter_expression_versionsContext)_localctx).f0.tree); 
 				}
 				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(269);
+				match(OPEN_PARENTHESIS);
+				setState(270);
+				((Filter_expression_versionsContext)_localctx).f1 = filter_expression_versions();
+				setState(271);
+				match(AND);
+				setState(272);
+				((Filter_expression_versionsContext)_localctx).f2 = filter_expression_versions();
+				setState(273);
+				match(CLOSE_PARENTHESIS);
+				 ((Filter_expression_versionsContext)_localctx).tree =  poql.createAndNode(((Filter_expression_versionsContext)_localctx).f1.tree,((Filter_expression_versionsContext)_localctx).f2.tree); 
+				}
+				break;
+			case 3:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(276);
+				match(OPEN_PARENTHESIS);
+				setState(277);
+				((Filter_expression_versionsContext)_localctx).f3 = filter_expression_versions();
+				setState(278);
+				match(OR);
+				setState(279);
+				((Filter_expression_versionsContext)_localctx).f4 = filter_expression_versions();
+				setState(280);
+				match(CLOSE_PARENTHESIS);
+				 ((Filter_expression_versionsContext)_localctx).tree =  poql.createOrNode(((Filter_expression_versionsContext)_localctx).f3.tree,((Filter_expression_versionsContext)_localctx).f4.tree); 
+				}
+				break;
+			case 4:
+				enterOuterAlt(_localctx, 4);
+				{
+				setState(283);
+				((Filter_expression_versionsContext)_localctx).f5 = filter_terminal();
+				 ((Filter_expression_versionsContext)_localctx).tree =  ((Filter_expression_versionsContext)_localctx).f5.tree; 
+				}
+				break;
+			case 5:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(286);
+				((Filter_expression_versionsContext)_localctx).f6 = filter_terminal_changed();
+				 ((Filter_expression_versionsContext)_localctx).tree =  ((Filter_expression_versionsContext)_localctx).f6.tree; 
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class Filter_terminal_changedContext extends ParserRuleContext {
+		public FilterTree tree;
+		public IdContext f12;
+		public Token f13;
+		public Token f14;
+		public TerminalNode CHANGED() { return getToken(poqlParser.CHANGED, 0); }
+		public IdContext id() {
+			return getRuleContext(IdContext.class,0);
+		}
+		public TerminalNode FROM() { return getToken(poqlParser.FROM, 0); }
+		public TerminalNode TO() { return getToken(poqlParser.TO, 0); }
+		public List<TerminalNode> STRING() { return getTokens(poqlParser.STRING); }
+		public TerminalNode STRING(int i) {
+			return getToken(poqlParser.STRING, i);
+		}
+		public Filter_terminal_changedContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_filter_terminal_changed; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).enterFilter_terminal_changed(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof poqlListener ) ((poqlListener)listener).exitFilter_terminal_changed(this);
+		}
+	}
+
+	public final Filter_terminal_changedContext filter_terminal_changed() throws RecognitionException {
+		Filter_terminal_changedContext _localctx = new Filter_terminal_changedContext(_ctx, getState());
+		enterRule(_localctx, 26, RULE_filter_terminal_changed);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(291);
+			((Filter_terminal_changedContext)_localctx).f12 = id();
+			setState(292);
+			match(CHANGED);
+			setState(295);
+			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
+			case 1:
+				{
+				setState(293);
+				match(FROM);
+				setState(294);
+				((Filter_terminal_changedContext)_localctx).f13 = match(STRING);
+				}
+				break;
+			}
+			setState(299);
+			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
+			case 1:
+				{
+				setState(297);
+				match(TO);
+				setState(298);
+				((Filter_terminal_changedContext)_localctx).f14 = match(STRING);
+				}
+				break;
+			}
+			 ((Filter_terminal_changedContext)_localctx).tree =  poql.createChangedTerminalFilter(((Filter_terminal_changedContext)_localctx).f12.name,(((Filter_terminal_changedContext)_localctx).f13!=null?((Filter_terminal_changedContext)_localctx).f13.getText():null),(((Filter_terminal_changedContext)_localctx).f14!=null?((Filter_terminal_changedContext)_localctx).f14.getText():null)); 
 			}
 		}
 		catch (RecognitionException re) {
@@ -1281,14 +1533,14 @@ public class poqlParser extends Parser {
 
 	public final IdContext id() throws RecognitionException {
 		IdContext _localctx = new IdContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_id);
+		enterRule(_localctx, 28, RULE_id);
 		try {
-			setState(264);
+			setState(307);
 			switch (_input.LA(1)) {
 			case IDATT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(260);
+				setState(303);
 				((IdContext)_localctx).IDATT = match(IDATT);
 				((IdContext)_localctx).name =  (((IdContext)_localctx).IDATT!=null?((IdContext)_localctx).IDATT.getText():null); ((IdContext)_localctx).att =  true;
 				}
@@ -1296,7 +1548,7 @@ public class poqlParser extends Parser {
 			case IDNOATT:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(262);
+				setState(305);
 				((IdContext)_localctx).IDNOATT = match(IDNOATT);
 				((IdContext)_localctx).name =  (((IdContext)_localctx).IDNOATT!=null?((IdContext)_localctx).IDNOATT.getText():null); ((IdContext)_localctx).att =  false;
 				}
@@ -1336,11 +1588,11 @@ public class poqlParser extends Parser {
 
 	public final AllObjectsContext allObjects() throws RecognitionException {
 		AllObjectsContext _localctx = new AllObjectsContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_allObjects);
+		enterRule(_localctx, 30, RULE_allObjects);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(266);
+			setState(309);
 			match(ALLOBJECTS);
 			 ((AllObjectsContext)_localctx).list =  poql.getAllObjects(); ((AllObjectsContext)_localctx).type = SLEXMMObject.class;
 			}
@@ -1376,11 +1628,11 @@ public class poqlParser extends Parser {
 
 	public final AllCasesContext allCases() throws RecognitionException {
 		AllCasesContext _localctx = new AllCasesContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_allCases);
+		enterRule(_localctx, 32, RULE_allCases);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(269);
+			setState(312);
 			match(ALLCASES);
 			 ((AllCasesContext)_localctx).list =  poql.getAllCases(); ((AllCasesContext)_localctx).type = SLEXMMCase.class;
 			}
@@ -1416,11 +1668,11 @@ public class poqlParser extends Parser {
 
 	public final AllEventsContext allEvents() throws RecognitionException {
 		AllEventsContext _localctx = new AllEventsContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_allEvents);
+		enterRule(_localctx, 34, RULE_allEvents);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(272);
+			setState(315);
 			match(ALLEVENTS);
 			 ((AllEventsContext)_localctx).list =  poql.getAllEvents(); ((AllEventsContext)_localctx).type = SLEXMMEvent.class;
 			}
@@ -1456,11 +1708,11 @@ public class poqlParser extends Parser {
 
 	public final AllClassesContext allClasses() throws RecognitionException {
 		AllClassesContext _localctx = new AllClassesContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_allClasses);
+		enterRule(_localctx, 36, RULE_allClasses);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(275);
+			setState(318);
 			match(ALLCLASSES);
 			 ((AllClassesContext)_localctx).list =  poql.getAllClasses(); ((AllClassesContext)_localctx).type = SLEXMMClass.class;
 			}
@@ -1496,11 +1748,11 @@ public class poqlParser extends Parser {
 
 	public final AllVersionsContext allVersions() throws RecognitionException {
 		AllVersionsContext _localctx = new AllVersionsContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_allVersions);
+		enterRule(_localctx, 38, RULE_allVersions);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(278);
+			setState(321);
 			match(ALLVERSIONS);
 			 ((AllVersionsContext)_localctx).list =  poql.getAllVersions(); ((AllVersionsContext)_localctx).type = SLEXMMObjectVersion.class;
 			}
@@ -1536,11 +1788,11 @@ public class poqlParser extends Parser {
 
 	public final AllActivitiesContext allActivities() throws RecognitionException {
 		AllActivitiesContext _localctx = new AllActivitiesContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_allActivities);
+		enterRule(_localctx, 40, RULE_allActivities);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(281);
+			setState(324);
 			match(ALLACTIVITIES);
 			 ((AllActivitiesContext)_localctx).list =  poql.getAllActivities(); ((AllActivitiesContext)_localctx).type = SLEXMMActivity.class;
 			}
@@ -1617,98 +1869,114 @@ public class poqlParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3#\u011f\4\2\t\2\4"+
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3#\u014a\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
-		"\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
-		"\3\3\3\3\3\3\3\5\3:\n\3\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4F\n"+
-		"\4\3\4\3\4\3\4\3\4\7\4L\n\4\f\4\16\4O\13\4\3\5\3\5\3\5\3\5\3\5\3\5\3\5"+
-		"\3\5\3\5\3\5\5\5[\n\5\3\5\3\5\3\5\3\5\7\5a\n\5\f\5\16\5d\13\5\3\6\3\6"+
-		"\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6p\n\6\3\6\3\6\3\6\3\6\7\6v\n\6\f\6"+
-		"\16\6y\13\6\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3\7\5\7\u0085\n\7\3\7"+
-		"\3\7\3\7\3\7\7\7\u008b\n\7\f\7\16\7\u008e\13\7\3\b\3\b\3\b\3\b\3\b\3\b"+
-		"\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\5\b\u00a0\n\b\3\b\3\b\3\b\3\b"+
-		"\7\b\u00a6\n\b\f\b\16\b\u00a9\13\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t"+
-		"\3\t\5\t\u00b5\n\t\3\t\3\t\3\t\3\t\7\t\u00bb\n\t\f\t\16\t\u00be\13\t\3"+
-		"\n\3\n\3\n\3\n\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\3\13\3\13\3\13\3\13\5\13\u00fd\n\13\3\13\3\13\5\13\u0101\n\13\3\13\3"+
-		"\13\5\13\u0105\n\13\3\f\3\f\3\f\3\f\5\f\u010b\n\f\3\r\3\r\3\r\3\16\3\16"+
-		"\3\16\3\17\3\17\3\17\3\20\3\20\3\20\3\21\3\21\3\21\3\22\3\22\3\22\3\22"+
-		"\2\b\6\b\n\f\16\20\23\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"\2\2\u012c"+
-		"\2$\3\2\2\2\49\3\2\2\2\6E\3\2\2\2\bZ\3\2\2\2\no\3\2\2\2\f\u0084\3\2\2"+
-		"\2\16\u009f\3\2\2\2\20\u00b4\3\2\2\2\22\u00bf\3\2\2\2\24\u0104\3\2\2\2"+
-		"\26\u010a\3\2\2\2\30\u010c\3\2\2\2\32\u010f\3\2\2\2\34\u0112\3\2\2\2\36"+
-		"\u0115\3\2\2\2 \u0118\3\2\2\2\"\u011b\3\2\2\2$%\5\4\3\2%&\b\2\1\2&\3\3"+
-		"\2\2\2\'(\5\b\5\2()\b\3\1\2):\3\2\2\2*+\5\6\4\2+,\b\3\1\2,:\3\2\2\2-."+
-		"\5\n\6\2./\b\3\1\2/:\3\2\2\2\60\61\5\f\7\2\61\62\b\3\1\2\62:\3\2\2\2\63"+
-		"\64\5\16\b\2\64\65\b\3\1\2\65:\3\2\2\2\66\67\5\20\t\2\678\b\3\1\28:\3"+
-		"\2\2\29\'\3\2\2\29*\3\2\2\29-\3\2\2\29\60\3\2\2\29\63\3\2\2\29\66\3\2"+
-		"\2\2:\5\3\2\2\2;<\b\4\1\2<=\7\4\2\2=>\7\20\2\2>?\5\4\3\2?@\7\21\2\2@A"+
-		"\b\4\1\2AF\3\2\2\2BC\5\30\r\2CD\b\4\1\2DF\3\2\2\2E;\3\2\2\2EB\3\2\2\2"+
-		"FM\3\2\2\2GH\f\3\2\2HI\5\22\n\2IJ\b\4\1\2JL\3\2\2\2KG\3\2\2\2LO\3\2\2"+
-		"\2MK\3\2\2\2MN\3\2\2\2N\7\3\2\2\2OM\3\2\2\2PQ\b\5\1\2QR\7\3\2\2RS\7\20"+
-		"\2\2ST\5\4\3\2TU\7\21\2\2UV\b\5\1\2V[\3\2\2\2WX\5\32\16\2XY\b\5\1\2Y["+
-		"\3\2\2\2ZP\3\2\2\2ZW\3\2\2\2[b\3\2\2\2\\]\f\3\2\2]^\5\22\n\2^_\b\5\1\2"+
-		"_a\3\2\2\2`\\\3\2\2\2ad\3\2\2\2b`\3\2\2\2bc\3\2\2\2c\t\3\2\2\2db\3\2\2"+
-		"\2ef\b\6\1\2fg\7\5\2\2gh\7\20\2\2hi\5\4\3\2ij\7\21\2\2jk\b\6\1\2kp\3\2"+
-		"\2\2lm\5\34\17\2mn\b\6\1\2np\3\2\2\2oe\3\2\2\2ol\3\2\2\2pw\3\2\2\2qr\f"+
-		"\3\2\2rs\5\22\n\2st\b\6\1\2tv\3\2\2\2uq\3\2\2\2vy\3\2\2\2wu\3\2\2\2wx"+
-		"\3\2\2\2x\13\3\2\2\2yw\3\2\2\2z{\b\7\1\2{|\7\6\2\2|}\7\20\2\2}~\5\4\3"+
-		"\2~\177\7\21\2\2\177\u0080\b\7\1\2\u0080\u0085\3\2\2\2\u0081\u0082\5\36"+
-		"\20\2\u0082\u0083\b\7\1\2\u0083\u0085\3\2\2\2\u0084z\3\2\2\2\u0084\u0081"+
-		"\3\2\2\2\u0085\u008c\3\2\2\2\u0086\u0087\f\3\2\2\u0087\u0088\5\22\n\2"+
-		"\u0088\u0089\b\7\1\2\u0089\u008b\3\2\2\2\u008a\u0086\3\2\2\2\u008b\u008e"+
-		"\3\2\2\2\u008c\u008a\3\2\2\2\u008c\u008d\3\2\2\2\u008d\r\3\2\2\2\u008e"+
-		"\u008c\3\2\2\2\u008f\u0090\b\b\1\2\u0090\u0091\7\7\2\2\u0091\u0092\7\20"+
-		"\2\2\u0092\u0093\5\4\3\2\u0093\u0094\7\21\2\2\u0094\u0095\b\b\1\2\u0095"+
-		"\u00a0\3\2\2\2\u0096\u0097\5 \21\2\u0097\u0098\b\b\1\2\u0098\u00a0\3\2"+
-		"\2\2\u0099\u009a\7\t\2\2\u009a\u009b\7\20\2\2\u009b\u009c\5\16\b\2\u009c"+
-		"\u009d\7\21\2\2\u009d\u009e\b\b\1\2\u009e\u00a0\3\2\2\2\u009f\u008f\3"+
-		"\2\2\2\u009f\u0096\3\2\2\2\u009f\u0099\3\2\2\2\u00a0\u00a7\3\2\2\2\u00a1"+
-		"\u00a2\f\3\2\2\u00a2\u00a3\5\22\n\2\u00a3\u00a4\b\b\1\2\u00a4\u00a6\3"+
-		"\2\2\2\u00a5\u00a1\3\2\2\2\u00a6\u00a9\3\2\2\2\u00a7\u00a5\3\2\2\2\u00a7"+
-		"\u00a8\3\2\2\2\u00a8\17\3\2\2\2\u00a9\u00a7\3\2\2\2\u00aa\u00ab\b\t\1"+
-		"\2\u00ab\u00ac\7\b\2\2\u00ac\u00ad\7\20\2\2\u00ad\u00ae\5\4\3\2\u00ae"+
-		"\u00af\7\21\2\2\u00af\u00b0\b\t\1\2\u00b0\u00b5\3\2\2\2\u00b1\u00b2\5"+
-		"\"\22\2\u00b2\u00b3\b\t\1\2\u00b3\u00b5\3\2\2\2\u00b4\u00aa\3\2\2\2\u00b4"+
-		"\u00b1\3\2\2\2\u00b5\u00bc\3\2\2\2\u00b6\u00b7\f\3\2\2\u00b7\u00b8\5\22"+
-		"\n\2\u00b8\u00b9\b\t\1\2\u00b9\u00bb\3\2\2\2\u00ba\u00b6\3\2\2\2\u00bb"+
-		"\u00be\3\2\2\2\u00bc\u00ba\3\2\2\2\u00bc\u00bd\3\2\2\2\u00bd\21\3\2\2"+
-		"\2\u00be\u00bc\3\2\2\2\u00bf\u00c0\7\22\2\2\u00c0\u00c1\5\24\13\2\u00c1"+
-		"\u00c2\b\n\1\2\u00c2\23\3\2\2\2\u00c3\u00c4\7\34\2\2\u00c4\u00c5\5\24"+
-		"\13\2\u00c5\u00c6\b\13\1\2\u00c6\u0105\3\2\2\2\u00c7\u00c8\7\20\2\2\u00c8"+
-		"\u00c9\5\24\13\2\u00c9\u00ca\7\32\2\2\u00ca\u00cb\5\24\13\2\u00cb\u00cc"+
-		"\7\21\2\2\u00cc\u00cd\b\13\1\2\u00cd\u0105\3\2\2\2\u00ce\u00cf\7\20\2"+
-		"\2\u00cf\u00d0\5\24\13\2\u00d0\u00d1\7\33\2\2\u00d1\u00d2\5\24\13\2\u00d2"+
-		"\u00d3\7\21\2\2\u00d3\u00d4\b\13\1\2\u00d4\u0105\3\2\2\2\u00d5\u00d6\5"+
-		"\26\f\2\u00d6\u00d7\7\23\2\2\u00d7\u00d8\7 \2\2\u00d8\u00d9\b\13\1\2\u00d9"+
-		"\u0105\3\2\2\2\u00da\u00db\5\26\f\2\u00db\u00dc\7\24\2\2\u00dc\u00dd\7"+
-		" \2\2\u00dd\u00de\b\13\1\2\u00de\u0105\3\2\2\2\u00df\u00e0\5\26\f\2\u00e0"+
-		"\u00e1\7\25\2\2\u00e1\u00e2\7 \2\2\u00e2\u00e3\b\13\1\2\u00e3\u0105\3"+
-		"\2\2\2\u00e4\u00e5\5\26\f\2\u00e5\u00e6\7\26\2\2\u00e6\u00e7\7 \2\2\u00e7"+
-		"\u00e8\b\13\1\2\u00e8\u0105\3\2\2\2\u00e9\u00ea\5\26\f\2\u00ea\u00eb\7"+
-		"\27\2\2\u00eb\u00ec\7 \2\2\u00ec\u00ed\b\13\1\2\u00ed\u0105\3\2\2\2\u00ee"+
-		"\u00ef\5\26\f\2\u00ef\u00f0\7\30\2\2\u00f0\u00f1\7 \2\2\u00f1\u00f2\b"+
-		"\13\1\2\u00f2\u0105\3\2\2\2\u00f3\u00f4\5\26\f\2\u00f4\u00f5\7\31\2\2"+
-		"\u00f5\u00f6\7 \2\2\u00f6\u00f7\b\13\1\2\u00f7\u0105\3\2\2\2\u00f8\u00f9"+
-		"\5\26\f\2\u00f9\u00fc\7\35\2\2\u00fa\u00fb\7\36\2\2\u00fb\u00fd\7 \2\2"+
-		"\u00fc\u00fa\3\2\2\2\u00fc\u00fd\3\2\2\2\u00fd\u0100\3\2\2\2\u00fe\u00ff"+
-		"\7\37\2\2\u00ff\u0101\7 \2\2\u0100\u00fe\3\2\2\2\u0100\u0101\3\2\2\2\u0101"+
-		"\u0102\3\2\2\2\u0102\u0103\b\13\1\2\u0103\u0105\3\2\2\2\u0104\u00c3\3"+
-		"\2\2\2\u0104\u00c7\3\2\2\2\u0104\u00ce\3\2\2\2\u0104\u00d5\3\2\2\2\u0104"+
-		"\u00da\3\2\2\2\u0104\u00df\3\2\2\2\u0104\u00e4\3\2\2\2\u0104\u00e9\3\2"+
-		"\2\2\u0104\u00ee\3\2\2\2\u0104\u00f3\3\2\2\2\u0104\u00f8\3\2\2\2\u0105"+
-		"\25\3\2\2\2\u0106\u0107\7!\2\2\u0107\u010b\b\f\1\2\u0108\u0109\7\"\2\2"+
-		"\u0109\u010b\b\f\1\2\u010a\u0106\3\2\2\2\u010a\u0108\3\2\2\2\u010b\27"+
-		"\3\2\2\2\u010c\u010d\7\n\2\2\u010d\u010e\b\r\1\2\u010e\31\3\2\2\2\u010f"+
-		"\u0110\7\13\2\2\u0110\u0111\b\16\1\2\u0111\33\3\2\2\2\u0112\u0113\7\f"+
-		"\2\2\u0113\u0114\b\17\1\2\u0114\35\3\2\2\2\u0115\u0116\7\r\2\2\u0116\u0117"+
-		"\b\20\1\2\u0117\37\3\2\2\2\u0118\u0119\7\16\2\2\u0119\u011a\b\21\1\2\u011a"+
-		"!\3\2\2\2\u011b\u011c\7\17\2\2\u011c\u011d\b\22\1\2\u011d#\3\2\2\2\23"+
-		"9EMZbow\u0084\u008c\u009f\u00a7\u00b4\u00bc\u00fc\u0100\u0104\u010a";
+		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3"+
+		"\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3B\n\3\3\4\3"+
+		"\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4N\n\4\3\4\3\4\3\4\3\4\7\4T\n\4\f"+
+		"\4\16\4W\13\4\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5c\n\5\3\5\3\5"+
+		"\3\5\3\5\7\5i\n\5\f\5\16\5l\13\5\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3"+
+		"\6\5\6x\n\6\3\6\3\6\3\6\3\6\7\6~\n\6\f\6\16\6\u0081\13\6\3\7\3\7\3\7\3"+
+		"\7\3\7\3\7\3\7\3\7\3\7\3\7\5\7\u008d\n\7\3\7\3\7\3\7\3\7\7\7\u0093\n\7"+
+		"\f\7\16\7\u0096\13\7\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3"+
+		"\b\3\b\3\b\3\b\5\b\u00a8\n\b\3\b\3\b\3\b\3\b\7\b\u00ae\n\b\f\b\16\b\u00b1"+
+		"\13\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\t\u00bd\n\t\3\t\3\t\3"+
+		"\t\3\t\7\t\u00c3\n\t\f\t\16\t\u00c6\13\t\3\n\3\n\3\n\3\n\3\13\3\13\3\13"+
+		"\3\13\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\f"+
+		"\3\f\3\f\3\f\3\f\3\f\5\f\u00e5\n\f\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r"+
+		"\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3"+
+		"\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\3\r\5\r\u010a\n\r\3\16\3\16\3\16\3\16\3"+
+		"\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3"+
+		"\16\3\16\3\16\3\16\3\16\3\16\5\16\u0124\n\16\3\17\3\17\3\17\3\17\5\17"+
+		"\u012a\n\17\3\17\3\17\5\17\u012e\n\17\3\17\3\17\3\20\3\20\3\20\3\20\5"+
+		"\20\u0136\n\20\3\21\3\21\3\21\3\22\3\22\3\22\3\23\3\23\3\23\3\24\3\24"+
+		"\3\24\3\25\3\25\3\25\3\26\3\26\3\26\3\26\2\b\6\b\n\f\16\20\27\2\4\6\b"+
+		"\n\f\16\20\22\24\26\30\32\34\36 \"$&(*\2\2\u0156\2,\3\2\2\2\4A\3\2\2\2"+
+		"\6M\3\2\2\2\bb\3\2\2\2\nw\3\2\2\2\f\u008c\3\2\2\2\16\u00a7\3\2\2\2\20"+
+		"\u00bc\3\2\2\2\22\u00c7\3\2\2\2\24\u00cb\3\2\2\2\26\u00e4\3\2\2\2\30\u0109"+
+		"\3\2\2\2\32\u0123\3\2\2\2\34\u0125\3\2\2\2\36\u0135\3\2\2\2 \u0137\3\2"+
+		"\2\2\"\u013a\3\2\2\2$\u013d\3\2\2\2&\u0140\3\2\2\2(\u0143\3\2\2\2*\u0146"+
+		"\3\2\2\2,-\5\4\3\2-.\b\2\1\2.\3\3\2\2\2/\60\5\b\5\2\60\61\b\3\1\2\61B"+
+		"\3\2\2\2\62\63\5\6\4\2\63\64\b\3\1\2\64B\3\2\2\2\65\66\5\n\6\2\66\67\b"+
+		"\3\1\2\67B\3\2\2\289\5\f\7\29:\b\3\1\2:B\3\2\2\2;<\5\16\b\2<=\b\3\1\2"+
+		"=B\3\2\2\2>?\5\20\t\2?@\b\3\1\2@B\3\2\2\2A/\3\2\2\2A\62\3\2\2\2A\65\3"+
+		"\2\2\2A8\3\2\2\2A;\3\2\2\2A>\3\2\2\2B\5\3\2\2\2CD\b\4\1\2DE\7\4\2\2EF"+
+		"\7\20\2\2FG\5\4\3\2GH\7\21\2\2HI\b\4\1\2IN\3\2\2\2JK\5 \21\2KL\b\4\1\2"+
+		"LN\3\2\2\2MC\3\2\2\2MJ\3\2\2\2NU\3\2\2\2OP\f\3\2\2PQ\5\22\n\2QR\b\4\1"+
+		"\2RT\3\2\2\2SO\3\2\2\2TW\3\2\2\2US\3\2\2\2UV\3\2\2\2V\7\3\2\2\2WU\3\2"+
+		"\2\2XY\b\5\1\2YZ\7\3\2\2Z[\7\20\2\2[\\\5\4\3\2\\]\7\21\2\2]^\b\5\1\2^"+
+		"c\3\2\2\2_`\5\"\22\2`a\b\5\1\2ac\3\2\2\2bX\3\2\2\2b_\3\2\2\2cj\3\2\2\2"+
+		"de\f\3\2\2ef\5\22\n\2fg\b\5\1\2gi\3\2\2\2hd\3\2\2\2il\3\2\2\2jh\3\2\2"+
+		"\2jk\3\2\2\2k\t\3\2\2\2lj\3\2\2\2mn\b\6\1\2no\7\5\2\2op\7\20\2\2pq\5\4"+
+		"\3\2qr\7\21\2\2rs\b\6\1\2sx\3\2\2\2tu\5$\23\2uv\b\6\1\2vx\3\2\2\2wm\3"+
+		"\2\2\2wt\3\2\2\2x\177\3\2\2\2yz\f\3\2\2z{\5\22\n\2{|\b\6\1\2|~\3\2\2\2"+
+		"}y\3\2\2\2~\u0081\3\2\2\2\177}\3\2\2\2\177\u0080\3\2\2\2\u0080\13\3\2"+
+		"\2\2\u0081\177\3\2\2\2\u0082\u0083\b\7\1\2\u0083\u0084\7\6\2\2\u0084\u0085"+
+		"\7\20\2\2\u0085\u0086\5\4\3\2\u0086\u0087\7\21\2\2\u0087\u0088\b\7\1\2"+
+		"\u0088\u008d\3\2\2\2\u0089\u008a\5&\24\2\u008a\u008b\b\7\1\2\u008b\u008d"+
+		"\3\2\2\2\u008c\u0082\3\2\2\2\u008c\u0089\3\2\2\2\u008d\u0094\3\2\2\2\u008e"+
+		"\u008f\f\3\2\2\u008f\u0090\5\22\n\2\u0090\u0091\b\7\1\2\u0091\u0093\3"+
+		"\2\2\2\u0092\u008e\3\2\2\2\u0093\u0096\3\2\2\2\u0094\u0092\3\2\2\2\u0094"+
+		"\u0095\3\2\2\2\u0095\r\3\2\2\2\u0096\u0094\3\2\2\2\u0097\u0098\b\b\1\2"+
+		"\u0098\u0099\7\7\2\2\u0099\u009a\7\20\2\2\u009a\u009b\5\4\3\2\u009b\u009c"+
+		"\7\21\2\2\u009c\u009d\b\b\1\2\u009d\u00a8\3\2\2\2\u009e\u009f\5(\25\2"+
+		"\u009f\u00a0\b\b\1\2\u00a0\u00a8\3\2\2\2\u00a1\u00a2\7\t\2\2\u00a2\u00a3"+
+		"\7\20\2\2\u00a3\u00a4\5\16\b\2\u00a4\u00a5\7\21\2\2\u00a5\u00a6\b\b\1"+
+		"\2\u00a6\u00a8\3\2\2\2\u00a7\u0097\3\2\2\2\u00a7\u009e\3\2\2\2\u00a7\u00a1"+
+		"\3\2\2\2\u00a8\u00af\3\2\2\2\u00a9\u00aa\f\3\2\2\u00aa\u00ab\5\24\13\2"+
+		"\u00ab\u00ac\b\b\1\2\u00ac\u00ae\3\2\2\2\u00ad\u00a9\3\2\2\2\u00ae\u00b1"+
+		"\3\2\2\2\u00af\u00ad\3\2\2\2\u00af\u00b0\3\2\2\2\u00b0\17\3\2\2\2\u00b1"+
+		"\u00af\3\2\2\2\u00b2\u00b3\b\t\1\2\u00b3\u00b4\7\b\2\2\u00b4\u00b5\7\20"+
+		"\2\2\u00b5\u00b6\5\4\3\2\u00b6\u00b7\7\21\2\2\u00b7\u00b8\b\t\1\2\u00b8"+
+		"\u00bd\3\2\2\2\u00b9\u00ba\5*\26\2\u00ba\u00bb\b\t\1\2\u00bb\u00bd\3\2"+
+		"\2\2\u00bc\u00b2\3\2\2\2\u00bc\u00b9\3\2\2\2\u00bd\u00c4\3\2\2\2\u00be"+
+		"\u00bf\f\3\2\2\u00bf\u00c0\5\22\n\2\u00c0\u00c1\b\t\1\2\u00c1\u00c3\3"+
+		"\2\2\2\u00c2\u00be\3\2\2\2\u00c3\u00c6\3\2\2\2\u00c4\u00c2\3\2\2\2\u00c4"+
+		"\u00c5\3\2\2\2\u00c5\21\3\2\2\2\u00c6\u00c4\3\2\2\2\u00c7\u00c8\7\22\2"+
+		"\2\u00c8\u00c9\5\26\f\2\u00c9\u00ca\b\n\1\2\u00ca\23\3\2\2\2\u00cb\u00cc"+
+		"\7\22\2\2\u00cc\u00cd\5\32\16\2\u00cd\u00ce\b\13\1\2\u00ce\25\3\2\2\2"+
+		"\u00cf\u00d0\7\34\2\2\u00d0\u00d1\5\26\f\2\u00d1\u00d2\b\f\1\2\u00d2\u00e5"+
+		"\3\2\2\2\u00d3\u00d4\7\20\2\2\u00d4\u00d5\5\26\f\2\u00d5\u00d6\7\32\2"+
+		"\2\u00d6\u00d7\5\26\f\2\u00d7\u00d8\7\21\2\2\u00d8\u00d9\b\f\1\2\u00d9"+
+		"\u00e5\3\2\2\2\u00da\u00db\7\20\2\2\u00db\u00dc\5\26\f\2\u00dc\u00dd\7"+
+		"\33\2\2\u00dd\u00de\5\26\f\2\u00de\u00df\7\21\2\2\u00df\u00e0\b\f\1\2"+
+		"\u00e0\u00e5\3\2\2\2\u00e1\u00e2\5\30\r\2\u00e2\u00e3\b\f\1\2\u00e3\u00e5"+
+		"\3\2\2\2\u00e4\u00cf\3\2\2\2\u00e4\u00d3\3\2\2\2\u00e4\u00da\3\2\2\2\u00e4"+
+		"\u00e1\3\2\2\2\u00e5\27\3\2\2\2\u00e6\u00e7\5\36\20\2\u00e7\u00e8\7\23"+
+		"\2\2\u00e8\u00e9\7 \2\2\u00e9\u00ea\b\r\1\2\u00ea\u010a\3\2\2\2\u00eb"+
+		"\u00ec\5\36\20\2\u00ec\u00ed\7\24\2\2\u00ed\u00ee\7 \2\2\u00ee\u00ef\b"+
+		"\r\1\2\u00ef\u010a\3\2\2\2\u00f0\u00f1\5\36\20\2\u00f1\u00f2\7\25\2\2"+
+		"\u00f2\u00f3\7 \2\2\u00f3\u00f4\b\r\1\2\u00f4\u010a\3\2\2\2\u00f5\u00f6"+
+		"\5\36\20\2\u00f6\u00f7\7\26\2\2\u00f7\u00f8\7 \2\2\u00f8\u00f9\b\r\1\2"+
+		"\u00f9\u010a\3\2\2\2\u00fa\u00fb\5\36\20\2\u00fb\u00fc\7\27\2\2\u00fc"+
+		"\u00fd\7 \2\2\u00fd\u00fe\b\r\1\2\u00fe\u010a\3\2\2\2\u00ff\u0100\5\36"+
+		"\20\2\u0100\u0101\7\30\2\2\u0101\u0102\7 \2\2\u0102\u0103\b\r\1\2\u0103"+
+		"\u010a\3\2\2\2\u0104\u0105\5\36\20\2\u0105\u0106\7\31\2\2\u0106\u0107"+
+		"\7 \2\2\u0107\u0108\b\r\1\2\u0108\u010a\3\2\2\2\u0109\u00e6\3\2\2\2\u0109"+
+		"\u00eb\3\2\2\2\u0109\u00f0\3\2\2\2\u0109\u00f5\3\2\2\2\u0109\u00fa\3\2"+
+		"\2\2\u0109\u00ff\3\2\2\2\u0109\u0104\3\2\2\2\u010a\31\3\2\2\2\u010b\u010c"+
+		"\7\34\2\2\u010c\u010d\5\32\16\2\u010d\u010e\b\16\1\2\u010e\u0124\3\2\2"+
+		"\2\u010f\u0110\7\20\2\2\u0110\u0111\5\32\16\2\u0111\u0112\7\32\2\2\u0112"+
+		"\u0113\5\32\16\2\u0113\u0114\7\21\2\2\u0114\u0115\b\16\1\2\u0115\u0124"+
+		"\3\2\2\2\u0116\u0117\7\20\2\2\u0117\u0118\5\32\16\2\u0118\u0119\7\33\2"+
+		"\2\u0119\u011a\5\32\16\2\u011a\u011b\7\21\2\2\u011b\u011c\b\16\1\2\u011c"+
+		"\u0124\3\2\2\2\u011d\u011e\5\30\r\2\u011e\u011f\b\16\1\2\u011f\u0124\3"+
+		"\2\2\2\u0120\u0121\5\34\17\2\u0121\u0122\b\16\1\2\u0122\u0124\3\2\2\2"+
+		"\u0123\u010b\3\2\2\2\u0123\u010f\3\2\2\2\u0123\u0116\3\2\2\2\u0123\u011d"+
+		"\3\2\2\2\u0123\u0120\3\2\2\2\u0124\33\3\2\2\2\u0125\u0126\5\36\20\2\u0126"+
+		"\u0129\7\35\2\2\u0127\u0128\7\36\2\2\u0128\u012a\7 \2\2\u0129\u0127\3"+
+		"\2\2\2\u0129\u012a\3\2\2\2\u012a\u012d\3\2\2\2\u012b\u012c\7\37\2\2\u012c"+
+		"\u012e\7 \2\2\u012d\u012b\3\2\2\2\u012d\u012e\3\2\2\2\u012e\u012f\3\2"+
+		"\2\2\u012f\u0130\b\17\1\2\u0130\35\3\2\2\2\u0131\u0132\7!\2\2\u0132\u0136"+
+		"\b\20\1\2\u0133\u0134\7\"\2\2\u0134\u0136\b\20\1\2\u0135\u0131\3\2\2\2"+
+		"\u0135\u0133\3\2\2\2\u0136\37\3\2\2\2\u0137\u0138\7\n\2\2\u0138\u0139"+
+		"\b\21\1\2\u0139!\3\2\2\2\u013a\u013b\7\13\2\2\u013b\u013c\b\22\1\2\u013c"+
+		"#\3\2\2\2\u013d\u013e\7\f\2\2\u013e\u013f\b\23\1\2\u013f%\3\2\2\2\u0140"+
+		"\u0141\7\r\2\2\u0141\u0142\b\24\1\2\u0142\'\3\2\2\2\u0143\u0144\7\16\2"+
+		"\2\u0144\u0145\b\25\1\2\u0145)\3\2\2\2\u0146\u0147\7\17\2\2\u0147\u0148"+
+		"\b\26\1\2\u0148+\3\2\2\2\25AMUbjw\177\u008c\u0094\u00a7\u00af\u00bc\u00c4"+
+		"\u00e4\u0109\u0123\u0129\u012d\u0135";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
