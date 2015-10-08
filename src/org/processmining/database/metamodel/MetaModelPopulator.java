@@ -261,7 +261,6 @@ public class MetaModelPopulator {
 		try {
 			bos = new BufferedOutputStream(new FileOutputStream(fdLog));
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		while ((e = evrset.getNext()) != null) {
@@ -271,7 +270,6 @@ public class MetaModelPopulator {
 				try {
 					bos.write(strout.getBytes());
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -460,7 +458,6 @@ public class MetaModelPopulator {
 			try {
 				bos.close();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
@@ -649,7 +646,10 @@ public class MetaModelPopulator {
 							if (endDate == null) {
 								endDate = -1L;
 							}
-							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),evId, objV.label,objV.startDate,endDate);
+							
+							SLEXMMObjectVersion mmObjV = strg.createObjectVersion(obj.getId(),objV.startDate,endDate);
+							mmObjV.add(evId, objV.label);
+							
 							objVToMMObjVersionMap.put(objV.id,mmObjV.getId());
 							
 							// Save Attribute values for Object version

@@ -97,8 +97,8 @@ public class POQLFunctions {
 					v = String.valueOf(ob.getObjectId());
 				} else if (condition.getKey().equals("id")) {
 					v = String.valueOf(ob.getId());
-				} else if (condition.getKey().equals("eventid")) {
-					v = String.valueOf(ob.getEventId());
+//				} else if (condition.getKey().equals("eventid")) {
+//					v = String.valueOf(ob.getEventId());
 				} else if (condition.getKey().equals("start_timestamp")) {
 					v = String.valueOf(ob.getStartTimestamp());
 				} else if (condition.getKey().equals("end_timestamp")) {
@@ -258,7 +258,7 @@ public class POQLFunctions {
 				return false;
 			}
 		} else { 
-			// ov was already the first Object Version for this object. We cannot decide what changed. FIXME
+			// ov was already the first Object Version for this object. We cannot decide what changed.
 			return false;
 		}
 		

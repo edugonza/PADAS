@@ -599,11 +599,9 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		}
 			
 		public ObjectVersionsTableModel() {
-			super(new String[] { "Version Id", "Object Id", "Event Label", "Event Id",
+			super(new String[] { "Version Id", "Object Id",
 					"Start Timestamp", "End Timestamp"}, 0);
 			columnTypes.add(Integer.class);
-			columnTypes.add(Integer.class);
-			columnTypes.add(String.class);
 			columnTypes.add(Integer.class);
 			columnTypes.add(Long.class);
 			columnTypes.add(Long.class);
@@ -619,37 +617,15 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		SLEXMMObjectVersionResultSet orset = mmstrg.getObjectVersionsForObjectOrdered(objectId);
 		SLEXMMObjectVersion objv = null;
 		
-		//List<SLEXMMAttribute> attrs = mmstrg.getAttributesForClass(classId);
-		//List<String> attrsName = new ArrayList<>();
-		
-//		for (SLEXMMAttribute at: attrs) {
-//			attrsName.add(at.getName());
-//		}
-//		Collections.sort(attrsName);
-//		
-//		for (String name: attrsName) {
-//			model.addColumn(name);
-//			model.addColumnClass(String.class);
-//		}
-//				
 		while ((objv = orset.getNext()) != null) {
 			
 			Object[] row = new Object[model.getColumnCount()];
 			
 			row[0] = Integer.valueOf(objv.getId());
 			row[1] = Integer.valueOf(objv.getObjectId());
-			row[2] = objv.getEventLabel();
-			row[3] = Integer.valueOf(objv.getEventId());
-			row[4] = Long.valueOf(objv.getStartTimestamp());
-			row[5] = Long.valueOf(objv.getEndTimestamp());
+			row[2] = Long.valueOf(objv.getStartTimestamp());
+			row[3] = Long.valueOf(objv.getEndTimestamp());
 			
-//			for (SLEXMMAttribute at: objv.getAttributeValues().keySet()) {
-//				String colName = at.getName();
-//				SLEXMMAttributeValue attrVal = objv.getAttributeValues().get(at);
-//				String value = attrVal.getValue();
-//				row[6+attrsName.indexOf(colName)] = value;
-//			}
-//			
 			model.addRow(row);
 		}
 		
@@ -667,10 +643,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			
 			row[0] = Integer.valueOf(objv.getId());
 			row[1] = Integer.valueOf(objv.getObjectId());
-			row[2] = objv.getEventLabel();
-			row[3] = Integer.valueOf(objv.getEventId());
-			row[4] = Long.valueOf(objv.getStartTimestamp());
-			row[5] = Long.valueOf(objv.getEndTimestamp());
+			row[2] = Long.valueOf(objv.getStartTimestamp());
+			row[3] = Long.valueOf(objv.getEndTimestamp());
 			
 			model.addRow(row);
 		}
