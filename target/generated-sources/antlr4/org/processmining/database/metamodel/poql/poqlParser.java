@@ -31,8 +31,8 @@ public class poqlParser extends Parser {
 		VERSIONS_RELATED_TO=7, ALLOBJECTS=8, ALLCASES=9, ALLEVENTS=10, ALLCLASSES=11, 
 		ALLVERSIONS=12, ALLACTIVITIES=13, OPEN_PARENTHESIS=14, CLOSE_PARENTHESIS=15, 
 		WHERE=16, EQUAL=17, DIFFERENT=18, EQUAL_OR_GREATER=19, EQUAL_OR_SMALLER=20, 
-		GREATER=21, SMALLER=22, CONTAINS=23, AND=24, OR=25, NOT=26, STRING=27, 
-		IDATT=28, IDNOATT=29, WS=30;
+		GREATER=21, SMALLER=22, CONTAINS=23, AND=24, OR=25, NOT=26, CHANGED=27, 
+		FROM=28, TO=29, STRING=30, IDATT=31, IDNOATT=32, WS=33;
 	public static final int
 		RULE_prog = 0, RULE_things = 1, RULE_objects = 2, RULE_cases = 3, RULE_events = 4, 
 		RULE_classes = 5, RULE_versions = 6, RULE_activities = 7, RULE_filter = 8, 
@@ -54,8 +54,8 @@ public class poqlParser extends Parser {
 		"VERSIONS_RELATED_TO", "ALLOBJECTS", "ALLCASES", "ALLEVENTS", "ALLCLASSES", 
 		"ALLVERSIONS", "ALLACTIVITIES", "OPEN_PARENTHESIS", "CLOSE_PARENTHESIS", 
 		"WHERE", "EQUAL", "DIFFERENT", "EQUAL_OR_GREATER", "EQUAL_OR_SMALLER", 
-		"GREATER", "SMALLER", "CONTAINS", "AND", "OR", "NOT", "STRING", "IDATT", 
-		"IDNOATT", "WS"
+		"GREATER", "SMALLER", "CONTAINS", "AND", "OR", "NOT", "CHANGED", "FROM", 
+		"TO", "STRING", "IDATT", "IDNOATT", "WS"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -1036,6 +1036,9 @@ public class poqlParser extends Parser {
 		public IdContext f9;
 		public IdContext f10;
 		public IdContext f11;
+		public IdContext f12;
+		public Token f13;
+		public Token f14;
 		public TerminalNode NOT() { return getToken(poqlParser.NOT, 0); }
 		public List<Filter_expressionContext> filter_expression() {
 			return getRuleContexts(Filter_expressionContext.class);
@@ -1048,7 +1051,10 @@ public class poqlParser extends Parser {
 		public TerminalNode CLOSE_PARENTHESIS() { return getToken(poqlParser.CLOSE_PARENTHESIS, 0); }
 		public TerminalNode OR() { return getToken(poqlParser.OR, 0); }
 		public TerminalNode EQUAL() { return getToken(poqlParser.EQUAL, 0); }
-		public TerminalNode STRING() { return getToken(poqlParser.STRING, 0); }
+		public List<TerminalNode> STRING() { return getTokens(poqlParser.STRING); }
+		public TerminalNode STRING(int i) {
+			return getToken(poqlParser.STRING, i);
+		}
 		public IdContext id() {
 			return getRuleContext(IdContext.class,0);
 		}
@@ -1058,6 +1064,9 @@ public class poqlParser extends Parser {
 		public TerminalNode GREATER() { return getToken(poqlParser.GREATER, 0); }
 		public TerminalNode SMALLER() { return getToken(poqlParser.SMALLER, 0); }
 		public TerminalNode CONTAINS() { return getToken(poqlParser.CONTAINS, 0); }
+		public TerminalNode CHANGED() { return getToken(poqlParser.CHANGED, 0); }
+		public TerminalNode FROM() { return getToken(poqlParser.FROM, 0); }
+		public TerminalNode TO() { return getToken(poqlParser.TO, 0); }
 		public Filter_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1076,8 +1085,8 @@ public class poqlParser extends Parser {
 		Filter_expressionContext _localctx = new Filter_expressionContext(_ctx, getState());
 		enterRule(_localctx, 18, RULE_filter_expression);
 		try {
-			setState(246);
-			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
+			setState(258);
+			switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
@@ -1204,6 +1213,38 @@ public class poqlParser extends Parser {
 				 ((Filter_expressionContext)_localctx).tree =  poql.createContainsTerminalFilter(((Filter_expressionContext)_localctx).f11.name,(((Filter_expressionContext)_localctx).STRING!=null?((Filter_expressionContext)_localctx).STRING.getText():null),((Filter_expressionContext)_localctx).f11.att); 
 				}
 				break;
+			case 11:
+				enterOuterAlt(_localctx, 11);
+				{
+				setState(246);
+				((Filter_expressionContext)_localctx).f12 = id();
+				setState(247);
+				match(CHANGED);
+				setState(250);
+				switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
+				case 1:
+					{
+					setState(248);
+					match(FROM);
+					setState(249);
+					((Filter_expressionContext)_localctx).f13 = match(STRING);
+					}
+					break;
+				}
+				setState(254);
+				switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
+				case 1:
+					{
+					setState(252);
+					match(TO);
+					setState(253);
+					((Filter_expressionContext)_localctx).f14 = match(STRING);
+					}
+					break;
+				}
+				 ((Filter_expressionContext)_localctx).tree =  poql.createChangedTerminalFilter(((Filter_expressionContext)_localctx).f12.name,(((Filter_expressionContext)_localctx).f13!=null?((Filter_expressionContext)_localctx).f13.getText():null),(((Filter_expressionContext)_localctx).f14!=null?((Filter_expressionContext)_localctx).f14.getText():null)); 
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -1242,12 +1283,12 @@ public class poqlParser extends Parser {
 		IdContext _localctx = new IdContext(_ctx, getState());
 		enterRule(_localctx, 20, RULE_id);
 		try {
-			setState(252);
+			setState(264);
 			switch (_input.LA(1)) {
 			case IDATT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(248);
+				setState(260);
 				((IdContext)_localctx).IDATT = match(IDATT);
 				((IdContext)_localctx).name =  (((IdContext)_localctx).IDATT!=null?((IdContext)_localctx).IDATT.getText():null); ((IdContext)_localctx).att =  true;
 				}
@@ -1255,7 +1296,7 @@ public class poqlParser extends Parser {
 			case IDNOATT:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(250);
+				setState(262);
 				((IdContext)_localctx).IDNOATT = match(IDNOATT);
 				((IdContext)_localctx).name =  (((IdContext)_localctx).IDNOATT!=null?((IdContext)_localctx).IDNOATT.getText():null); ((IdContext)_localctx).att =  false;
 				}
@@ -1299,7 +1340,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(254);
+			setState(266);
 			match(ALLOBJECTS);
 			 ((AllObjectsContext)_localctx).list =  poql.getAllObjects(); ((AllObjectsContext)_localctx).type = SLEXMMObject.class;
 			}
@@ -1339,7 +1380,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(257);
+			setState(269);
 			match(ALLCASES);
 			 ((AllCasesContext)_localctx).list =  poql.getAllCases(); ((AllCasesContext)_localctx).type = SLEXMMCase.class;
 			}
@@ -1379,7 +1420,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(260);
+			setState(272);
 			match(ALLEVENTS);
 			 ((AllEventsContext)_localctx).list =  poql.getAllEvents(); ((AllEventsContext)_localctx).type = SLEXMMEvent.class;
 			}
@@ -1419,7 +1460,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(263);
+			setState(275);
 			match(ALLCLASSES);
 			 ((AllClassesContext)_localctx).list =  poql.getAllClasses(); ((AllClassesContext)_localctx).type = SLEXMMClass.class;
 			}
@@ -1459,7 +1500,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(266);
+			setState(278);
 			match(ALLVERSIONS);
 			 ((AllVersionsContext)_localctx).list =  poql.getAllVersions(); ((AllVersionsContext)_localctx).type = SLEXMMObjectVersion.class;
 			}
@@ -1499,7 +1540,7 @@ public class poqlParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(269);
+			setState(281);
 			match(ALLACTIVITIES);
 			 ((AllActivitiesContext)_localctx).list =  poql.getAllActivities(); ((AllActivitiesContext)_localctx).type = SLEXMMActivity.class;
 			}
@@ -1576,7 +1617,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3 \u0113\4\2\t\2\4"+
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3#\u011f\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3"+
@@ -1593,13 +1634,14 @@ public class poqlParser extends Parser {
 		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
 		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
 		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
-		"\5\13\u00f9\n\13\3\f\3\f\3\f\3\f\5\f\u00ff\n\f\3\r\3\r\3\r\3\16\3\16\3"+
-		"\16\3\17\3\17\3\17\3\20\3\20\3\20\3\21\3\21\3\21\3\22\3\22\3\22\3\22\2"+
-		"\b\6\b\n\f\16\20\23\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"\2\2\u011d"+
+		"\3\13\3\13\3\13\3\13\5\13\u00fd\n\13\3\13\3\13\5\13\u0101\n\13\3\13\3"+
+		"\13\5\13\u0105\n\13\3\f\3\f\3\f\3\f\5\f\u010b\n\f\3\r\3\r\3\r\3\16\3\16"+
+		"\3\16\3\17\3\17\3\17\3\20\3\20\3\20\3\21\3\21\3\21\3\22\3\22\3\22\3\22"+
+		"\2\b\6\b\n\f\16\20\23\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"\2\2\u012c"+
 		"\2$\3\2\2\2\49\3\2\2\2\6E\3\2\2\2\bZ\3\2\2\2\no\3\2\2\2\f\u0084\3\2\2"+
-		"\2\16\u009f\3\2\2\2\20\u00b4\3\2\2\2\22\u00bf\3\2\2\2\24\u00f8\3\2\2\2"+
-		"\26\u00fe\3\2\2\2\30\u0100\3\2\2\2\32\u0103\3\2\2\2\34\u0106\3\2\2\2\36"+
-		"\u0109\3\2\2\2 \u010c\3\2\2\2\"\u010f\3\2\2\2$%\5\4\3\2%&\b\2\1\2&\3\3"+
+		"\2\16\u009f\3\2\2\2\20\u00b4\3\2\2\2\22\u00bf\3\2\2\2\24\u0104\3\2\2\2"+
+		"\26\u010a\3\2\2\2\30\u010c\3\2\2\2\32\u010f\3\2\2\2\34\u0112\3\2\2\2\36"+
+		"\u0115\3\2\2\2 \u0118\3\2\2\2\"\u011b\3\2\2\2$%\5\4\3\2%&\b\2\1\2&\3\3"+
 		"\2\2\2\'(\5\b\5\2()\b\3\1\2):\3\2\2\2*+\5\6\4\2+,\b\3\1\2,:\3\2\2\2-."+
 		"\5\n\6\2./\b\3\1\2/:\3\2\2\2\60\61\5\f\7\2\61\62\b\3\1\2\62:\3\2\2\2\63"+
 		"\64\5\16\b\2\64\65\b\3\1\2\65:\3\2\2\2\66\67\5\20\t\2\678\b\3\1\28:\3"+
@@ -1637,32 +1679,36 @@ public class poqlParser extends Parser {
 		"\u00be\3\2\2\2\u00bc\u00ba\3\2\2\2\u00bc\u00bd\3\2\2\2\u00bd\21\3\2\2"+
 		"\2\u00be\u00bc\3\2\2\2\u00bf\u00c0\7\22\2\2\u00c0\u00c1\5\24\13\2\u00c1"+
 		"\u00c2\b\n\1\2\u00c2\23\3\2\2\2\u00c3\u00c4\7\34\2\2\u00c4\u00c5\5\24"+
-		"\13\2\u00c5\u00c6\b\13\1\2\u00c6\u00f9\3\2\2\2\u00c7\u00c8\7\20\2\2\u00c8"+
+		"\13\2\u00c5\u00c6\b\13\1\2\u00c6\u0105\3\2\2\2\u00c7\u00c8\7\20\2\2\u00c8"+
 		"\u00c9\5\24\13\2\u00c9\u00ca\7\32\2\2\u00ca\u00cb\5\24\13\2\u00cb\u00cc"+
-		"\7\21\2\2\u00cc\u00cd\b\13\1\2\u00cd\u00f9\3\2\2\2\u00ce\u00cf\7\20\2"+
+		"\7\21\2\2\u00cc\u00cd\b\13\1\2\u00cd\u0105\3\2\2\2\u00ce\u00cf\7\20\2"+
 		"\2\u00cf\u00d0\5\24\13\2\u00d0\u00d1\7\33\2\2\u00d1\u00d2\5\24\13\2\u00d2"+
-		"\u00d3\7\21\2\2\u00d3\u00d4\b\13\1\2\u00d4\u00f9\3\2\2\2\u00d5\u00d6\5"+
-		"\26\f\2\u00d6\u00d7\7\23\2\2\u00d7\u00d8\7\35\2\2\u00d8\u00d9\b\13\1\2"+
-		"\u00d9\u00f9\3\2\2\2\u00da\u00db\5\26\f\2\u00db\u00dc\7\24\2\2\u00dc\u00dd"+
-		"\7\35\2\2\u00dd\u00de\b\13\1\2\u00de\u00f9\3\2\2\2\u00df\u00e0\5\26\f"+
-		"\2\u00e0\u00e1\7\25\2\2\u00e1\u00e2\7\35\2\2\u00e2\u00e3\b\13\1\2\u00e3"+
-		"\u00f9\3\2\2\2\u00e4\u00e5\5\26\f\2\u00e5\u00e6\7\26\2\2\u00e6\u00e7\7"+
-		"\35\2\2\u00e7\u00e8\b\13\1\2\u00e8\u00f9\3\2\2\2\u00e9\u00ea\5\26\f\2"+
-		"\u00ea\u00eb\7\27\2\2\u00eb\u00ec\7\35\2\2\u00ec\u00ed\b\13\1\2\u00ed"+
-		"\u00f9\3\2\2\2\u00ee\u00ef\5\26\f\2\u00ef\u00f0\7\30\2\2\u00f0\u00f1\7"+
-		"\35\2\2\u00f1\u00f2\b\13\1\2\u00f2\u00f9\3\2\2\2\u00f3\u00f4\5\26\f\2"+
-		"\u00f4\u00f5\7\31\2\2\u00f5\u00f6\7\35\2\2\u00f6\u00f7\b\13\1\2\u00f7"+
-		"\u00f9\3\2\2\2\u00f8\u00c3\3\2\2\2\u00f8\u00c7\3\2\2\2\u00f8\u00ce\3\2"+
-		"\2\2\u00f8\u00d5\3\2\2\2\u00f8\u00da\3\2\2\2\u00f8\u00df\3\2\2\2\u00f8"+
-		"\u00e4\3\2\2\2\u00f8\u00e9\3\2\2\2\u00f8\u00ee\3\2\2\2\u00f8\u00f3\3\2"+
-		"\2\2\u00f9\25\3\2\2\2\u00fa\u00fb\7\36\2\2\u00fb\u00ff\b\f\1\2\u00fc\u00fd"+
-		"\7\37\2\2\u00fd\u00ff\b\f\1\2\u00fe\u00fa\3\2\2\2\u00fe\u00fc\3\2\2\2"+
-		"\u00ff\27\3\2\2\2\u0100\u0101\7\n\2\2\u0101\u0102\b\r\1\2\u0102\31\3\2"+
-		"\2\2\u0103\u0104\7\13\2\2\u0104\u0105\b\16\1\2\u0105\33\3\2\2\2\u0106"+
-		"\u0107\7\f\2\2\u0107\u0108\b\17\1\2\u0108\35\3\2\2\2\u0109\u010a\7\r\2"+
-		"\2\u010a\u010b\b\20\1\2\u010b\37\3\2\2\2\u010c\u010d\7\16\2\2\u010d\u010e"+
-		"\b\21\1\2\u010e!\3\2\2\2\u010f\u0110\7\17\2\2\u0110\u0111\b\22\1\2\u0111"+
-		"#\3\2\2\2\219EMZbow\u0084\u008c\u009f\u00a7\u00b4\u00bc\u00f8\u00fe";
+		"\u00d3\7\21\2\2\u00d3\u00d4\b\13\1\2\u00d4\u0105\3\2\2\2\u00d5\u00d6\5"+
+		"\26\f\2\u00d6\u00d7\7\23\2\2\u00d7\u00d8\7 \2\2\u00d8\u00d9\b\13\1\2\u00d9"+
+		"\u0105\3\2\2\2\u00da\u00db\5\26\f\2\u00db\u00dc\7\24\2\2\u00dc\u00dd\7"+
+		" \2\2\u00dd\u00de\b\13\1\2\u00de\u0105\3\2\2\2\u00df\u00e0\5\26\f\2\u00e0"+
+		"\u00e1\7\25\2\2\u00e1\u00e2\7 \2\2\u00e2\u00e3\b\13\1\2\u00e3\u0105\3"+
+		"\2\2\2\u00e4\u00e5\5\26\f\2\u00e5\u00e6\7\26\2\2\u00e6\u00e7\7 \2\2\u00e7"+
+		"\u00e8\b\13\1\2\u00e8\u0105\3\2\2\2\u00e9\u00ea\5\26\f\2\u00ea\u00eb\7"+
+		"\27\2\2\u00eb\u00ec\7 \2\2\u00ec\u00ed\b\13\1\2\u00ed\u0105\3\2\2\2\u00ee"+
+		"\u00ef\5\26\f\2\u00ef\u00f0\7\30\2\2\u00f0\u00f1\7 \2\2\u00f1\u00f2\b"+
+		"\13\1\2\u00f2\u0105\3\2\2\2\u00f3\u00f4\5\26\f\2\u00f4\u00f5\7\31\2\2"+
+		"\u00f5\u00f6\7 \2\2\u00f6\u00f7\b\13\1\2\u00f7\u0105\3\2\2\2\u00f8\u00f9"+
+		"\5\26\f\2\u00f9\u00fc\7\35\2\2\u00fa\u00fb\7\36\2\2\u00fb\u00fd\7 \2\2"+
+		"\u00fc\u00fa\3\2\2\2\u00fc\u00fd\3\2\2\2\u00fd\u0100\3\2\2\2\u00fe\u00ff"+
+		"\7\37\2\2\u00ff\u0101\7 \2\2\u0100\u00fe\3\2\2\2\u0100\u0101\3\2\2\2\u0101"+
+		"\u0102\3\2\2\2\u0102\u0103\b\13\1\2\u0103\u0105\3\2\2\2\u0104\u00c3\3"+
+		"\2\2\2\u0104\u00c7\3\2\2\2\u0104\u00ce\3\2\2\2\u0104\u00d5\3\2\2\2\u0104"+
+		"\u00da\3\2\2\2\u0104\u00df\3\2\2\2\u0104\u00e4\3\2\2\2\u0104\u00e9\3\2"+
+		"\2\2\u0104\u00ee\3\2\2\2\u0104\u00f3\3\2\2\2\u0104\u00f8\3\2\2\2\u0105"+
+		"\25\3\2\2\2\u0106\u0107\7!\2\2\u0107\u010b\b\f\1\2\u0108\u0109\7\"\2\2"+
+		"\u0109\u010b\b\f\1\2\u010a\u0106\3\2\2\2\u010a\u0108\3\2\2\2\u010b\27"+
+		"\3\2\2\2\u010c\u010d\7\n\2\2\u010d\u010e\b\r\1\2\u010e\31\3\2\2\2\u010f"+
+		"\u0110\7\13\2\2\u0110\u0111\b\16\1\2\u0111\33\3\2\2\2\u0112\u0113\7\f"+
+		"\2\2\u0113\u0114\b\17\1\2\u0114\35\3\2\2\2\u0115\u0116\7\r\2\2\u0116\u0117"+
+		"\b\20\1\2\u0117\37\3\2\2\2\u0118\u0119\7\16\2\2\u0119\u011a\b\21\1\2\u011a"+
+		"!\3\2\2\2\u011b\u011c\7\17\2\2\u011c\u011d\b\22\1\2\u011d#\3\2\2\2\23"+
+		"9EMZbow\u0084\u008c\u009f\u00a7\u00b4\u00bc\u00fc\u0100\u0104\u010a";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

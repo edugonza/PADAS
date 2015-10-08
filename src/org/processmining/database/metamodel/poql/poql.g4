@@ -74,6 +74,7 @@ filter_expression returns [FilterTree tree]: NOT f0=filter_expression { $tree = 
 	| f9=id GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.name,$STRING.text,$f9.att); }
 	| f10=id SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.name,$STRING.text,$f10.att); }
 	| f11=id CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.name,$STRING.text,$f11.att); }
+	| f12=id CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
 	;
 
 id returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
@@ -117,6 +118,9 @@ CONTAINS: C O N T A I N S ;
 AND: A N D;
 OR: O R;
 NOT: N O T ;
+CHANGED: C H A N G E D ;
+FROM: F R O M ;
+TO: T O ;
 STRING: '"' ~('\r' | '\n' | '"')* '"' { setText(getText().substring(1, getText().length() - 1)); };
 
 IDATT : 'at.'IDNOATT { setText(getText().substring(3, getText().length())); };

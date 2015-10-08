@@ -61,9 +61,10 @@ public class POQLFunctions {
 			for (Object o: list) {
 				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
 				String v = null;
+				SLEXMMAttribute slxAtt = null;
 				if (condition.isAttribute()) {
 					HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attsMap = ob.getAttributeValues();
-					SLEXMMAttribute slxAtt = null;
+					slxAtt = null;
 					
 					for (SLEXMMAttribute at: attsMap.keySet()) {
 						if (at.getName().equals(condition.getKey())) {
@@ -95,7 +96,13 @@ public class POQLFunctions {
 					return list;
 				}
 				
-				if (v != null && filterOperation(v,condition.value,condition.operator)) {
+				if (condition.isChanged()) {
+					if (slxAtt != null) {
+						if (filterChangedOperation(ob,slxAtt,v,condition.valueFrom,condition.valueTo)) {
+							filteredList.add(o);
+						}
+					}
+				} else if (v != null && filterOperation(v,condition.value,condition.operator)) {
 					filteredList.add(o);
 				}
 				
@@ -181,6 +188,45 @@ public class POQLFunctions {
 		}
 		
 		return filteredList;
+	}
+	
+	public boolean filterChangedOperation(SLEXMMObjectVersion ov, SLEXMMAttribute slxAtt,
+			String v, String valueFrom, String valueTo) {
+		
+		SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersionsForObjectOrdered(ov.getObjectId());
+		SLEXMMObjectVersion ova = null;
+		SLEXMMObjectVersion ovb = null;
+		
+		while ((ovb = ovrset.getNext()) != null) {
+			if (ovb.getId() == ov.getId()) {
+				break;
+			} else {
+				ova = ovb;
+			}
+		}
+		
+		if (ova != null) {
+			SLEXMMAttributeValue prevAtV = ova.getAttributeValues().get(slxAtt);
+			String prevV = prevAtV.getValue();
+			if (valueFrom != null) {
+				if (!prevV.equals(valueFrom)) {
+					return false;
+				}
+			}
+			if (valueTo != null) {
+				if (!v.equals(valueTo)) {
+					return false;
+				}
+			}
+			if (prevV.equals(v)) {
+				return false;
+			}
+		} else { 
+			// ov was already the first Object Version for this object. We cannot decide what changed. FIXME
+			return false;
+		}
+		
+		return true;
 	}
 	
 	public boolean filterOperation(String a, String b, int op) {
@@ -297,6 +343,17 @@ public class POQLFunctions {
 		return createTerminalFilter(key, value, FilterTree.OPERATOR_CONTAINS,att);
 	}
 	
+	public FilterTree createChangedTerminalFilter(String key, String from, String to) {
+		FilterTree node = new FilterTree();
+		node.node = FilterTree.NODE_TERMINAL;
+		node.operator = FilterTree.OPERATOR_CHANGED;
+		node.key = key;
+		node.valueFrom = from;
+		node.valueTo = to;
+		node.att = true;
+		return node;
+	}
+	
 	public FilterTree createTerminalFilter(String key, String value, int operator, boolean att) {
 		FilterTree node = new FilterTree();
 		node.node = FilterTree.NODE_TERMINAL;
@@ -305,7 +362,7 @@ public class POQLFunctions {
 		node.value = value;
 		node.att = att;
 		return node;
-	}
+	}	
 	
 	public List<Object> objectsOf(List<Object> list, Class type) {
 		ArrayList<Object> listResult = new ArrayList<>();
@@ -323,7 +380,19 @@ public class POQLFunctions {
 				}
 			}
 		} else if (type == SLEXMMObjectVersion.class) {
-			// TODO
+			HashMap<Integer,SLEXMMObject> mapObjects = new HashMap<>();
+			for (Object o: list) {
+				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
+				if (!mapObjects.containsKey(ob.getObjectId())) {
+					SLEXMMObject obj = slxmm.getObjectPerId(ob.getObjectId());
+					if (obj != null) {
+						mapObjects.put(obj.getId(), obj);
+					}
+				}
+			}
+			
+			listResult.addAll(mapObjects.values());
+			
 		} else if (type == SLEXMMCase.class) {
 			// TODO
 		} else if (type == SLEXMMObject.class) {

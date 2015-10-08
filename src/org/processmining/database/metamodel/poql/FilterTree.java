@@ -9,6 +9,7 @@ public class FilterTree {
 	public static final int OPERATOR_EQUAL_OR_GREATER_THAN = 5;
 	public static final int OPERATOR_EQUAL_OR_SMALLER_THAN = 6;
 	public static final int OPERATOR_CONTAINS = 7;
+	public static final int OPERATOR_CHANGED = 8;
 	
 	public static final int NODE_AND = 1;
 	public static final int NODE_OR = 2;
@@ -20,6 +21,8 @@ public class FilterTree {
 	FilterTree rightChild = null;
 	String key = null;
 	String value = null;
+	String valueFrom = null;
+	String valueTo = null;
 	int operator = 0;
 	boolean att = false;
 	
@@ -37,6 +40,14 @@ public class FilterTree {
 	
 	public String getValue() {
 		return value;
+	}
+	
+	public String getValueFrom() {
+		return valueFrom;
+	}
+	
+	public String getValueTo() {
+		return valueTo;
 	}
 	
 	public int getOperator() {
@@ -89,6 +100,10 @@ public class FilterTree {
 	
 	public boolean isEqualOrSmaller() {
 		return isTerminal() && operator == OPERATOR_EQUAL_OR_SMALLER_THAN;
+	}
+	
+	public boolean isChanged() {
+		return isTerminal() && operator == OPERATOR_CHANGED;
 	}
 	
 }
