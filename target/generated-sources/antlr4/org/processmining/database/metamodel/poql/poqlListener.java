@@ -8,7 +8,10 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMEvent;
   import org.processmining.openslex.metamodel.SLEXMMActivity;
   import org.processmining.openslex.metamodel.SLEXMMCase;
-  import org.processmining.openslex.metamodel.SLEXMMClass; 
+  import org.processmining.openslex.metamodel.SLEXMMClass;
+  import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
+  import org.processmining.openslex.metamodel.SLEXMMRelation;
+  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -98,6 +101,36 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitActivities(poqlParser.ActivitiesContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link poqlParser#relations}.
+	 * @param ctx the parse tree
+	 */
+	void enterRelations(poqlParser.RelationsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#relations}.
+	 * @param ctx the parse tree
+	 */
+	void exitRelations(poqlParser.RelationsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#relationships}.
+	 * @param ctx the parse tree
+	 */
+	void enterRelationships(poqlParser.RelationshipsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#relationships}.
+	 * @param ctx the parse tree
+	 */
+	void exitRelationships(poqlParser.RelationshipsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#activityinstances}.
+	 * @param ctx the parse tree
+	 */
+	void enterActivityinstances(poqlParser.ActivityinstancesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#activityinstances}.
+	 * @param ctx the parse tree
+	 */
+	void exitActivityinstances(poqlParser.ActivityinstancesContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link poqlParser#filter}.
 	 * @param ctx the parse tree
 	 */
@@ -107,16 +140,6 @@ public interface poqlListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFilter(poqlParser.FilterContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link poqlParser#filter_versions}.
-	 * @param ctx the parse tree
-	 */
-	void enterFilter_versions(poqlParser.Filter_versionsContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#filter_versions}.
-	 * @param ctx the parse tree
-	 */
-	void exitFilter_versions(poqlParser.Filter_versionsContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link poqlParser#filter_expression}.
 	 * @param ctx the parse tree
@@ -138,35 +161,125 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitFilter_terminal(poqlParser.Filter_terminalContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#filter_expression_versions}.
+	 * Enter a parse tree produced by {@link poqlParser#filter_terminal_versions_changed}.
 	 * @param ctx the parse tree
 	 */
-	void enterFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx);
+	void enterFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link poqlParser#filter_expression_versions}.
+	 * Exit a parse tree produced by {@link poqlParser#filter_terminal_versions_changed}.
 	 * @param ctx the parse tree
 	 */
-	void exitFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx);
+	void exitFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#filter_terminal_changed}.
+	 * Enter a parse tree produced by {@link poqlParser#id_att}.
 	 * @param ctx the parse tree
 	 */
-	void enterFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx);
+	void enterId_att(poqlParser.Id_attContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link poqlParser#filter_terminal_changed}.
+	 * Exit a parse tree produced by {@link poqlParser#id_att}.
 	 * @param ctx the parse tree
 	 */
-	void exitFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx);
+	void exitId_att(poqlParser.Id_attContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#id}.
+	 * Enter a parse tree produced by {@link poqlParser#ids}.
 	 * @param ctx the parse tree
 	 */
-	void enterId(poqlParser.IdContext ctx);
+	void enterIds(poqlParser.IdsContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link poqlParser#id}.
+	 * Exit a parse tree produced by {@link poqlParser#ids}.
 	 * @param ctx the parse tree
 	 */
-	void exitId(poqlParser.IdContext ctx);
+	void exitIds(poqlParser.IdsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_version}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_version(poqlParser.Id_versionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_version}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_version(poqlParser.Id_versionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_object}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_object(poqlParser.Id_objectContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_object}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_object(poqlParser.Id_objectContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_class}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_class(poqlParser.Id_classContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_class}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_class(poqlParser.Id_classContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_relationship}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_relationship(poqlParser.Id_relationshipContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_relationship}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_relationship(poqlParser.Id_relationshipContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_relation}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_relation(poqlParser.Id_relationContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_relation}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_relation(poqlParser.Id_relationContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_event}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_event(poqlParser.Id_eventContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_event}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_event(poqlParser.Id_eventContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_case}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_case(poqlParser.Id_caseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_case}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_case(poqlParser.Id_caseContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_activity_instance}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_activity_instance(poqlParser.Id_activity_instanceContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_activity_instance}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_activity_instance(poqlParser.Id_activity_instanceContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_activity}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_activity(poqlParser.Id_activityContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_activity}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_activity(poqlParser.Id_activityContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link poqlParser#allObjects}.
 	 * @param ctx the parse tree
@@ -227,4 +340,34 @@ public interface poqlListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAllActivities(poqlParser.AllActivitiesContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#allRelations}.
+	 * @param ctx the parse tree
+	 */
+	void enterAllRelations(poqlParser.AllRelationsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#allRelations}.
+	 * @param ctx the parse tree
+	 */
+	void exitAllRelations(poqlParser.AllRelationsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#allRelationships}.
+	 * @param ctx the parse tree
+	 */
+	void enterAllRelationships(poqlParser.AllRelationshipsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#allRelationships}.
+	 * @param ctx the parse tree
+	 */
+	void exitAllRelationships(poqlParser.AllRelationshipsContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#allActivityInstances}.
+	 * @param ctx the parse tree
+	 */
+	void enterAllActivityInstances(poqlParser.AllActivityInstancesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#allActivityInstances}.
+	 * @param ctx the parse tree
+	 */
+	void exitAllActivityInstances(poqlParser.AllActivityInstancesContext ctx);
 }

@@ -25,6 +25,8 @@ import org.processmining.openslex.metamodel.SLEXMMObject;
 import org.processmining.openslex.metamodel.SLEXMMObjectResultSet;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
+import org.processmining.openslex.metamodel.SLEXMMRelation;
+import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 
 public class POQLFunctions {
@@ -55,7 +57,7 @@ public class POQLFunctions {
 					// ERROR
 					System.err.println("No attributes for type Object");
 					return list;
-				} else if (condition.getKey().equals("classid")) {
+				} else if (condition.getKeyId() == (poqlParser.CLASS_ID)) {
 					v = String.valueOf(ob.getClassId());
 				} else if (condition.getKey().equals("id")) {
 					v = String.valueOf(ob.getId());
@@ -351,32 +353,32 @@ public class POQLFunctions {
 		return orNode;
 	}
 	
-	public FilterTree createEqualTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL,att);
+	public FilterTree createEqualTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL,att);
 	}
 	
-	public FilterTree createDifferentTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_DIFFERENT,att);
+	public FilterTree createDifferentTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_DIFFERENT,att);
 	}
 	
-	public FilterTree createEqualOrGreaterTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN,att);
+	public FilterTree createEqualOrGreaterTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN,att);
 	}
 	
-	public FilterTree createEqualOrSmallerTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN,att);
+	public FilterTree createEqualOrSmallerTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN,att);
 	}
 	
-	public FilterTree createGreaterTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_GREATER_THAN,att);
+	public FilterTree createGreaterTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_GREATER_THAN,att);
 	}
 	
-	public FilterTree createSmallerTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_SMALLER_THAN,att);
+	public FilterTree createSmallerTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_SMALLER_THAN,att);
 	}
 	
-	public FilterTree createContainsTerminalFilter(String key, String value, boolean att) {
-		return createTerminalFilter(key, value, FilterTree.OPERATOR_CONTAINS,att);
+	public FilterTree createContainsTerminalFilter(int id, String key, String value, boolean att) {
+		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_CONTAINS,att);
 	}
 	
 	public FilterTree createChangedTerminalFilter(String key, String from, String to) {
@@ -390,11 +392,12 @@ public class POQLFunctions {
 		return node;
 	}
 	
-	public FilterTree createTerminalFilter(String key, String value, int operator, boolean att) {
+	public FilterTree createTerminalFilter(int id, String key, String value, int operator, boolean att) {
 		FilterTree node = new FilterTree();
 		node.node = FilterTree.NODE_TERMINAL;
 		node.operator = operator;
 		node.key = key;
+		node.keyId = id;
 		node.value = value;
 		node.att = att;
 		return node;
@@ -540,6 +543,21 @@ public class POQLFunctions {
 		return null;
 	}
 	
+	public List<Object> relationsOf(List<Object> list, Class type) {
+		// TODO
+		return null;
+	}
+	
+	public List<Object> relationshipsOf(List<Object> list, Class type) {
+		// TODO
+		return null;
+	}
+	
+	public List<Object> activityInstancesOf(List<Object> list, Class type) {
+		// TODO
+		return null;
+	}
+	
 	public List<Object> versionsRelatedTo(List<Object> list, Class type) {
 		HashSet<SLEXMMObjectVersion> setResult = new HashSet<>();
 		List<Object> listResult = new ArrayList<>();
@@ -633,6 +651,38 @@ public class POQLFunctions {
 				while ((cl = crset.getNext()) != null) {
 					list.add(cl);
 				}
+			}
+		}
+		return list;
+	}
+	
+	public List<Object> getAllRelations() {
+		ArrayList<Object> list = new ArrayList<>();
+		SLEXMMRelationResultSet rrset = slxmm.getRelations();
+		if (!isCheckerModeEnabled()) {
+			SLEXMMRelation r = null;
+			while ((r = rrset.getNext()) != null) {
+				list.add(r);
+			}
+		}
+		return list;
+	}
+	
+	public List<Object> getAllRelationships() {
+		ArrayList<Object> list = new ArrayList<>();
+		if (!isCheckerModeEnabled()) {
+			list.addAll(slxmm.getRelationships());
+		}
+		return list;
+	}
+	
+	public List<Object> getAllActivityInstances() {
+		ArrayList<Object> list = new ArrayList<>();
+		SLEXMMActivityInstanceResultSet airset = slxmm.getActivityInstances();
+		if (!isCheckerModeEnabled()) {
+			SLEXMMActivityInstance ai = null;
+			while ((ai = airset.getNext()) != null) {
+				list.add(ai);
 			}
 		}
 		return list;

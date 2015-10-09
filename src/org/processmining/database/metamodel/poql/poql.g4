@@ -10,7 +10,10 @@ grammar poql;
   import org.processmining.openslex.metamodel.SLEXMMEvent;
   import org.processmining.openslex.metamodel.SLEXMMActivity;
   import org.processmining.openslex.metamodel.SLEXMMCase;
-  import org.processmining.openslex.metamodel.SLEXMMClass; 
+  import org.processmining.openslex.metamodel.SLEXMMClass;
+  import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
+  import org.processmining.openslex.metamodel.SLEXMMRelation;
+  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
 }
 
 @lexer::members 
@@ -26,6 +29,16 @@ grammar poql;
   
   public POQLFunctions poql = new POQLFunctions();
 
+  public static final int ID_TYPE_OBJECT = 1;
+  public static final int ID_TYPE_EVENT = 2;
+  public static final int ID_TYPE_CLASS = 3;
+  public static final int ID_TYPE_VERSION = 4;
+  public static final int ID_TYPE_ACTIVITY = 5;
+  public static final int ID_TYPE_RELATION = 6;
+  public static final int ID_TYPE_RELATIONSHIP = 7;
+  public static final int ID_TYPE_ACTIVITY_INSTANCE = 8;
+  public static final int ID_TYPE_CASE = 9;
+
   @Override
   public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException ex)
   {
@@ -37,83 +50,165 @@ grammar poql;
 prog returns [List<Object> result, Class type]: t=things { $result = $t.list; $type = $t.type; }
 ;
 
-things returns [List<Object> list, Class type]: t1=cases { $list = $t1.list; $type = $t1.type; }
+things returns [List<Object> list, Class type]:
+	  t1=cases { $list = $t1.list; $type = $t1.type; }
 	| t2=objects { $list = $t2.list; $type = $t2.type; }
 	| t3=events { $list = $t3.list; $type = $t3.type; }
 	| t4=classes { $list = $t4.list; $type = $t4.type; }
 	| t5=versions { $list = $t5.list; $type = $t5.type; }
 	| t6=activities { $list = $t6.list; $type = $t6.type; }
+	| t7=relations { $list = $t7.list; $type = $t7.type; }
+	| t8=relationships { $list = $t8.list; $type = $t8.type; }
+	| t9=activityinstances { $list = $t9.list; $type = $t9.type; }
 	;
  	
 objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
 	| t2=allObjects{ $list = $t2.list; $type = $t2.type; }
-	| t3=objects f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=objects f=filter[ID_TYPE_OBJECT] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
  	
 cases returns [List<Object> list, Class type] : CASESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.casesOf($t1.list,$t1.type); $type=SLEXMMCase.class; }
 	| t2=allCases{ $list = $t2.list; $type = $t2.type; }
-	| t3=cases f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=cases f=filter[ID_TYPE_CASE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
 events returns [List<Object> list, Class type]: EVENTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.eventsOf($t1.list,$t1.type); $type=SLEXMMEvent.class;}
 	| t2=allEvents{ $list = $t2.list; $type = $t2.type; }
-	| t3=events f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=events f=filter[ID_TYPE_EVENT] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
 classes returns [List<Object> list, Class type]: CLASSESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.classesOf($t1.list,$t1.type); $type=SLEXMMClass.class;}
 	| t2=allClasses{ $list = $t2.list; $type = $t2.type; }
-	| t3=classes f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=classes f=filter[ID_TYPE_CLASS] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	; 
 	
 versions returns [List<Object> list, Class type]: VERSIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.versionsOf($t1.list,$t1.type); $type=SLEXMMObjectVersion.class;}
 	| t2=allVersions{ $list = $t2.list; $type = $t2.type; }
 	| VERSIONS_RELATED_TO OPEN_PARENTHESIS t4=versions CLOSE_PARENTHESIS { $list = poql.versionsRelatedTo($t4.list,$t4.type); $type=SLEXMMObjectVersion.class; }
-	| t3=versions f=filter_versions { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=versions f=filter[ID_TYPE_VERSION] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
 activities returns [List<Object> list, Class type]: ACTIVITIESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activitiesOf($t1.list,$t1.type); $type=SLEXMMActivity.class;}
 	| t2=allActivities { $list = $t2.list; $type = $t2.type; }
-	| t3=activities f=filter { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t3=activities f=filter[ID_TYPE_ACTIVITY] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-filter returns [FilterTree conditions]: WHERE f=filter_expression { $conditions = $f.tree; }
+relations returns [List<Object> list, Class type]: RELATIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationsOf($t1.list,$t1.type); $type=SLEXMMRelation.class;}
+	| t2=allRelations { $list = $t2.list; $type = $t2.type; }
+	| t3=relations f=filter[ID_TYPE_RELATION] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-filter_versions returns [FilterTree conditions]: WHERE f=filter_expression_versions { $conditions = $f.tree; }
+relationships returns [List<Object> list, Class type]: RELATIONSHIPSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationshipsOf($t1.list,$t1.type); $type=SLEXMMRelationship.class;}
+	| t2=allRelationships { $list = $t2.list; $type = $t2.type; }
+	| t3=relationships f=filter[ID_TYPE_RELATIONSHIP] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	;
+	
+activityinstances returns [List<Object> list, Class type]: ACTIVITYINSTANCESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activityInstancesOf($t1.list,$t1.type); $type=SLEXMMActivityInstance.class;}
+	| t2=allActivityInstances { $list = $t2.list; $type = $t2.type; }
+	| t3=activityinstances f=filter[ID_TYPE_ACTIVITY_INSTANCE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	;
+	
+filter [int type_id] returns [FilterTree conditions]: WHERE f=filter_expression[$type_id] { $conditions = $f.tree; }
 	;
 
-filter_expression returns [FilterTree tree]:
-	  NOT f0=filter_expression { $tree = poql.createNotNode($f0.tree); }
-	| OPEN_PARENTHESIS f1=filter_expression AND f2=filter_expression CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
-	| OPEN_PARENTHESIS f3=filter_expression OR f4=filter_expression CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
-	| f5=filter_terminal { $tree = $f5.tree; }
+filter_expression [int type_id] returns [FilterTree tree]:
+	  NOT f0=filter_expression[$type_id] { $tree = poql.createNotNode($f0.tree); }
+	| OPEN_PARENTHESIS f1=filter_expression[$type_id] AND f2=filter_expression[$type_id] CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
+	| OPEN_PARENTHESIS f3=filter_expression[$type_id] OR f4=filter_expression[$type_id] CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
+	| f5=filter_terminal[$type_id] { $tree = $f5.tree; }
+	| f6=filter_terminal_versions_changed[$type_id] { $tree = $f6.tree; }
 	;
 
-filter_terminal returns [FilterTree tree]:
-	  f5=id EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.name,$STRING.text,$f5.att); }
-	| f6=id DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.name,$STRING.text,$f6.att); }
-	| f7=id EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.name,$STRING.text,$f7.att); }
-	| f8=id EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.name,$STRING.text,$f8.att); }
-	| f9=id GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.name,$STRING.text,$f9.att); }
-	| f10=id SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.name,$STRING.text,$f10.att); }
-	| f11=id CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.name,$STRING.text,$f11.att); }
-	; 
-
-filter_expression_versions returns [FilterTree tree]:
-	  NOT f0=filter_expression_versions { $tree = poql.createNotNode($f0.tree); }
-	| OPEN_PARENTHESIS f1=filter_expression_versions AND f2=filter_expression_versions CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
-	| OPEN_PARENTHESIS f3=filter_expression_versions OR f4=filter_expression_versions CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
-	| f5=filter_terminal { $tree = $f5.tree; }
-	| f6=filter_terminal_changed { $tree = $f6.tree; }
+filter_terminal [int type_id] returns [FilterTree tree]:
+	  f5=ids[$type_id] EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.id,$f5.name,$STRING.text,$f5.att); }
+	| f6=ids[$type_id] DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.id,$f6.name,$STRING.text,$f6.att); }
+	| f7=ids[$type_id] EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.id,$f7.name,$STRING.text,$f7.att); }
+	| f8=ids[$type_id] EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.id,$f8.name,$STRING.text,$f8.att); }
+	| f9=ids[$type_id] GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.id,$f9.name,$STRING.text,$f9.att); }
+	| f10=ids[$type_id] SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.id,$f10.name,$STRING.text,$f10.att); }
+	| f11=ids[$type_id] CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.id,$f11.name,$STRING.text,$f11.att); }
 	;
 
-filter_terminal_changed returns [FilterTree tree]: 
-	  f12=id CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
+filter_terminal_versions_changed [int type_id] returns [FilterTree tree]: 
+	  {$type_id == ID_TYPE_VERSION}? f12=id_att CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
 	; 
 
-id returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
-	| IDNOATT {$name = $IDNOATT.text; $att = false;}
-	; 
+id_att returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
+	;
+	
+ids [int type_id] returns [String name, boolean att, int id]:
+	  {$type_id == ID_TYPE_VERSION}? i1=id_version {$name = $i1.name; $att = $i1.att; $id = $i1.id;}
+	| {$type_id == ID_TYPE_OBJECT}? i2=id_object {$name = $i2.name; $att = $i2.att; $id = $i2.id;}
+	| {$type_id == ID_TYPE_CLASS}? i3=id_class {$name = $i3.name; $att = $i3.att; $id = $i3.id;}
+	| {$type_id == ID_TYPE_RELATIONSHIP}? i4=id_relationship {$name = $i4.name; $att = $i4.att; $id = $i4.id;}
+	| {$type_id == ID_TYPE_RELATION}? i5=id_relation {$name = $i5.name; $att = $i5.att; $id = $i5.id;}
+	| {$type_id == ID_TYPE_EVENT}? i6=id_event {$name = $i6.name; $att = $i6.att; $id = $i6.id;}
+	| {$type_id == ID_TYPE_CASE}? i7=id_case {$name = $i7.name; $att = $i7.att; $id = $i7.id;}
+	| {$type_id == ID_TYPE_ACTIVITY_INSTANCE}? i8=id_activity_instance {$name = $i8.name; $att = $i8.att; $id = $i8.id;}
+	| {$type_id == ID_TYPE_ACTIVITY}? i9=id_activity {$name = $i9.name; $att = $i9.att; $id = $i9.id;}
+	;
+
+id_version returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| OBJECT_ID {$name = $OBJECT_ID.text; $att = false; $id = $OBJECT_ID.type;}
+	| START_TIMESTAMP {$name = $START_TIMESTAMP.text; $att = false; $id = $START_TIMESTAMP.type;}
+	| END_TIMESTAMP {$name = $END_TIMESTAMP.text; $att = false; $id = $END_TIMESTAMP.type;}
+	| i=id_att {$name = $i.name; $att = $i.att;}
+	;
+	
+id_object returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| CLASS_ID {$name = $CLASS_ID.text; $att = false; $id = $CLASS_ID.type;}
+	;
+	
+id_class returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| DATAMODEL_ID {$name = $DATAMODEL_ID.text; $att = false; $id = $DATAMODEL_ID.type;}
+	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type;}
+	| i=id_att {$name = $i.name; $att = $i.att;}
+	;
+	
+id_relationship returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| SOURCE {$name = $SOURCE.text; $att = false; $id = $SOURCE.type;}
+	| TARGET {$name = $TARGET.text; $att = false; $id = $TARGET.type;}
+	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type;}
+	;
+	
+id_relation returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| SOURCE_OBJECT_VERSION_ID {$name = $SOURCE_OBJECT_VERSION_ID.text; $att = false; $id = $SOURCE_OBJECT_VERSION_ID.type;}
+	| TARGET_OBJECT_VERSION_ID {$name = $TARGET_OBJECT_VERSION_ID.text; $att = false; $id = $TARGET_OBJECT_VERSION_ID.type;}
+	| RELATIONSHIP_ID {$name = $RELATIONSHIP_ID.text; $att = false; $id = $RELATIONSHIP_ID.type;}
+	| START_TIMESTAMP {$name = $START_TIMESTAMP.text; $att = false; $id = $START_TIMESTAMP.type;}
+	| END_TIMESTAMP {$name = $END_TIMESTAMP.text; $att = false; $id = $END_TIMESTAMP.type;}
+	;
+	
+id_event returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| ACTIVITY_INSTANCE_ID {$name = $ACTIVITY_INSTANCE_ID.text; $att = false; $id = $ACTIVITY_INSTANCE_ID.type;}
+	| ORDERING {$name = $ORDERING.text; $att = false; $id = $ORDERING.type;}
+	| TIMESTAMP {$name = $TIMESTAMP.text; $att = false; $id = $TIMESTAMP.type;}
+	| LIFECYCLE {$name = $LIFECYCLE.text; $att = false; $id = $LIFECYCLE.type;}
+	| RESOURCE {$name = $RESOURCE.text; $att = false; $id = $RESOURCE.type;}
+	| i=id_att {$name = $i.name; $att = $i.att;}
+	;
+	
+id_case returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type;}
+	;
+	
+id_activity_instance returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
+	| ACTIVITY_ID {$name = $ACTIVITY_ID.text; $att = false; $id = $ACTIVITY_ID.type;}
+	;
+	
+id_activity returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type; }
+	| PROCESS_ID {$name = $PROCESS_ID.text; $att = false; $id = $PROCESS_ID.type; }
+	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type; }
+	;
 
 allObjects returns [List<Object> list, Class type]: ALLOBJECTS { $list = poql.getAllObjects(); $type=SLEXMMObject.class;};
 allCases returns [List<Object> list, Class type]: ALLCASES { $list = poql.getAllCases(); $type=SLEXMMCase.class;};
@@ -121,6 +216,9 @@ allEvents returns [List<Object> list, Class type]: ALLEVENTS { $list = poql.getA
 allClasses returns [List<Object> list, Class type]: ALLCLASSES { $list = poql.getAllClasses(); $type=SLEXMMClass.class;};
 allVersions returns [List<Object> list, Class type]: ALLVERSIONS { $list = poql.getAllVersions(); $type=SLEXMMObjectVersion.class;};
 allActivities returns [List<Object> list, Class type]: ALLACTIVITIES { $list = poql.getAllActivities(); $type=SLEXMMActivity.class;};
+allRelations returns [List<Object> list, Class type]: ALLRELATIONS { $list = poql.getAllRelations(); $type=SLEXMMRelation.class;};
+allRelationships returns [List<Object> list, Class type]: ALLRELATIONSHIPS { $list = poql.getAllRelationships(); $type=SLEXMMRelationship.class;};
+allActivityInstances returns [List<Object> list, Class type]: ALLACTIVITYINSTANCES { $list = poql.getAllActivityInstances(); $type=SLEXMMActivityInstance.class;};
 
 CASESOF: C A S E S O F ;
 OBJECTSOF: O B J E C T S O F ;
@@ -129,6 +227,9 @@ CLASSESOF: C L A S S E S O F ;
 VERSIONSOF: V E R S I O N S O F ;
 ACTIVITIESOF: A C T I V I T I E S O F ;
 VERSIONS_RELATED_TO: V E R S I O N S R E L A T E D T O ;
+RELATIONSOF: R E L A T I O N S O F ;
+RELATIONSHIPSOF: R E L A T I O N S H I P S O F ;
+ACTIVITYINSTANCESOF: A C T I V I T Y I N S T A N C E S O F ;
 
 ALLOBJECTS: A L L O B J E C T S ;
 ALLCASES: A L L C A S E S ;
@@ -136,6 +237,30 @@ ALLEVENTS: A L L E V E N T S ;
 ALLCLASSES: A L L C L A S S E S ;
 ALLVERSIONS: A L L V E R S I O N S ;
 ALLACTIVITIES: A L L A C T I V I T I E S ;
+ALLRELATIONS: A L L R E L A T I O N S ;
+ALLRELATIONSHIPS: A L L R E L A T I O N S H I P S ;
+ALLACTIVITYINSTANCES: A L L A C T I V I T Y I N S T A N C E S ;
+
+// tokens for filters
+ID: I D ;
+DATAMODEL_ID: D A T A M O D E L '_' I D ;
+NAME: N A M E ;
+CLASS_ID: C L A S S '_' I D ;
+SOURCE: S O U R C E ;
+TARGET: T A R G E T ;
+OBJECT_ID: O B J E C T '_' I D ;
+START_TIMESTAMP: S T A R T '_' T I M E S T A M P ;
+END_TIMESTAMP: E N D '_' T I M E S T A M P ;
+SOURCE_OBJECT_VERSION_ID: S O U R C E '_' O B J E C T '_' V E R S I O N '_' I D ;
+TARGET_OBJECT_VERSION_ID: T A R G E T '_' O B J E C T '_' V E R S I O N '_' I D ;
+RELATIONSHIP_ID: R E L A T I O N S H I P '_' I D ;
+ACTIVITY_INSTANCE_ID: A C T I V I T Y '_' I N S T A N C E '_' I D ;
+ORDERING: O R D E R I N G ;
+TIMESTAMP: T I M E S T A M P ;
+LIFECYCLE: L I F E C Y C L E ;
+RESOURCE: R E S O U R C E ;
+ACTIVITY_ID: A C T I V I T Y '_' I D ;
+PROCESS_ID: P R O C E S S '_' I D ;
 
 OPEN_PARENTHESIS: '(' ;
 CLOSE_PARENTHESIS: ')' ;

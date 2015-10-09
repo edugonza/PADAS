@@ -20,6 +20,7 @@ public class FilterTree {
 	FilterTree leftChild = null;
 	FilterTree rightChild = null;
 	String key = null;
+	int keyId = -1;
 	String value = null;
 	String valueFrom = null;
 	String valueTo = null;
@@ -36,6 +37,10 @@ public class FilterTree {
 	
 	public String getKey() {
 		return key;
+	}
+	
+	public int getKeyId() {
+		return keyId;
 	}
 	
 	public String getValue() {

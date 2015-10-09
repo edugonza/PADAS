@@ -8,7 +8,10 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMEvent;
   import org.processmining.openslex.metamodel.SLEXMMActivity;
   import org.processmining.openslex.metamodel.SLEXMMCase;
-  import org.processmining.openslex.metamodel.SLEXMMClass; 
+  import org.processmining.openslex.metamodel.SLEXMMClass;
+  import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
+  import org.processmining.openslex.metamodel.SLEXMMRelation;
+  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -122,6 +125,42 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterRelations(poqlParser.RelationsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRelations(poqlParser.RelationsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterRelationships(poqlParser.RelationshipsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitRelationships(poqlParser.RelationshipsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterActivityinstances(poqlParser.ActivityinstancesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitActivityinstances(poqlParser.ActivityinstancesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFilter(poqlParser.FilterContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -129,18 +168,6 @@ public class poqlBaseListener implements poqlListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitFilter(poqlParser.FilterContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterFilter_versions(poqlParser.Filter_versionsContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFilter_versions(poqlParser.Filter_versionsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -170,37 +197,145 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx) { }
+	@Override public void enterFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFilter_expression_versions(poqlParser.Filter_expression_versionsContext ctx) { }
+	@Override public void exitFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx) { }
+	@Override public void enterId_att(poqlParser.Id_attContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFilter_terminal_changed(poqlParser.Filter_terminal_changedContext ctx) { }
+	@Override public void exitId_att(poqlParser.Id_attContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterId(poqlParser.IdContext ctx) { }
+	@Override public void enterIds(poqlParser.IdsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitId(poqlParser.IdContext ctx) { }
+	@Override public void exitIds(poqlParser.IdsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_version(poqlParser.Id_versionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_version(poqlParser.Id_versionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_object(poqlParser.Id_objectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_object(poqlParser.Id_objectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_class(poqlParser.Id_classContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_class(poqlParser.Id_classContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_relationship(poqlParser.Id_relationshipContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_relationship(poqlParser.Id_relationshipContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_relation(poqlParser.Id_relationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_relation(poqlParser.Id_relationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_event(poqlParser.Id_eventContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_event(poqlParser.Id_eventContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_case(poqlParser.Id_caseContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_case(poqlParser.Id_caseContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_activity_instance(poqlParser.Id_activity_instanceContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_activity_instance(poqlParser.Id_activity_instanceContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterId_activity(poqlParser.Id_activityContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_activity(poqlParser.Id_activityContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -273,6 +408,42 @@ public class poqlBaseListener implements poqlListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitAllActivities(poqlParser.AllActivitiesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAllRelations(poqlParser.AllRelationsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAllRelations(poqlParser.AllRelationsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAllRelationships(poqlParser.AllRelationshipsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAllRelationships(poqlParser.AllRelationshipsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAllActivityInstances(poqlParser.AllActivityInstancesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAllActivityInstances(poqlParser.AllActivityInstancesContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
