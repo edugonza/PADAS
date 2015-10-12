@@ -21,6 +21,7 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.redologs.ui.components.Autocomplete;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.DiagramComponent;
 import org.processmining.redologs.ui.components.NodeSelectionHandler;
@@ -48,6 +49,8 @@ import javax.swing.JButton;
 import javax.swing.BoxLayout;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 
@@ -397,9 +400,28 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		panel.add(scrollPane, BorderLayout.CENTER);
 		
-		final JTextArea textArea = new JTextArea();
-		textArea.setRows(5);
-		scrollPane.setViewportView(textArea);
+		final JTextField textQueryField = new JTextField();
+		/**/
+		final String COMMIT_ACTION = "commit";
+
+		// Without this, cursor always leaves text field
+		textQueryField.setFocusTraversalKeysEnabled(false);
+		
+		// Our words to complete
+		ArrayList<String>keywords = new ArrayList<String>(5);
+		        keywords.add("allEvents");
+		        keywords.add("allObjects");
+		        keywords.add("where");
+		        keywords.add("id");
+		Autocomplete autoComplete = new Autocomplete(textQueryField, keywords);
+		textQueryField.getDocument().addDocumentListener(autoComplete);
+
+		// Maps the tab key to the commit action, which finishes the autocomplete
+		// when given a suggestion
+		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMMIT_ACTION);
+		textQueryField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
+		/**/
+		scrollPane.setViewportView(textQueryField);
 		
 		JButton btnExecuteQuery = new JButton("Execute Query");
 		btnExecuteQuery.addActionListener(new ActionListener() {
@@ -408,7 +430,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					
 					@Override
 					public void run() {
-						String query = textArea.getText();
+						String query = textQueryField.getText();
 						POQLRunner runner = new POQLRunner();
 						QueryResult qr = runner.executeQuery(FrameMetaModelInspect.this.mmstrg, query);
 						
