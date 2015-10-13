@@ -90,7 +90,7 @@ classes returns [List<Object> list, Class type]: CLASSESOF OPEN_PARENTHESIS t1=t
 	
 versions returns [List<Object> list, Class type]: VERSIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.versionsOf($t1.list,$t1.type); $type=SLEXMMObjectVersion.class;}
 	| t2=allVersions{ $list = $t2.list; $type = $t2.type; }
-	| VERSIONS_RELATED_TO OPEN_PARENTHESIS t4=versions CLOSE_PARENTHESIS { $list = poql.versionsRelatedTo($t4.list,$t4.type); $type=SLEXMMObjectVersion.class; }
+	| VERSIONSRELATEDTO OPEN_PARENTHESIS t4=versions CLOSE_PARENTHESIS { $list = poql.versionsRelatedTo($t4.list,$t4.type); $type=SLEXMMObjectVersion.class; }
 	| t3=versions f=filter[ID_TYPE_VERSION] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
@@ -127,8 +127,6 @@ filter_expression [int type_id] returns [FilterTree tree]:
 			$tree = poql.createTerminalFilter($ids.id,$ids.name,$operator.value,$operator.operator_id,$ids.att);
 		}
 	}
-
-//	| {$type_id == ID_TYPE_VERSION}? IDATT CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($IDATT.text,$f13.text,$f14.text); }
 	;
 
 node returns [int node_id]:
@@ -145,23 +143,6 @@ operator [int type_id, boolean att] returns [int operator_id, String value, Stri
 	| SMALLER STRING {$operator_id = FilterTree.OPERATOR_SMALLER_THAN; $value = $STRING.text; }
 	| CONTAINS STRING {$operator_id = FilterTree.OPERATOR_CONTAINS; $value = $STRING.text; }
 	| {$type_id == ID_TYPE_VERSION && $att}? CHANGED (FROM f13=STRING)? (TO f14=STRING)? {$operator_id = FilterTree.OPERATOR_CHANGED; $valueFrom = $f13.text; $valueTo = $f14.text;}
-	;
-
-//filter_terminal [int type_id] returns [FilterTree tree]:
-//	  f5=ids[$type_id] EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.id,$f5.name,$STRING.text,$f5.att); }
-//	| f6=ids[$type_id] DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.id,$f6.name,$STRING.text,$f6.att); }
-//	| f7=ids[$type_id] EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.id,$f7.name,$STRING.text,$f7.att); }
-//	| f8=ids[$type_id] EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.id,$f8.name,$STRING.text,$f8.att); }
-//	| f9=ids[$type_id] GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.id,$f9.name,$STRING.text,$f9.att); }
-//	| f10=ids[$type_id] SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.id,$f10.name,$STRING.text,$f10.att); }
-//	| f11=ids[$type_id] CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.id,$f11.name,$STRING.text,$f11.att); }
-//	;
-
-//filter_terminal_versions_changed [int type_id] returns [FilterTree tree]: 
-//	  {$type_id == ID_TYPE_VERSION}? f12=id_att CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
-//	; 
-
-id_att returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
 	;
 	
 ids [int type_id] returns [String name, boolean att, int id]:
@@ -254,7 +235,7 @@ EVENTSOF: E V E N T S O F ;
 CLASSESOF: C L A S S E S O F ;
 VERSIONSOF: V E R S I O N S O F ;
 ACTIVITIESOF: A C T I V I T I E S O F ;
-VERSIONS_RELATED_TO: V E R S I O N S R E L A T E D T O ;
+VERSIONSRELATEDTO: V E R S I O N S R E L A T E D T O ;
 RELATIONSOF: R E L A T I O N S O F ;
 RELATIONSHIPSOF: R E L A T I O N S H I P S O F ;
 ACTIVITYINSTANCESOF: A C T I V I T Y I N S T A N C E S O F ;

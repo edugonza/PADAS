@@ -172,16 +172,6 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitOperator(poqlParser.OperatorContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#id_att}.
-	 * @param ctx the parse tree
-	 */
-	void enterId_att(poqlParser.Id_attContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link poqlParser#id_att}.
-	 * @param ctx the parse tree
-	 */
-	void exitId_att(poqlParser.Id_attContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link poqlParser#ids}.
 	 * @param ctx the parse tree
 	 */

@@ -210,18 +210,6 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterId_att(poqlParser.Id_attContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitId_att(poqlParser.Id_attContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterIds(poqlParser.IdsContext ctx) { }
 	/**
 	 * {@inheritDoc}

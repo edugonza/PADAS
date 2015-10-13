@@ -30,34 +30,36 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
+import org.processmining.openslex.metamodel.SLEXMMRelationship;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.ui.components.Autocomplete;
 
 public class POQLFunctions {
-	
+
 	private SLEXMMStorageMetaModel slxmm = null;
 	private boolean checkerMode = false;
 	private List<String> suggestions = null;
 	private Token offendingToken = null;
 	private Vocabulary vocabulary = null;
-	
+
 	public void setCheckerMode(boolean mode) {
 		this.checkerMode = mode;
 	}
-	
+
 	public boolean isCheckerModeEnabled() {
 		return this.checkerMode;
 	}
-	
+
 	public void setMetaModel(SLEXMMStorageMetaModel strg) {
 		this.slxmm = strg;
 	}
-	
-	public List<Object> filterTerminal(List<Object> list, Class type, FilterTree condition) {
+
+	public List<Object> filterTerminal(List<Object> list, Class type,
+			FilterTree condition) {
 		List<Object> filteredList = new ArrayList<>();
-		
+
 		if (type == SLEXMMObject.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMObject ob = (SLEXMMObject) o;
 				String v = null;
 				if (condition.isAttribute()) {
@@ -66,182 +68,310 @@ public class POQLFunctions {
 					return list;
 				} else if (condition.getKeyId() == (poqlParser.CLASS_ID)) {
 					v = String.valueOf(ob.getClassId());
-				} else if (condition.getKey().equals(poqlParser.ID)) {
+				} else if (condition.getKeyId() == poqlParser.ID) {
 					v = String.valueOf(ob.getId());
 				} else {
 					// ERROR
 					System.err.println("Unknown key");
 					return list;
 				}
-				
-				if (filterOperation(v,condition.value,condition.operator)) {
+
+				if (filterOperation(v, condition.value, condition.operator)) {
 					filteredList.add(o);
 				}
-				
+
 			}
-		} else if (type == SLEXMMObjectVersion.class) {			
-			for (Object o: list) {
+		} else if (type == SLEXMMObjectVersion.class) {
+			for (Object o : list) {
 				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
 				String v = null;
 				SLEXMMAttribute slxAtt = null;
 				if (condition.isAttribute()) {
-					HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attsMap = ob.getAttributeValues();
+					HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attsMap = ob
+							.getAttributeValues();
 					slxAtt = null;
-					
-					for (SLEXMMAttribute at: attsMap.keySet()) {
+
+					for (SLEXMMAttribute at : attsMap.keySet()) {
 						if (at.getName().equals(condition.getKey())) {
 							slxAtt = at;
 							break;
 						}
 					}
-					
+
 					if (slxAtt != null) {
 						SLEXMMAttributeValue slxAttVal = attsMap.get(slxAtt);
 						if (slxAttVal != null) {
 							v = slxAttVal.getValue();
 						}
 					}
-					
-				} else if (condition.getKey().equals("objectid")) {
-					v = String.valueOf(ob.getObjectId());
-				} else if (condition.getKey().equals("id")) {
+
+				} else if (condition.getKeyId() == poqlParser.ID) {
 					v = String.valueOf(ob.getId());
-//				} else if (condition.getKey().equals("eventid")) {
-//					v = String.valueOf(ob.getEventId());
-				} else if (condition.getKey().equals("start_timestamp")) {
+				} else if (condition.getKeyId() == poqlParser.OBJECT_ID) {
+					v = String.valueOf(ob.getObjectId());
+				} else if (condition.getKeyId() == poqlParser.START_TIMESTAMP) {
 					v = String.valueOf(ob.getStartTimestamp());
-				} else if (condition.getKey().equals("end_timestamp")) {
+				} else if (condition.getKeyId() == poqlParser.END_TIMESTAMP) {
 					v = String.valueOf(ob.getEndTimestamp());
 				} else {
 					// ERROR
 					System.err.println("Unknown key");
 					return list;
 				}
-				
+
 				if (condition.isChanged()) {
 					if (slxAtt != null) {
-						if (filterChangedOperation(ob,slxAtt,v,condition.valueFrom,condition.valueTo)) {
+						if (filterChangedOperation(ob, slxAtt, v,
+								condition.valueFrom, condition.valueTo)) {
 							filteredList.add(o);
 						}
 					}
-				} else if (v != null && filterOperation(v,condition.value,condition.operator)) {
+				} else if (v != null
+						&& filterOperation(v, condition.value,
+								condition.operator)) {
 					filteredList.add(o);
 				}
-				
+
 			}
 		} else if (type == SLEXMMCase.class) {
-			// TODO
+			for (Object o : list) {
+				SLEXMMCase ob = (SLEXMMCase) o;
+				String v = null;
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Case");
+					return list;
+				} else if (condition.getKeyId() == (poqlParser.NAME)) {
+					v = String.valueOf(ob.getName());
+				} else if (condition.getKeyId() == poqlParser.ID) {
+					v = String.valueOf(ob.getId());
+				} else {
+					// ERROR
+					System.err.println("Unknown key");
+					return list;
+				}
+
+				if (filterOperation(v, condition.value, condition.operator)) {
+					filteredList.add(o);
+				}
+
+			}
 		} else if (type == SLEXMMEvent.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMEvent ob = (SLEXMMEvent) o;
 				String v = null;
 				if (condition.isAttribute()) {
-					HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attsMap = ob.getAttributeValues();
+					HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attsMap = ob
+							.getAttributeValues();
 					SLEXMMEventAttribute slxAtt = null;
-					
-					for (SLEXMMEventAttribute at: attsMap.keySet()) {
+
+					for (SLEXMMEventAttribute at : attsMap.keySet()) {
 						if (at.getName().equals(condition.getKey())) {
 							slxAtt = at;
 							break;
 						}
 					}
-					
+
 					if (slxAtt != null) {
-						SLEXMMEventAttributeValue slxAttVal = attsMap.get(slxAtt);
+						SLEXMMEventAttributeValue slxAttVal = attsMap
+								.get(slxAtt);
 						if (slxAttVal != null) {
 							v = slxAttVal.getValue();
 						}
 					}
-					
-				} else if (condition.getKey().equals("activity_instance_id")) {
-					v = String.valueOf(ob.getActivityInstanceId());
-				} else if (condition.getKey().equals("id")) {
+
+				} else if (condition.getKeyId() == poqlParser.ID) {
 					v = String.valueOf(ob.getId());
-				} else if (condition.getKey().equals("ordering")) {
+				} else if (condition.getKeyId() == poqlParser.ACTIVITY_INSTANCE_ID) {
+					v = String.valueOf(ob.getActivityInstanceId());
+				} else if (condition.getKeyId() == poqlParser.ORDERING) {
 					v = String.valueOf(ob.getOrder());
-				} else if (condition.getKey().equals("timestamp")) {
+				} else if (condition.getKeyId() == poqlParser.TIMESTAMP) {
 					v = String.valueOf(ob.getTimestamp());
-				} else if (condition.getKey().equals("lifecycle")) {
+				} else if (condition.getKeyId() == poqlParser.LIFECYCLE) {
 					v = String.valueOf(ob.getLifecycle());
-				} else if (condition.getKey().equals("resource")) {
+				} else if (condition.getKeyId() == poqlParser.RESOURCE) {
 					v = String.valueOf(ob.getResource());
 				} else {
 					// ERROR
 					System.err.println("Unknown key");
 					return list;
 				}
-				
-				if (v != null && filterOperation(v,condition.value,condition.operator)) {
+
+				if (v != null
+						&& filterOperation(v, condition.value,
+								condition.operator)) {
 					filteredList.add(o);
 				}
-				
+
 			}
 		} else if (type == SLEXMMClass.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMClass ob = (SLEXMMClass) o;
 				String v = null;
 				if (condition.isAttribute()) {
-					// ERROR
-					System.err.println("No attributes for type Class");
-					return list;
-				} else if (condition.getKey().equals("name")) {
-					v = String.valueOf(ob.getName());
-				} else if (condition.getKey().equals("id")) {
+					// TODO
+//					List<SLEXMMAttribute> attsList = ob
+//							.getAttributes();
+//					SLEXMMAttribute slxAtt = null;
+//
+//					for (SLEXMMAttribute at : attsList) {
+//						if (at.getName().equals(condition.getKey())) {
+//							slxAtt = at;
+//							break;
+//						}
+//					}
+//
+//					if (slxAtt != null) {
+//						SLEXMMEventAttributeValue slxAttVal = attsList
+//								.get(slxAtt);
+//						if (slxAttVal != null) {
+//							v = slxAttVal.getValue();
+//						}
+//					}
+
+				} else if (condition.getKeyId() == poqlParser.ID) {
 					v = String.valueOf(ob.getId());
-				} else if (condition.getKey().equals("datamodel_id")) {
+				} else if (condition.getKeyId() == poqlParser.DATAMODEL_ID) {
 					v = String.valueOf(ob.getDataModelId());
+				} else if (condition.getKeyId() == poqlParser.NAME) {
+					v = String.valueOf(ob.getName());
 				} else {
 					// ERROR
 					System.err.println("Unknown key");
 					return list;
 				}
-				
-				if (filterOperation(v,condition.value,condition.operator)) {
+
+				if (v != null
+						&& filterOperation(v, condition.value,
+								condition.operator)) {
 					filteredList.add(o);
 				}
-				
+
 			}
 		} else if (type == SLEXMMActivity.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMActivity ob = (SLEXMMActivity) o;
 				String v = null;
 				if (condition.isAttribute()) {
 					// ERROR
 					System.err.println("No attributes for type Activity");
 					return list;
-				} else if (condition.getKey().equals("name")) {
-					v = String.valueOf(ob.getName());
-				} else if (condition.getKey().equals("id")) {
+				} else if (condition.getKeyId() == poqlParser.ID) {
 					v = String.valueOf(ob.getId());
-				} else if (condition.getKey().equals("processid")) {
+				} else if (condition.getKeyId() == poqlParser.PROCESS_ID) {
 					v = String.valueOf(ob.getProcessId());
+				} else if (condition.getKeyId() == poqlParser.NAME) {
+					v = String.valueOf(ob.getName());
 				} else {
 					// ERROR
 					System.err.println("Unknown key");
 					return list;
 				}
-				
-				if (filterOperation(v,condition.value,condition.operator)) {
+
+				if (filterOperation(v, condition.value, condition.operator)) {
 					filteredList.add(o);
 				}
-				
+
+			}
+		} else if (type == SLEXMMActivityInstance.class) {
+			for (Object o : list) {
+				SLEXMMActivityInstance ob = (SLEXMMActivityInstance) o;
+				String v = null;
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Activity Instance");
+					return list;
+				} else if (condition.getKeyId() == poqlParser.ID) {
+					v = String.valueOf(ob.getId());
+				} else if (condition.getKeyId() == poqlParser.ACTIVITY_ID) {
+					v = String.valueOf(ob.getActivityId());
+				} else {
+					// ERROR
+					System.err.println("Unknown key");
+					return list;
+				}
+
+				if (filterOperation(v, condition.value, condition.operator)) {
+					filteredList.add(o);
+				}
+
+			}
+		} else if (type == SLEXMMRelation.class) {
+			for (Object o : list) {
+				SLEXMMRelation ob = (SLEXMMRelation) o;
+				String v = null;
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Relation");
+					return list;
+				} else if (condition.getKeyId() == poqlParser.ID) {
+					v = String.valueOf(ob.getId());
+				} else if (condition.getKeyId() == poqlParser.SOURCE_OBJECT_VERSION_ID) {
+					v = String.valueOf(ob.getSourceObjectVersionId());
+				} else if (condition.getKeyId() == poqlParser.TARGET_OBJECT_VERSION_ID) {
+					v = String.valueOf(ob.getTargetObjectVersionId());
+				} else if (condition.getKeyId() == poqlParser.RELATIONSHIP_ID) {
+					v = String.valueOf(ob.getRelationshipId());
+				} else if (condition.getKeyId() == poqlParser.START_TIMESTAMP) {
+					v = String.valueOf(ob.getStartTimestamp());
+				} else if (condition.getKeyId() == poqlParser.END_TIMESTAMP) {
+					v = String.valueOf(ob.getEndTimestamp());
+				} else {
+					// ERROR
+					System.err.println("Unknown key");
+					return list;
+				}
+
+				if (filterOperation(v, condition.value, condition.operator)) {
+					filteredList.add(o);
+				}
+
+			}
+		} else if (type == SLEXMMRelationship.class) {
+			for (Object o : list) {
+				SLEXMMRelationship ob = (SLEXMMRelationship) o;
+				String v = null;
+				if (condition.isAttribute()) {
+					// ERROR
+					System.err.println("No attributes for type Relationship");
+					return list;
+				} else if (condition.getKeyId() == poqlParser.ID) {
+					v = String.valueOf(ob.getId());
+				} else if (condition.getKeyId() == poqlParser.SOURCE) {
+					v = String.valueOf(ob.getSourceClassId());
+				} else if (condition.getKeyId() == poqlParser.TARGET) {
+					v = String.valueOf(ob.getTargetClassId());
+				} else if (condition.getKeyId() == poqlParser.NAME) {
+					v = String.valueOf(ob.getName());
+				} else {
+					// ERROR
+					System.err.println("Unknown key");
+					return list;
+				}
+
+				if (filterOperation(v, condition.value, condition.operator)) {
+					filteredList.add(o);
+				}
+
 			}
 		} else {
 			// ERROR
 			System.err.println("Unknown type");
 			return list;
 		}
-		
+
 		return filteredList;
 	}
-	
-	public boolean filterChangedOperation(SLEXMMObjectVersion ov, SLEXMMAttribute slxAtt,
-			String v, String valueFrom, String valueTo) {
-		
-		SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersionsForObjectOrdered(ov.getObjectId());
+
+	public boolean filterChangedOperation(SLEXMMObjectVersion ov,
+			SLEXMMAttribute slxAtt, String v, String valueFrom, String valueTo) {
+
+		SLEXMMObjectVersionResultSet ovrset = slxmm
+				.getObjectVersionsForObjectOrdered(ov.getObjectId());
 		SLEXMMObjectVersion ova = null;
 		SLEXMMObjectVersion ovb = null;
-		
+
 		while ((ovb = ovrset.getNext()) != null) {
 			if (ovb.getId() == ov.getId()) {
 				break;
@@ -249,7 +379,7 @@ public class POQLFunctions {
 				ova = ovb;
 			}
 		}
-		
+
 		if (ova != null) {
 			SLEXMMAttributeValue prevAtV = ova.getAttributeValues().get(slxAtt);
 			String prevV = prevAtV.getValue();
@@ -266,14 +396,15 @@ public class POQLFunctions {
 			if (prevV.equals(v)) {
 				return false;
 			}
-		} else { 
-			// ov was already the first Object Version for this object. We cannot decide what changed.
+		} else {
+			// ov was already the first Object Version for this object. We
+			// cannot decide what changed.
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	public boolean filterOperation(String a, String b, int op) {
 		switch (op) {
 		case FilterTree.OPERATOR_CONTAINS:
@@ -294,34 +425,40 @@ public class POQLFunctions {
 			return false;
 		}
 	}
-	
-	public List<Object> filter(List<Object> list, Class type, FilterTree conditions) {
+
+	public List<Object> filter(List<Object> list, Class type,
+			FilterTree conditions) {
 		List<Object> filteredList = new ArrayList<>();
-		
+
 		if (conditions.isTerminal()) {
 			// Filter terminal
-			return filterTerminal(list,type,conditions);
+			return filterTerminal(list, type, conditions);
 		} else if (conditions.isNot()) {
 			// Filter NOT
-			for (Object o: list) {
-				if (filter(Arrays.asList(o),type,conditions.leftChild).isEmpty()) {
+			for (Object o : list) {
+				if (filter(Arrays.asList(o), type, conditions.leftChild)
+						.isEmpty()) {
 					filteredList.add(o);
 				}
 			}
 		} else if (conditions.isAnd()) {
 			// Filter AND
-			for (Object o: list) {
-				if (!filter(Arrays.asList(o),type,conditions.leftChild).isEmpty()) {
-					if (!filter(Arrays.asList(o),type,conditions.rightChild).isEmpty()) {
+			for (Object o : list) {
+				if (!filter(Arrays.asList(o), type, conditions.leftChild)
+						.isEmpty()) {
+					if (!filter(Arrays.asList(o), type, conditions.rightChild)
+							.isEmpty()) {
 						filteredList.add(o);
 					}
 				}
 			}
 		} else if (conditions.isOr()) {
 			// Filter OR
-			for (Object o: list) {
-				if (filter(Arrays.asList(o),type,conditions.leftChild).isEmpty()) {
-					if (!filter(Arrays.asList(o),type,conditions.rightChild).isEmpty()) {
+			for (Object o : list) {
+				if (filter(Arrays.asList(o), type, conditions.leftChild)
+						.isEmpty()) {
+					if (!filter(Arrays.asList(o), type, conditions.rightChild)
+							.isEmpty()) {
 						filteredList.add(o);
 					}
 				} else {
@@ -333,17 +470,17 @@ public class POQLFunctions {
 			System.err.println("Unknown Filter node");
 			return list;
 		}
-		
+
 		return filteredList;
 	}
-	
+
 	public FilterTree createNotNode(FilterTree tree) {
 		FilterTree notNode = new FilterTree();
 		notNode.node = FilterTree.NODE_NOT;
 		notNode.leftChild = tree;
 		return notNode;
 	}
-	
+
 	public FilterTree createNode(FilterTree left, FilterTree right, int operator) {
 		if (operator == FilterTree.NODE_AND) {
 			return createAndNode(left, right);
@@ -357,7 +494,7 @@ public class POQLFunctions {
 			return null;
 		}
 	}
-	
+
 	public FilterTree createAndNode(FilterTree left, FilterTree right) {
 		FilterTree andNode = new FilterTree();
 		andNode.node = FilterTree.NODE_AND;
@@ -365,7 +502,7 @@ public class POQLFunctions {
 		andNode.rightChild = right;
 		return andNode;
 	}
-	
+
 	public FilterTree createOrNode(FilterTree left, FilterTree right) {
 		FilterTree orNode = new FilterTree();
 		orNode.node = FilterTree.NODE_OR;
@@ -373,8 +510,9 @@ public class POQLFunctions {
 		orNode.rightChild = right;
 		return orNode;
 	}
-	
-	public FilterTree createChangedTerminalFilter(String key, String from, String to) {
+
+	public FilterTree createChangedTerminalFilter(String key, String from,
+			String to) {
 		FilterTree node = new FilterTree();
 		node.node = FilterTree.NODE_TERMINAL;
 		node.operator = FilterTree.OPERATOR_CHANGED;
@@ -384,8 +522,9 @@ public class POQLFunctions {
 		node.att = true;
 		return node;
 	}
-	
-	public FilterTree createTerminalFilter(int id, String key, String value, int operator, boolean att) {
+
+	public FilterTree createTerminalFilter(int id, String key, String value,
+			int operator, boolean att) {
 		FilterTree node = new FilterTree();
 		node.node = FilterTree.NODE_TERMINAL;
 		node.operator = operator;
@@ -394,17 +533,17 @@ public class POQLFunctions {
 		node.value = value;
 		node.att = att;
 		return node;
-	}	
-	
+	}
+
 	public List<Object> objectsOf(List<Object> list, Class type) {
 		ArrayList<Object> listResult = new ArrayList<>();
-		
+
 		if (type == SLEXMMActivity.class) {
 			// TODO
 		} else if (type == SLEXMMEvent.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMEvent ob = (SLEXMMEvent) o;
-				
+
 				SLEXMMObjectResultSet orset = slxmm.getObjectsForEvent(ob);
 				SLEXMMObject slxo = null;
 				while ((slxo = orset.getNext()) != null) {
@@ -412,8 +551,8 @@ public class POQLFunctions {
 				}
 			}
 		} else if (type == SLEXMMObjectVersion.class) {
-			HashMap<Integer,SLEXMMObject> mapObjects = new HashMap<>();
-			for (Object o: list) {
+			HashMap<Integer, SLEXMMObject> mapObjects = new HashMap<>();
+			for (Object o : list) {
 				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
 				if (!mapObjects.containsKey(ob.getObjectId())) {
 					SLEXMMObject obj = slxmm.getObjectPerId(ob.getObjectId());
@@ -422,18 +561,19 @@ public class POQLFunctions {
 					}
 				}
 			}
-			
+
 			listResult.addAll(mapObjects.values());
-			
+
 		} else if (type == SLEXMMCase.class) {
 			// TODO
 		} else if (type == SLEXMMClass.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMClass c = (SLEXMMClass) o;
-				
-				SLEXMMObjectResultSet orset = slxmm.getObjectsPerClass(c.getId());
+
+				SLEXMMObjectResultSet orset = slxmm.getObjectsPerClass(c
+						.getId());
 				SLEXMMObject ob = null;
-				
+
 				while ((ob = orset.getNext()) != null) {
 					listResult.add(ob);
 				}
@@ -444,22 +584,22 @@ public class POQLFunctions {
 			// ERROR
 			System.err.println("Unknown type");
 		}
-		
+
 		return listResult;
 	}
-	
+
 	public List<Object> casesOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> eventsOf(List<Object> list, Class type) {
 		ArrayList<Object> listResult = new ArrayList<>();
-		
+
 		if (type == SLEXMMActivity.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMActivity ob = (SLEXMMActivity) o;
-				
+
 				SLEXMMEventResultSet erset = slxmm.getEventsForActivity(ob);
 				SLEXMMEvent e = null;
 				while ((e = erset.getNext()) != null) {
@@ -469,12 +609,13 @@ public class POQLFunctions {
 		} else if (type == SLEXMMObject.class) {
 			// TODO
 		} else if (type == SLEXMMObjectVersion.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMObjectVersion ov = (SLEXMMObjectVersion) o;
-				
-				SLEXMMEventResultSet erset = slxmm.getEventsForObjectVersion(ov.getId());
+
+				SLEXMMEventResultSet erset = slxmm.getEventsForObjectVersion(ov
+						.getId());
 				SLEXMMEvent ev = null;
-				
+
 				while ((ev = erset.getNext()) != null) {
 					listResult.add(ev);
 				}
@@ -487,28 +628,30 @@ public class POQLFunctions {
 			// ERROR
 			System.err.println("Unknown type");
 		}
-		
+
 		return listResult;
 	}
 
 	public List<Object> versionsOf(List<Object> list, Class type) {
 		ArrayList<Object> listResult = new ArrayList<>();
-		
+
 		if (type == SLEXMMActivity.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMActivity ob = (SLEXMMActivity) o;
-				
-				SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersionsForActivity(ob);
+
+				SLEXMMObjectVersionResultSet ovrset = slxmm
+						.getObjectVersionsForActivity(ob);
 				SLEXMMObjectVersion ov = null;
 				while ((ov = ovrset.getNext()) != null) {
 					listResult.add(ov);
 				}
 			}
 		} else if (type == SLEXMMObject.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMObject ob = (SLEXMMObject) o;
-				
-				SLEXMMObjectVersionResultSet ovrset = slxmm.getObjectVersionsForObjectOrdered(ob);
+
+				SLEXMMObjectVersionResultSet ovrset = slxmm
+						.getObjectVersionsForObjectOrdered(ob);
 				SLEXMMObjectVersion ov = null;
 				while ((ov = ovrset.getNext()) != null) {
 					listResult.add(ov);
@@ -522,47 +665,48 @@ public class POQLFunctions {
 			// ERROR
 			System.err.println("Unknown type");
 		}
-		
+
 		return listResult;
 	}
-	
+
 	public List<Object> activitiesOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> classesOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> relationsOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> relationshipsOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> activityInstancesOf(List<Object> list, Class type) {
 		// TODO
 		return null;
 	}
-	
+
 	public List<Object> versionsRelatedTo(List<Object> list, Class type) {
 		HashSet<SLEXMMObjectVersion> setResult = new HashSet<>();
 		List<Object> listResult = new ArrayList<>();
-		
+
 		if (type == SLEXMMObjectVersion.class) {
-			for (Object o: list) {
+			for (Object o : list) {
 				SLEXMMObjectVersion ob = (SLEXMMObjectVersion) o;
-				
-				SLEXMMObjectVersionResultSet ovrset = slxmm.getVersionsRelatedToObjectVersion(ob);
-				
+
+				SLEXMMObjectVersionResultSet ovrset = slxmm
+						.getVersionsRelatedToObjectVersion(ob);
+
 				SLEXMMObjectVersion ov = null;
-				
+
 				while ((ov = ovrset.getNext()) != null) {
 					setResult.add(ov);
 				}
@@ -571,12 +715,12 @@ public class POQLFunctions {
 			// ERROR
 			System.err.println("Unknown type");
 		}
-		
+
 		listResult.addAll(setResult);
-		
+
 		return listResult;
 	}
-	
+
 	public List<Object> getAllObjects() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -588,7 +732,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllCases() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -600,7 +744,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllEvents() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -612,7 +756,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllVersions() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -624,7 +768,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllActivities() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -632,7 +776,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllClasses() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -648,7 +792,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllRelations() {
 		ArrayList<Object> list = new ArrayList<>();
 		SLEXMMRelationResultSet rrset = slxmm.getRelations();
@@ -660,7 +804,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllRelationships() {
 		ArrayList<Object> list = new ArrayList<>();
 		if (!isCheckerModeEnabled()) {
@@ -668,7 +812,7 @@ public class POQLFunctions {
 		}
 		return list;
 	}
-	
+
 	public List<Object> getAllActivityInstances() {
 		ArrayList<Object> list = new ArrayList<>();
 		SLEXMMActivityInstanceResultSet airset = slxmm.getActivityInstances();
@@ -683,37 +827,37 @@ public class POQLFunctions {
 
 	public void computeSuggestions(Token offendingToken, Set<Integer> set) {
 		List<String> suggestions = new ArrayList<>();
-		for (Integer i: set) {
+		for (Integer i : set) {
 			if (i >= 0) {
 				String name = vocabulary.getLiteralName(i);
 				if (name == null) {
 					name = vocabulary.getSymbolicName(i);
 				} else {
-					name = name.substring(1, name.length()-1);
+					name = name.substring(1, name.length() - 1);
 				}
 				if (i == poqlParser.STRING) {
 					name = "\"\"";
 				} else if (i == poqlParser.IDATT) {
 					name = "at.";
 				}
-	  			suggestions.add(name);
+				suggestions.add(name);
 			}
-	  	}
-		
+		}
+
 		System.out.println(suggestions);
 		this.suggestions = suggestions;
-		this.offendingToken  = offendingToken;
+		this.offendingToken = offendingToken;
 	}
-	
+
 	public List<String> getSuggestions() {
 		return this.suggestions;
 	}
-	
+
 	public Token getOffendingToken() {
 		return this.offendingToken;
 	}
 
 	public void setVocabulary(Vocabulary vocabulary) {
-		this.vocabulary  = vocabulary;
+		this.vocabulary = vocabulary;
 	}
 }
