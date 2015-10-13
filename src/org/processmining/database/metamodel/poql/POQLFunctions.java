@@ -5,7 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Vocabulary;
 import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
 import org.processmining.openslex.metamodel.SLEXMMActivityInstanceResultSet;
@@ -28,11 +31,15 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.redologs.ui.components.Autocomplete;
 
 public class POQLFunctions {
 	
 	private SLEXMMStorageMetaModel slxmm = null;
 	private boolean checkerMode = false;
+	private List<String> suggestions = null;
+	private Token offendingToken = null;
+	private Vocabulary vocabulary = null;
 	
 	public void setCheckerMode(boolean mode) {
 		this.checkerMode = mode;
@@ -59,7 +66,7 @@ public class POQLFunctions {
 					return list;
 				} else if (condition.getKeyId() == (poqlParser.CLASS_ID)) {
 					v = String.valueOf(ob.getClassId());
-				} else if (condition.getKey().equals("id")) {
+				} else if (condition.getKey().equals(poqlParser.ID)) {
 					v = String.valueOf(ob.getId());
 				} else {
 					// ERROR
@@ -337,6 +344,20 @@ public class POQLFunctions {
 		return notNode;
 	}
 	
+	public FilterTree createNode(FilterTree left, FilterTree right, int operator) {
+		if (operator == FilterTree.NODE_AND) {
+			return createAndNode(left, right);
+		} else if (operator == FilterTree.NODE_OR) {
+			return createOrNode(left, right);
+		} else if (operator == FilterTree.NODE_NOT) {
+			return createNotNode(left);
+		} else {
+			// ERROR
+			System.err.println("Unknown Node Type");
+			return null;
+		}
+	}
+	
 	public FilterTree createAndNode(FilterTree left, FilterTree right) {
 		FilterTree andNode = new FilterTree();
 		andNode.node = FilterTree.NODE_AND;
@@ -351,34 +372,6 @@ public class POQLFunctions {
 		orNode.leftChild = left;
 		orNode.rightChild = right;
 		return orNode;
-	}
-	
-	public FilterTree createEqualTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL,att);
-	}
-	
-	public FilterTree createDifferentTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_DIFFERENT,att);
-	}
-	
-	public FilterTree createEqualOrGreaterTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN,att);
-	}
-	
-	public FilterTree createEqualOrSmallerTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN,att);
-	}
-	
-	public FilterTree createGreaterTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_GREATER_THAN,att);
-	}
-	
-	public FilterTree createSmallerTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_SMALLER_THAN,att);
-	}
-	
-	public FilterTree createContainsTerminalFilter(int id, String key, String value, boolean att) {
-		return createTerminalFilter(id,key, value, FilterTree.OPERATOR_CONTAINS,att);
 	}
 	
 	public FilterTree createChangedTerminalFilter(String key, String from, String to) {
@@ -686,5 +679,41 @@ public class POQLFunctions {
 			}
 		}
 		return list;
+	}
+
+	public void computeSuggestions(Token offendingToken, Set<Integer> set) {
+		List<String> suggestions = new ArrayList<>();
+		for (Integer i: set) {
+			if (i >= 0) {
+				String name = vocabulary.getLiteralName(i);
+				if (name == null) {
+					name = vocabulary.getSymbolicName(i);
+				} else {
+					name = name.substring(1, name.length()-1);
+				}
+				if (i == poqlParser.STRING) {
+					name = "\"\"";
+				} else if (i == poqlParser.IDATT) {
+					name = "at.";
+				}
+	  			suggestions.add(name);
+			}
+	  	}
+		
+		System.out.println(suggestions);
+		this.suggestions = suggestions;
+		this.offendingToken  = offendingToken;
+	}
+	
+	public List<String> getSuggestions() {
+		return this.suggestions;
+	}
+	
+	public Token getOffendingToken() {
+		return this.offendingToken;
+	}
+
+	public void setVocabulary(Vocabulary vocabulary) {
+		this.vocabulary  = vocabulary;
 	}
 }

@@ -2,6 +2,7 @@
 package org.processmining.database.metamodel.poql;
 
   import java.util.List;
+  import java.util.Set;
   import org.processmining.openslex.metamodel.SLEXMMCase;
   import org.processmining.openslex.metamodel.SLEXMMObject;
   import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
@@ -11,7 +12,7 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMClass;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
-  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
+  import org.processmining.openslex.metamodel.SLEXMMRelationship;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -185,25 +186,25 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFilter_terminal(poqlParser.Filter_terminalContext ctx) { }
+	@Override public void enterNode(poqlParser.NodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFilter_terminal(poqlParser.Filter_terminalContext ctx) { }
+	@Override public void exitNode(poqlParser.NodeContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx) { }
+	@Override public void enterOperator(poqlParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx) { }
+	@Override public void exitOperator(poqlParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

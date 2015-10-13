@@ -4,6 +4,7 @@ grammar poql;
 
 @header {
   import java.util.List;
+  import java.util.Set;
   import org.processmining.openslex.metamodel.SLEXMMCase;
   import org.processmining.openslex.metamodel.SLEXMMObject;
   import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
@@ -13,7 +14,7 @@ grammar poql;
   import org.processmining.openslex.metamodel.SLEXMMClass;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
-  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
+  import org.processmining.openslex.metamodel.SLEXMMRelationship;
 }
 
 @lexer::members 
@@ -38,10 +39,15 @@ grammar poql;
   public static final int ID_TYPE_RELATIONSHIP = 7;
   public static final int ID_TYPE_ACTIVITY_INSTANCE = 8;
   public static final int ID_TYPE_CASE = 9;
-
+  
   @Override
   public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException ex)
   {
+  	//IntervalSet expectedTokens = getExpectedTokensWithinCurrentRule();
+  	IntervalSet expectedTokens = getExpectedTokens();
+	Set<Integer> set = expectedTokens.toSet();
+	poql.computeSuggestions(offendingToken,set);
+	
     throw new RuntimeException(msg); 
   }
   
@@ -63,8 +69,8 @@ things returns [List<Object> list, Class type]:
 	;
  	
 objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
-	| t2=allObjects{ $list = $t2.list; $type = $t2.type; }
 	| t3=objects f=filter[ID_TYPE_OBJECT] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	| t2=allObjects{ $list = $t2.list; $type = $t2.type; }
 	;
  	
 cases returns [List<Object> list, Class type] : CASESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.casesOf($t1.list,$t1.type); $type=SLEXMMCase.class; }
@@ -113,25 +119,47 @@ filter [int type_id] returns [FilterTree conditions]: WHERE f=filter_expression[
 
 filter_expression [int type_id] returns [FilterTree tree]:
 	  NOT f0=filter_expression[$type_id] { $tree = poql.createNotNode($f0.tree); }
-	| OPEN_PARENTHESIS f1=filter_expression[$type_id] AND f2=filter_expression[$type_id] CLOSE_PARENTHESIS { $tree = poql.createAndNode($f1.tree,$f2.tree); }
-	| OPEN_PARENTHESIS f3=filter_expression[$type_id] OR f4=filter_expression[$type_id] CLOSE_PARENTHESIS { $tree = poql.createOrNode($f3.tree,$f4.tree); }
-	| f5=filter_terminal[$type_id] { $tree = $f5.tree; }
-	| f6=filter_terminal_versions_changed[$type_id] { $tree = $f6.tree; }
+	| OPEN_PARENTHESIS f1=filter_expression[$type_id] node f2=filter_expression[$type_id] CLOSE_PARENTHESIS { $tree = poql.createNode($f1.tree,$f2.tree,$node.node_id); }
+	| ids[$type_id] operator[$type_id,$ids.att] {
+		if ($operator.operator_id == FilterTree.OPERATOR_CHANGED) {
+			$tree = poql.createChangedTerminalFilter($ids.name,$operator.valueFrom,$operator.valueTo);
+		} else {
+			$tree = poql.createTerminalFilter($ids.id,$ids.name,$operator.value,$operator.operator_id,$ids.att);
+		}
+	}
+
+//	| {$type_id == ID_TYPE_VERSION}? IDATT CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($IDATT.text,$f13.text,$f14.text); }
 	;
 
-filter_terminal [int type_id] returns [FilterTree tree]:
-	  f5=ids[$type_id] EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.id,$f5.name,$STRING.text,$f5.att); }
-	| f6=ids[$type_id] DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.id,$f6.name,$STRING.text,$f6.att); }
-	| f7=ids[$type_id] EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.id,$f7.name,$STRING.text,$f7.att); }
-	| f8=ids[$type_id] EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.id,$f8.name,$STRING.text,$f8.att); }
-	| f9=ids[$type_id] GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.id,$f9.name,$STRING.text,$f9.att); }
-	| f10=ids[$type_id] SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.id,$f10.name,$STRING.text,$f10.att); }
-	| f11=ids[$type_id] CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.id,$f11.name,$STRING.text,$f11.att); }
+node returns [int node_id]:
+	  AND {$node_id = FilterTree.NODE_AND; }
+	| OR  {$node_id = FilterTree.NODE_OR; }
 	;
 
-filter_terminal_versions_changed [int type_id] returns [FilterTree tree]: 
-	  {$type_id == ID_TYPE_VERSION}? f12=id_att CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
-	; 
+operator [int type_id, boolean att] returns [int operator_id, String value, String valueFrom, String valueTo]:
+	  EQUAL STRING {$operator_id = FilterTree.OPERATOR_EQUAL; $value = $STRING.text; }
+	| DIFFERENT STRING {$operator_id = FilterTree.OPERATOR_DIFFERENT; $value = $STRING.text; }
+	| EQUAL_OR_GREATER STRING {$operator_id = FilterTree.OPERATOR_EQUAL_OR_GREATER_THAN; $value = $STRING.text; }
+	| EQUAL_OR_SMALLER STRING {$operator_id = FilterTree.OPERATOR_EQUAL_OR_SMALLER_THAN; $value = $STRING.text; }
+	| GREATER STRING {$operator_id = FilterTree.OPERATOR_GREATER_THAN; $value = $STRING.text; }
+	| SMALLER STRING {$operator_id = FilterTree.OPERATOR_SMALLER_THAN; $value = $STRING.text; }
+	| CONTAINS STRING {$operator_id = FilterTree.OPERATOR_CONTAINS; $value = $STRING.text; }
+	| {$type_id == ID_TYPE_VERSION && $att}? CHANGED (FROM f13=STRING)? (TO f14=STRING)? {$operator_id = FilterTree.OPERATOR_CHANGED; $valueFrom = $f13.text; $valueTo = $f14.text;}
+	;
+
+//filter_terminal [int type_id] returns [FilterTree tree]:
+//	  f5=ids[$type_id] EQUAL STRING { $tree = poql.createEqualTerminalFilter($f5.id,$f5.name,$STRING.text,$f5.att); }
+//	| f6=ids[$type_id] DIFFERENT STRING { $tree = poql.createDifferentTerminalFilter($f6.id,$f6.name,$STRING.text,$f6.att); }
+//	| f7=ids[$type_id] EQUAL_OR_GREATER STRING { $tree = poql.createEqualOrGreaterTerminalFilter($f7.id,$f7.name,$STRING.text,$f7.att); }
+//	| f8=ids[$type_id] EQUAL_OR_SMALLER STRING { $tree = poql.createEqualOrSmallerTerminalFilter($f8.id,$f8.name,$STRING.text,$f8.att); }
+//	| f9=ids[$type_id] GREATER STRING { $tree = poql.createGreaterTerminalFilter($f9.id,$f9.name,$STRING.text,$f9.att); }
+//	| f10=ids[$type_id] SMALLER STRING { $tree = poql.createSmallerTerminalFilter($f10.id,$f10.name,$STRING.text,$f10.att); }
+//	| f11=ids[$type_id] CONTAINS STRING { $tree = poql.createContainsTerminalFilter($f11.id,$f11.name,$STRING.text,$f11.att); }
+//	;
+
+//filter_terminal_versions_changed [int type_id] returns [FilterTree tree]: 
+//	  {$type_id == ID_TYPE_VERSION}? f12=id_att CHANGED (FROM f13=STRING)? (TO f14=STRING)? { $tree = poql.createChangedTerminalFilter($f12.name,$f13.text,$f14.text); }
+//	; 
 
 id_att returns [String name, boolean att]: IDATT {$name = $IDATT.text; $att = true;}
 	;
@@ -153,7 +181,7 @@ id_version returns [String name, boolean att, int id]:
 	| OBJECT_ID {$name = $OBJECT_ID.text; $att = false; $id = $OBJECT_ID.type;}
 	| START_TIMESTAMP {$name = $START_TIMESTAMP.text; $att = false; $id = $START_TIMESTAMP.type;}
 	| END_TIMESTAMP {$name = $END_TIMESTAMP.text; $att = false; $id = $END_TIMESTAMP.type;}
-	| i=id_att {$name = $i.name; $att = $i.att;}
+	| IDATT {$name = $IDATT.text; $att = true;}
 	;
 	
 id_object returns [String name, boolean att, int id]:
@@ -165,7 +193,7 @@ id_class returns [String name, boolean att, int id]:
 	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
 	| DATAMODEL_ID {$name = $DATAMODEL_ID.text; $att = false; $id = $DATAMODEL_ID.type;}
 	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type;}
-	| i=id_att {$name = $i.name; $att = $i.att;}
+	| IDATT {$name = $IDATT.text; $att = true;}
 	;
 	
 id_relationship returns [String name, boolean att, int id]:
@@ -191,7 +219,7 @@ id_event returns [String name, boolean att, int id]:
 	| TIMESTAMP {$name = $TIMESTAMP.text; $att = false; $id = $TIMESTAMP.type;}
 	| LIFECYCLE {$name = $LIFECYCLE.text; $att = false; $id = $LIFECYCLE.type;}
 	| RESOURCE {$name = $RESOURCE.text; $att = false; $id = $RESOURCE.type;}
-	| i=id_att {$name = $i.name; $att = $i.att;}
+	| IDATT {$name = $IDATT.text; $att = true;}
 	;
 	
 id_case returns [String name, boolean att, int id]:

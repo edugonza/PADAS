@@ -2,6 +2,7 @@
 package org.processmining.database.metamodel.poql;
 
   import java.util.List;
+  import java.util.Set;
   import org.processmining.openslex.metamodel.SLEXMMCase;
   import org.processmining.openslex.metamodel.SLEXMMObject;
   import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
@@ -11,7 +12,7 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMClass;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
-  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
+  import org.processmining.openslex.metamodel.SLEXMMRelationship;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

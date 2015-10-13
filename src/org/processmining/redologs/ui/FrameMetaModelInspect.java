@@ -22,6 +22,7 @@ import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.ui.components.Autocomplete;
+import org.processmining.redologs.ui.components.Autocomplete.CommitAction;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.DiagramComponent;
 import org.processmining.redologs.ui.components.NodeSelectionHandler;
@@ -403,23 +404,22 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		final JTextField textQueryField = new JTextField();
 		/**/
 		final String COMMIT_ACTION = "commit";
+		final String SHIFT_ACTION = "shift";
 
 		// Without this, cursor always leaves text field
 		textQueryField.setFocusTraversalKeysEnabled(false);
 		
 		// Our words to complete
-		ArrayList<String>keywords = new ArrayList<String>(5);
-		        keywords.add("allEvents");
-		        keywords.add("allObjects");
-		        keywords.add("where");
-		        keywords.add("id");
+		ArrayList<String>keywords = new ArrayList<String>();
 		Autocomplete autoComplete = new Autocomplete(textQueryField, keywords);
 		textQueryField.getDocument().addDocumentListener(autoComplete);
 
 		// Maps the tab key to the commit action, which finishes the autocomplete
 		// when given a suggestion
-		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMMIT_ACTION);
+		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), SHIFT_ACTION);
+		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
 		textQueryField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
+		textQueryField.getActionMap().put(SHIFT_ACTION, autoComplete.new ShiftAction());
 		/**/
 		scrollPane.setViewportView(textQueryField);
 		

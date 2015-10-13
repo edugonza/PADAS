@@ -2,6 +2,7 @@
 package org.processmining.database.metamodel.poql;
 
   import java.util.List;
+  import java.util.Set;
   import org.processmining.openslex.metamodel.SLEXMMCase;
   import org.processmining.openslex.metamodel.SLEXMMObject;
   import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
@@ -11,7 +12,7 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMClass;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
-  import org.processmining.openslex.metamodel.SLEXMMRelationship; 
+  import org.processmining.openslex.metamodel.SLEXMMRelationship;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -151,25 +152,25 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitFilter_expression(poqlParser.Filter_expressionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#filter_terminal}.
+	 * Enter a parse tree produced by {@link poqlParser#node}.
 	 * @param ctx the parse tree
 	 */
-	void enterFilter_terminal(poqlParser.Filter_terminalContext ctx);
+	void enterNode(poqlParser.NodeContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link poqlParser#filter_terminal}.
+	 * Exit a parse tree produced by {@link poqlParser#node}.
 	 * @param ctx the parse tree
 	 */
-	void exitFilter_terminal(poqlParser.Filter_terminalContext ctx);
+	void exitNode(poqlParser.NodeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link poqlParser#filter_terminal_versions_changed}.
+	 * Enter a parse tree produced by {@link poqlParser#operator}.
 	 * @param ctx the parse tree
 	 */
-	void enterFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx);
+	void enterOperator(poqlParser.OperatorContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link poqlParser#filter_terminal_versions_changed}.
+	 * Exit a parse tree produced by {@link poqlParser#operator}.
 	 * @param ctx the parse tree
 	 */
-	void exitFilter_terminal_versions_changed(poqlParser.Filter_terminal_versions_changedContext ctx);
+	void exitOperator(poqlParser.OperatorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link poqlParser#id_att}.
 	 * @param ctx the parse tree
