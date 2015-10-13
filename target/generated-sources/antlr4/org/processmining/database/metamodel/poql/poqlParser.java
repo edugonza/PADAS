@@ -65,8 +65,7 @@ public class poqlParser extends Parser {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, null, "'('", "')'", null, "'=='", "'<>'", "'=>'", "'=<'", 
-		"'>'", "'<'"
+		null, null, null, "'('", "')'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "CASESOF", "OBJECTSOF", "EVENTSOF", "CLASSESOF", "VERSIONSOF", "ACTIVITIESOF", 

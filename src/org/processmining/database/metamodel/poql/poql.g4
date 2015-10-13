@@ -276,12 +276,12 @@ CLOSE_PARENTHESIS: ')' ;
 
 WHERE: W H E R E ;
 
-EQUAL: '==';
-DIFFERENT: '<>';
-EQUAL_OR_GREATER: '=>';
-EQUAL_OR_SMALLER: '=<';
-GREATER: '>';
-SMALLER: '<';
+EQUAL: EQUAL_SIGN EQUAL_SIGN;
+DIFFERENT: SMALLER_SIGN GREATER_SIGN;
+EQUAL_OR_GREATER: EQUAL_SIGN GREATER_SIGN;
+EQUAL_OR_SMALLER: EQUAL_SIGN SMALLER_SIGN;
+GREATER: GREATER_SIGN;
+SMALLER: SMALLER_SIGN;
 CONTAINS: C O N T A I N S ;
 AND: A N D;
 OR: O R;
@@ -292,9 +292,13 @@ TO: T O ;
 STRING: '"' ~('\r' | '\n' | '"')* '"' { setText(getText().substring(1, getText().length() - 1)); };
 
 IDATT : 'at.'IDNOATT { setText(getText().substring(3, getText().length())); };
-IDNOATT : [a-z,0-9,_,A-Z]+ ;
+//IDNOATT : [a-z,0-9,_,A-Z]+ ;
+IDNOATT : ~('\r' | '\n' | '\t' | ' ')+ ;
 WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
 
+fragment SMALLER_SIGN:('<');
+fragment GREATER_SIGN:('>');
+fragment EQUAL_SIGN:('=');
 fragment A:('a'|'A');
 fragment B:('b'|'B');
 fragment C:('c'|'C');

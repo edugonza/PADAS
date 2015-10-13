@@ -839,6 +839,18 @@ public class POQLFunctions {
 					name = "\"\"";
 				} else if (i == poqlParser.IDATT) {
 					name = "at.";
+				} else if (i == poqlParser.EQUAL) {
+					name = "==";
+				} else if (i == poqlParser.EQUAL_OR_GREATER) {
+					name = "=>";
+				} else if (i == poqlParser.EQUAL_OR_SMALLER) {
+					name = "=<";
+				} else if (i == poqlParser.SMALLER) {
+					name = "<";
+				} else if (i == poqlParser.GREATER) {
+					name = ">";
+				} else if (i == poqlParser.DIFFERENT) {
+					name = "<>";
 				}
 				suggestions.add(name);
 			}

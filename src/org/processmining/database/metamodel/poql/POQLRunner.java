@@ -57,7 +57,10 @@ public class POQLRunner {
 			result.initOffendingToken = query.length();
 			result.endOffendingToken = query.length()-1;
 		} else {
-			//result.initOffendingToken = offendedToken.getCharPositionInLine();
+			if (offendedToken.getCharPositionInLine() != offendedToken.getStartIndex()) {
+				System.err.println("WARNING!");
+			}
+			result.initOffendingToken = offendedToken.getCharPositionInLine();
 			result.initOffendingToken = offendedToken.getStartIndex();
 			result.endOffendingToken = offendedToken.getStopIndex();
 		}

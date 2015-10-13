@@ -87,10 +87,11 @@ public class Autocomplete implements DocumentListener {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			
-			int pos = textField.getCaretPosition() - 1;
+			int pos = textField.getCaretPosition();
+			
 			String content = null;
 			try {
-				content = textField.getText(0, pos + 1);
+				content = textField.getText(0, pos);
 			} catch (BadLocationException e) {
 				e.printStackTrace();
 			}
@@ -105,9 +106,12 @@ public class Autocomplete implements DocumentListener {
 
 			setKeywords(suggRes.suggestions);
 
-			int w = suggRes.initOffendingToken - 1;
+			int w = suggRes.initOffendingToken;
+//			if (w < 0) {
+//				w = 0;
+//			}
 			
-			String prefix = content.substring(w + 1).toUpperCase();
+			String prefix = content.substring(w).toUpperCase();
 
 			int n = Collections.binarySearch(keywords, prefix);
 
@@ -127,7 +131,7 @@ public class Autocomplete implements DocumentListener {
 					// We cannot modify Document from within notification,
 					// so we submit a task that does the change later
 					SwingUtilities.invokeLater(new CompletionTask(completion,
-							pos + 1));
+							pos));
 				} else {
 					shift = false;
 					SwingUtilities.invokeLater(new HighlightTask(
