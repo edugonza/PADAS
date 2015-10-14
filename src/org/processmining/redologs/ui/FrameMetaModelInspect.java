@@ -20,6 +20,8 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
+import org.processmining.openslex.metamodel.SLEXMMSQLResult;
+import org.processmining.openslex.metamodel.SLEXMMSQLResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.ui.components.Autocomplete;
 import org.processmining.redologs.ui.components.Autocomplete.CommitAction;
@@ -34,6 +36,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +93,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	
 	private JTabbedPane casesTabbedPane;
 		
+	public SLEXMMStorageMetaModel getMetaModel() {
+		return mmstrg;
+	}
+	
 	public FrameMetaModelInspect(SLEXMMStorageMetaModel mmstrg) {
 		super("MetaModel Inspector");
 		this.mmstrg = mmstrg;
@@ -398,30 +405,31 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		getContentPane().add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new BorderLayout(0, 0));
 		
-		JScrollPane scrollPane = new JScrollPane();
-		panel.add(scrollPane, BorderLayout.CENTER);
+		JPanel poqlQueryPanel = new JPanel();
+		panel.add(poqlQueryPanel, BorderLayout.NORTH);
 		
-		final JTextField textQueryField = new JTextField();
+		final JTextField poqlQueryField = new JTextField();
 		/**/
 		final String COMMIT_ACTION = "commit";
 		final String SHIFT_ACTION = "shift";
 
 		// Without this, cursor always leaves text field
-		textQueryField.setFocusTraversalKeysEnabled(false);
+		poqlQueryField.setFocusTraversalKeysEnabled(false);
 		
 		// Our words to complete
 		ArrayList<String>keywords = new ArrayList<String>();
-		Autocomplete autoComplete = new Autocomplete(textQueryField, keywords);
-		textQueryField.getDocument().addDocumentListener(autoComplete);
+		Autocomplete autoComplete = new Autocomplete(poqlQueryField, keywords);
+		poqlQueryField.getDocument().addDocumentListener(autoComplete);
 
 		// Maps the tab key to the commit action, which finishes the autocomplete
 		// when given a suggestion
-		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), SHIFT_ACTION);
-		textQueryField.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
-		textQueryField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
-		textQueryField.getActionMap().put(SHIFT_ACTION, autoComplete.new ShiftAction());
+		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), SHIFT_ACTION);
+		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
+		poqlQueryField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
+		poqlQueryField.getActionMap().put(SHIFT_ACTION, autoComplete.new ShiftAction());
 		/**/
-		scrollPane.setViewportView(textQueryField);
+		poqlQueryPanel.setLayout(new BorderLayout(0, 0));
+		poqlQueryPanel.add(poqlQueryField, BorderLayout.CENTER);
 		
 		JButton btnExecuteQuery = new JButton("Execute Query");
 		btnExecuteQuery.addActionListener(new ActionListener() {
@@ -430,7 +438,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					
 					@Override
 					public void run() {
-						String query = textQueryField.getText();
+						String query = poqlQueryField.getText();
 						POQLRunner runner = new POQLRunner();
 						QueryResult qr = runner.executeQuery(FrameMetaModelInspect.this.mmstrg, query);
 						
@@ -448,7 +456,52 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				queryPOQLThread.start();
 			}
 		});
-		panel.add(btnExecuteQuery, BorderLayout.EAST);
+		poqlQueryPanel.add(btnExecuteQuery, BorderLayout.EAST);
+		
+		JPanel sqlQueryPanel = new JPanel();
+		panel.add(sqlQueryPanel, BorderLayout.SOUTH);
+		
+		final JTextField sqlQueryField = new JTextField();
+		
+		JButton btnExecuteSQLQuery = new JButton("Execute SQL Query");
+		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
+		
+		sqlQueryPanel.add(sqlQueryField, BorderLayout.CENTER);
+		sqlQueryPanel.add(btnExecuteSQLQuery, BorderLayout.EAST);
+		
+		btnExecuteSQLQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Thread querySQLThread = new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						String query = sqlQueryField.getText();
+						
+						try {
+							SLEXMMSQLResultSet rset = getMetaModel()
+									.executeSQL(query);
+							
+							if (rset != null) {
+								SLEXMMSQLResult r = null;
+								
+								while ((r = rset.getNext()) != null) {
+									System.out.println(Arrays.toString(r.getValues()));
+								}
+							} else {
+								System.out.println("No Values");
+							}
+
+						} catch (Exception e) {
+							e.printStackTrace();
+							System.err.println("Error executing sql query: "
+									+ query);
+						}
+					}
+				});
+				querySQLThread.start();
+			}
+		});
+		
 		setObjectsTableContentAll();
 		setEventsTableContent();
 		setDataModel();
