@@ -24,6 +24,10 @@ import org.processmining.openslex.metamodel.SLEXMMClassResultSet;
 import org.processmining.openslex.metamodel.SLEXMMDataModel;
 import org.processmining.openslex.metamodel.SLEXMMRelationship;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.Key;
+import org.processmining.redologs.common.TableInfo;
 
 public class DiagramComponent extends JPanel {
 	
@@ -34,8 +38,8 @@ public class DiagramComponent extends JPanel {
 	
 	private VMDGraphScene scene;
 	private JComponent myView;
-	private SLEXMMDataModel dm;
-	private SLEXMMStorageMetaModel mmstrg;
+	//private SLEXMMDataModel dm;
+	//private SLEXMMStorageMetaModel mmstrg;
 	
 	private static int nodeID = 1;
     private static int edgeID = 1;
@@ -94,8 +98,8 @@ public class DiagramComponent extends JPanel {
     
 	public void setDataModel(SLEXMMDataModel dm) {
 		
-		this.dm = dm;
-		this.mmstrg = dm.getStorage();
+		//this.dm = dm;
+		SLEXMMStorageMetaModel mmstrg = dm.getStorage();
 		
 		widgetIdToClassMap = new HashMap<>();
 		classToWidgetIdMap = new HashMap<>();
@@ -131,6 +135,44 @@ public class DiagramComponent extends JPanel {
 				
 				createEdge (scene, rel.getName()+" ("+rel.getId()+")", source, target);
 				
+			}
+		}
+		
+		scene.layoutScene();
+		
+	}
+	
+	public void setDataModel(DataModel dm) {
+		
+		//this.dm = dm;
+		//this.mmstrg = dm.getStorage();
+		
+		widgetIdToClassMap = new HashMap<>();
+		classToWidgetIdMap = new HashMap<>();
+		
+		for (TableInfo t: dm.getTables()) {
+			String name =  t.name;
+			String nodeId = createNode (scene, 100, 100, null, name, "Class", null);
+			
+			//widgetIdToClassMap.put(nodeId, c);
+			//widgetNameToClassMap.put(name,c);
+			classToWidgetIdMap.put(t.hashCode(),nodeId);
+			
+			for (Column c: t.columns) {
+				createPin(scene, nodeId, c.toString(), null, c.name, "Attribute");
+			}
+			
+		}
+		
+		for (TableInfo t: dm.getTables()) {
+			
+			for (Key k: dm.getKeysPerTable(t)) {
+				if (k.type == Key.FOREIGN_KEY) {
+					String source = classToWidgetIdMap.get(k.table.hashCode());
+					String target = classToWidgetIdMap.get(k.refers_to.table.hashCode());
+				
+					createEdge (scene, k.name, source, target);
+				}
 			}
 		}
 		

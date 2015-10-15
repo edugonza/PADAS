@@ -1,7 +1,5 @@
 package org.processmining.redologs.ui;
 
-import org.processmining.database.metamodel.poql.POQLRunner;
-import org.processmining.database.metamodel.poql.QueryResult;
 import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
@@ -20,25 +18,27 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
-import org.processmining.openslex.metamodel.SLEXMMSQLResult;
-import org.processmining.openslex.metamodel.SLEXMMSQLResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
-import org.processmining.redologs.ui.components.Autocomplete;
-import org.processmining.redologs.ui.components.Autocomplete.CommitAction;
+import org.processmining.redologs.common.Column;
+import org.processmining.redologs.common.DataModel;
+import org.processmining.redologs.common.Key;
+import org.processmining.redologs.common.TableInfo;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.DiagramComponent;
 import org.processmining.redologs.ui.components.NodeSelectionHandler;
+import org.processmining.redologs.ui.components.metamodel.MetaModelTableUtils;
+import org.processmining.redologs.ui.components.metamodel.POQLQueryPanel;
+import org.processmining.redologs.ui.components.metamodel.SQLQueryPanel;
 
 import javax.swing.JSplitPane;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -49,1030 +49,692 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.JButton;
 import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
 
 public class FrameMetaModelInspect extends CustomInternalFrame {
 
-	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3775031378258022448L;
-	
+
 	private SLEXMMStorageMetaModel mmstrg;
-	
+
 	private JTable tableObjectsAll;
 	private JTable tableObjectsPerClass;
-	private JTable tableObjectsFiltered;
-	
+
 	private JTable tableObjectVersions;
 	private JTable tableObjectRelations;
-	
+
 	private JTable tableCasesAll;
-	private JTable tableCasesFiltered;
-	
+
 	private JTable tableEventsAll;
 	private JTable tableEventsPerCase;
-	private JTable tableEventsFiltered;
-	
+
 	private JTable tableEventAttributes;
-	
+
 	private JTable tableObjectVersionAttributes;
-	
+
 	private JProgressBar topProgressBar;
 	private DiagramComponent datamodelPanel;
 	private JPanel processModelPanel;
 	private JTable processActivitiesTable;
-	
+
 	private JTabbedPane casesTabbedPane;
-		
+	
+	private int sqlTabCounter = 0;
+	private int poqlTabCounter = 0;
+
 	public SLEXMMStorageMetaModel getMetaModel() {
 		return mmstrg;
 	}
-	
+
 	public FrameMetaModelInspect(SLEXMMStorageMetaModel mmstrg) {
 		super("MetaModel Inspector");
 		this.mmstrg = mmstrg;
-		
+
 		setBounds(715, 30, 1207, 669);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
+
+		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.BOTTOM);
+		getContentPane().add(tabbedPane_1, BorderLayout.CENTER);
 		
-		JSplitPane splitPane = new JSplitPane();
-		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		getContentPane().add(splitPane, BorderLayout.CENTER);
+		tabbedPane_1.addTab("Inspector", null, createInspectorPanel(), null);
+
+		tabbedPane_1.addTab("POQL", null, createPOQLPanel(), null);
 		
+		tabbedPane_1.addTab("SQL", null, createSQLPanel(), null);
+		
+		SLEXMMCaseResultSet crset = getMetaModel().getCases();
+		MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
+		
+		MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
+		
+		SLEXMMObjectResultSet orset = getMetaModel().getObjects();
+		MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
+		
+		SLEXMMEventResultSet erset = getMetaModel().getEvents();
+		MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
+		
+		setDataModel();
+		
+	}
+	
+	private JPanel createInspectorPanel() {
+		
+		JPanel inspectorPanel = new JPanel();
+		
+		JSplitPane inspectorSplitPane = new JSplitPane();
+		
+		inspectorPanel.setLayout(new BorderLayout());
+		inspectorPanel.add(inspectorSplitPane, BorderLayout.CENTER);
+		
+		inspectorSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
 		JSplitPane splitPane_1 = new JSplitPane();
-		splitPane.setLeftComponent(splitPane_1);
-		
-		JPanel leftTopPanel = new JPanel(new BorderLayout(0,0));
+		inspectorSplitPane.setLeftComponent(splitPane_1);
+
+		JPanel leftTopPanel = new JPanel(new BorderLayout(0, 0));
 		splitPane_1.setLeftComponent(leftTopPanel);
-		
-		processModelPanel = new JPanel(new BorderLayout(0,0));
-		processModelPanel.setMinimumSize(new Dimension(300,200));
+
+		processModelPanel = new JPanel(new BorderLayout(0, 0));
+		processModelPanel.setMinimumSize(new Dimension(300, 200));
 		leftTopPanel.add(processModelPanel, BorderLayout.CENTER);
-		
+
 		JScrollPane scrollPaneProcessModel = new JScrollPane();
 		processModelPanel.add(scrollPaneProcessModel, BorderLayout.CENTER);
 		processActivitiesTable = new JTable();
 		processActivitiesTable.setFillsViewportHeight(true);
-		processActivitiesTable.setModel(new ActivitiesTableModel());
+		processActivitiesTable.setModel(new MetaModelTableUtils.ActivitiesTableModel());
 		scrollPaneProcessModel.setViewportView(processActivitiesTable);
-		
+
 		JPanel rightTopPanel = new JPanel();
 		splitPane_1.setRightComponent(rightTopPanel);
 		rightTopPanel.setLayout(new BorderLayout(0, 0));
-		
+
 		topProgressBar = new JProgressBar();
-		rightTopPanel.add(topProgressBar,BorderLayout.NORTH);
-		
+		rightTopPanel.add(topProgressBar, BorderLayout.NORTH);
+
 		JSplitPane splitPanelTopLeft = new JSplitPane();
 		splitPanelTopLeft.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
 		rightTopPanel.add(splitPanelTopLeft, BorderLayout.CENTER);
-		
-		casesTabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
-		
+
 		tableCasesAll = new JTable();
 		tableCasesAll.setFillsViewportHeight(true);
-		tableCasesAll.setModel(new CasesTableModel());
-		
+		tableCasesAll.setModel(new MetaModelTableUtils.CasesTableModel());
+
 		tableCasesAll.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableCasesAll.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedCase(tableCasesAll);
-				if (selected != null) {
-					setEventsTableContentFromCase(selected);
-				}
-			}
-		});
-		
-		tableCasesFiltered = new JTable();
-		tableCasesFiltered.setFillsViewportHeight(true);
-		tableCasesFiltered.setModel(new CasesTableModel());
-		
-		tableCasesFiltered.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableCasesFiltered.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedCase(tableCasesFiltered);
-				if (selected != null) {
-					setEventsTableContentFromCase(selected);
-				}
-			}
-		});
-		
+		tableCasesAll.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
+						if (selected != null) {
+							SLEXMMEventResultSet erset = getMetaModel().getEventsForCaseOrdered(selected);
+							MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+						}
+					}
+				});
+
 		JScrollPane casesScrollPane_all = new JScrollPane(tableCasesAll);
-		JScrollPane casesScrollPane_filtered = new JScrollPane(tableCasesFiltered);
-		casesTabbedPane.addTab("All Cases", null, casesScrollPane_all, null);
-		casesTabbedPane.addTab("Filtered", null, casesScrollPane_filtered, null);
 		casesScrollPane_all.setMinimumSize(new Dimension(220, 0));
-		casesScrollPane_filtered.setMinimumSize(new Dimension(220, 0));
-		
+
 		tableEventsAll = new JTable();
 		tableEventsAll.setFillsViewportHeight(true);
-		tableEventsAll.setModel(new EventsTableModel());
-		
+		tableEventsAll.setModel(new MetaModelTableUtils.EventsTableModel());
+
 		tableEventsAll.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableEventsAll.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedEvent(tableEventsAll);
-				if (selected != null) {
-					setEventAttributesTableContent(selected);
-				}
-			}
-		});
-		
+		tableEventsAll.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsAll);
+						if (selected != null) {
+							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+							MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+									ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+									String.valueOf(ev.getTimestamp()));
+						}
+					}
+				});
+
 		tableEventsPerCase = new JTable();
 		tableEventsPerCase.setFillsViewportHeight(true);
-		tableEventsPerCase.setModel(new EventsTableModel());
-		
-		tableEventsPerCase.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableEventsPerCase.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedEvent(tableEventsPerCase);
-				if (selected != null) {
-					setEventAttributesTableContent(selected);
-				}
-			}
-		});
-		
-		tableEventsFiltered = new JTable();
-		tableEventsFiltered.setFillsViewportHeight(true);
-		tableEventsFiltered.setModel(new EventsTableModel());
-		
-		tableEventsFiltered.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableEventsFiltered.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedEvent(tableEventsFiltered);
-				if (selected != null) {
-					setEventAttributesTableContent(selected);
-				}
-			}
-		});
-		
+		tableEventsPerCase.setModel(new MetaModelTableUtils.EventsTableModel());
+
+		tableEventsPerCase
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableEventsPerCase.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerCase);
+						if (selected != null) {
+							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+							MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+									ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+									String.valueOf(ev.getTimestamp()));
+						}
+					}
+				});
+
 		JSplitPane splitPanelTopRight = new JSplitPane();
 		splitPanelTopRight.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-		
+
 		splitPanelTopLeft.setRightComponent(splitPanelTopRight);
-		splitPanelTopLeft.setLeftComponent(casesTabbedPane);
-		
-		
+		splitPanelTopLeft.setLeftComponent(casesScrollPane_all);
+
 		JTabbedPane eventsTabbedPane = new JTabbedPane();
 		eventsTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-		
+
 		JScrollPane scrollPaneEventsAll = new JScrollPane(tableEventsAll);
 		scrollPaneEventsAll.setMinimumSize(new Dimension(270, 0));
 		eventsTabbedPane.addTab("All Events", null, scrollPaneEventsAll, null);
-		
-		JScrollPane scrollPaneEventsPerCase = new JScrollPane(tableEventsPerCase);
+
+		JScrollPane scrollPaneEventsPerCase = new JScrollPane(
+				tableEventsPerCase);
 		scrollPaneEventsPerCase.setMinimumSize(new Dimension(270, 0));
-		eventsTabbedPane.addTab("Per Case", null, scrollPaneEventsPerCase, null);
-		
-		JScrollPane scrollPaneEventsFiltered = new JScrollPane(tableEventsFiltered);
-		scrollPaneEventsFiltered.setMinimumSize(new Dimension(270, 0));
-		eventsTabbedPane.addTab("Filtered", null, scrollPaneEventsFiltered, null);
-		
+		eventsTabbedPane
+				.addTab("Per Case", null, scrollPaneEventsPerCase, null);
+
 		splitPanelTopRight.setLeftComponent(eventsTabbedPane);
-		
+
 		tableEventAttributes = new JTable();
 		tableEventAttributes.setFillsViewportHeight(true);
-		tableEventAttributes.setModel(new EventAttributesTableModel());
-		
+		tableEventAttributes.setModel(new MetaModelTableUtils.EventAttributesTableModel());
+
 		JScrollPane scrollPane_right = new JScrollPane(tableEventAttributes);
-		//tableEventAttributes.setMinimumSize(new Dimension(300, 0));
+		// tableEventAttributes.setMinimumSize(new Dimension(300, 0));
 		splitPanelTopRight.setRightComponent(scrollPane_right);
-		
+
 		JSplitPane splitPane_2 = new JSplitPane();
-		splitPane.setRightComponent(splitPane_2);
-		
+		inspectorSplitPane.setRightComponent(splitPane_2);
+
 		JPanel leftBottomPanel = new JPanel();
 		leftBottomPanel.setMinimumSize(new Dimension(180, 0));
 		splitPane_2.setLeftComponent(leftBottomPanel);
 		leftBottomPanel.setLayout(new BorderLayout(0, 0));
-		
+
 		NodeSelectionHandler classSelectionHandler = new NodeSelectionHandler() {
-			
+
 			@Override
 			public void run(SLEXMMClass c) {
-				setObjectsTableContentPerClass(c.getId());
+				SLEXMMObjectResultSet orset = getMetaModel().getObjectsPerClass(c.getId());
+				MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
 			}
 		};
 		
 		datamodelPanel = new DiagramComponent(classSelectionHandler);
-		datamodelPanel.setMinimumSize(new Dimension(300,200));
+		datamodelPanel.setMinimumSize(new Dimension(300, 200));
 		leftBottomPanel.add(datamodelPanel, BorderLayout.CENTER);
-		
-		
+
 		tableObjectsAll = new JTable();
 		tableObjectsAll.setFillsViewportHeight(true);
-		tableObjectsAll.setModel(new ObjectsTableModel());
-		
+		tableObjectsAll.setModel(new MetaModelTableUtils.ObjectsTableModel());
+
 		tableObjectsAll.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableObjectsAll.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer[] selected = getSelectedObject(tableObjectsAll);
-				if (selected != null) {
-					setObjectVersionsTableContent(selected[0]);
-					setObjectRelationsTableContent(selected[0]);
-				}
-			}
-		});
-		
+		tableObjectsAll.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsAll);
+						if (selected != null) {
+							SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+									getObjectVersionsForObjectOrdered(selected[0]);
+							MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+							SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+							rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+							rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+							MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+						}
+					}
+				});
+
 		tableObjectsPerClass = new JTable();
 		tableObjectsPerClass.setFillsViewportHeight(true);
-		tableObjectsPerClass.setModel(new ObjectsTableModel());
-		
-		tableObjectsPerClass.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableObjectsPerClass.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer[] selected = getSelectedObject(tableObjectsPerClass);
-				if (selected != null) {
-					setObjectVersionsTableContent(selected[0]);
-					setObjectRelationsTableContent(selected[0]);
-				}
-			}
-		});
-		
-		tableObjectsFiltered = new JTable();
-		tableObjectsFiltered.setFillsViewportHeight(true);
-		tableObjectsFiltered.setModel(new ObjectsTableModel());
-		
-		tableObjectsFiltered.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		tableObjectsFiltered.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer[] selected = getSelectedObject(tableObjectsFiltered);
-				if (selected != null) {
-					setObjectVersionsTableContent(selected[0]);
-					setObjectRelationsTableContent(selected[0]);
-				}
-			}
-		});
-		
+		tableObjectsPerClass.setModel(new MetaModelTableUtils.ObjectsTableModel());
+
+		tableObjectsPerClass
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableObjectsPerClass.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsPerClass);
+						if (selected != null) {
+							SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+									getObjectVersionsForObjectOrdered(selected[0]);
+							MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+							SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+							rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+							rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+							MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+						}
+					}
+				});
+
 		JTabbedPane objectsTabbedPane = new JTabbedPane();
 		objectsTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 		JScrollPane scrollPaneTableObjectsAll = new JScrollPane(tableObjectsAll);
-		objectsTabbedPane.addTab("All Objects", null, scrollPaneTableObjectsAll, null);
-		JScrollPane scrollPaneTableObjectsPerClass = new JScrollPane(tableObjectsPerClass);
-		objectsTabbedPane.addTab("Per Class", null, scrollPaneTableObjectsPerClass, null);
-		JScrollPane scrollPaneTableObjectsFiltered = new JScrollPane(tableObjectsFiltered);
-		objectsTabbedPane.addTab("Filtered", null, scrollPaneTableObjectsFiltered, null);
-		
+		objectsTabbedPane.addTab("All Objects", null,
+				scrollPaneTableObjectsAll, null);
+		JScrollPane scrollPaneTableObjectsPerClass = new JScrollPane(
+				tableObjectsPerClass);
+		objectsTabbedPane.addTab("Per Class", null,
+				scrollPaneTableObjectsPerClass, null);
+
 		JPanel rightBottomPanel = new JPanel();
 		JSplitPane splitPane_22 = new JSplitPane();
 		splitPane_2.setRightComponent(splitPane_22);
 		splitPane_22.setLeftComponent(objectsTabbedPane);
 		splitPane_22.setRightComponent(rightBottomPanel);
-		rightBottomPanel.setLayout(new BoxLayout(rightBottomPanel, BoxLayout.X_AXIS));
+		rightBottomPanel.setLayout(new BoxLayout(rightBottomPanel,
+				BoxLayout.X_AXIS));
+
 		
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
-		rightBottomPanel.add(tabbedPane);
-		
+
 		JSplitPane splitPane_3 = new JSplitPane();
 		splitPane_3.setResizeWeight(0.5);
 		splitPane_3.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		tabbedPane.addTab("Per Object", null, splitPane_3, null);
 		
+		rightBottomPanel.add(splitPane_3);
+
 		JPanel topObjectVersionsPanel = new JPanel();
 		topObjectVersionsPanel.setLayout(new BorderLayout(0, 0));
-		
+
 		tableObjectVersionAttributes = new JTable();
 		tableObjectVersionAttributes.setFillsViewportHeight(true);
-		tableObjectVersionAttributes.setModel(new ObjectVersionAttributesTableModel());
-		
-		JScrollPane objectVersionDetailsPanel = new JScrollPane(tableObjectVersionAttributes);
-		
+		tableObjectVersionAttributes
+				.setModel(new MetaModelTableUtils.ObjectVersionAttributesTableModel());
+
+		JScrollPane objectVersionDetailsPanel = new JScrollPane(
+				tableObjectVersionAttributes);
+
 		JSplitPane splitPane_4 = new JSplitPane();
 		splitPane_4.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane_3.setTopComponent(splitPane_4);
 		splitPane_4.setLeftComponent(topObjectVersionsPanel);
 		splitPane_4.setRightComponent(objectVersionDetailsPanel);
-		
+
 		tableObjectVersions = new JTable();
 		tableObjectVersions.setFillsViewportHeight(true);
-		tableObjectVersions.setModel(new ObjectVersionsTableModel());
-		tableObjectVersions.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-			
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				Integer selected = getSelectedEvent(tableObjectVersions);
-				if (selected != null) {
-					setObjectVersionAttributesTableContent(selected);
-				}
-			}
-		});
-		
-		JScrollPane scrollPaneTableObjectVersions = new JScrollPane(tableObjectVersions);
+		tableObjectVersions.setModel(new MetaModelTableUtils.ObjectVersionsTableModel());
+		tableObjectVersions.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedEvent(tableObjectVersions);
+						if (selected != null) {
+							HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
+									getMetaModel().getAttributeValuesForObjectVersion(selected);
+							MetaModelTableUtils.setObjectVersionAttributesTableContent(tableObjectVersionAttributes,atts);
+						}
+					}
+				});
+
+		JScrollPane scrollPaneTableObjectVersions = new JScrollPane(
+				tableObjectVersions);
 		topObjectVersionsPanel.add(scrollPaneTableObjectVersions);
-		
+
 		JPanel bottomObjectVersionsPanel = new JPanel();
 		splitPane_3.setBottomComponent(bottomObjectVersionsPanel);
 		bottomObjectVersionsPanel.setLayout(new BorderLayout(0, 0));
-		
+
 		tableObjectRelations = new JTable();
 		tableObjectRelations.setFillsViewportHeight(true);
-		tableObjectRelations.setModel(new ObjectRelationsTableModel());
-		
-		JScrollPane scrollPaneTableObjectRelations = new JScrollPane(tableObjectRelations);
+		tableObjectRelations.setModel(new MetaModelTableUtils.ObjectRelationsTableModel());
+
+		JScrollPane scrollPaneTableObjectRelations = new JScrollPane(
+				tableObjectRelations);
 		bottomObjectVersionsPanel.add(scrollPaneTableObjectRelations);
 		
-		setActivitiesTableContent();
-		setCasesTableContent(tableCasesAll);
+		return inspectorPanel;
+	}
+	
+	private JPanel createSQLPanel() {
+		/* START SQL Tab */
+		JPanel sqlTab = new JPanel();
 		
-		JPanel panel = new JPanel();
-		getContentPane().add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new BorderLayout(0, 0));
-		
-		JPanel poqlQueryPanel = new JPanel();
-		panel.add(poqlQueryPanel, BorderLayout.NORTH);
-		
-		final JTextField poqlQueryField = new JTextField();
-		/**/
-		final String COMMIT_ACTION = "commit";
-		final String SHIFT_ACTION = "shift";
+		sqlTab.setLayout(new BorderLayout(0, 0));
 
-		// Without this, cursor always leaves text field
-		poqlQueryField.setFocusTraversalKeysEnabled(false);
-		
-		// Our words to complete
-		ArrayList<String>keywords = new ArrayList<String>();
-		Autocomplete autoComplete = new Autocomplete(poqlQueryField, keywords);
-		poqlQueryField.getDocument().addDocumentListener(autoComplete);
+		JSplitPane sqlSplitPane = new JSplitPane();
+		sqlSplitPane.setResizeWeight(0.5);
+		sqlTab.add(sqlSplitPane);
 
-		// Maps the tab key to the commit action, which finishes the autocomplete
-		// when given a suggestion
-		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"), SHIFT_ACTION);
-		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
-		poqlQueryField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
-		poqlQueryField.getActionMap().put(SHIFT_ACTION, autoComplete.new ShiftAction());
-		/**/
-		poqlQueryPanel.setLayout(new BorderLayout(0, 0));
-		poqlQueryPanel.add(poqlQueryField, BorderLayout.CENTER);
+		final JTabbedPane sqlQueryTabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+		sqlSplitPane.setRightComponent(sqlQueryTabbedPane);
+
+		SQLQueryPanel sqlQueryRightPanel = new SQLQueryPanel(getMetaModel(),incSQLQueryTabCounter());
 		
-		JButton btnExecuteQuery = new JButton("Execute Query");
-		btnExecuteQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Thread queryPOQLThread = new Thread(new Runnable() {
-					
-					@Override
-					public void run() {
-						String query = poqlQueryField.getText();
-						POQLRunner runner = new POQLRunner();
-						QueryResult qr = runner.executeQuery(FrameMetaModelInspect.this.mmstrg, query);
-						
-						if (qr.type == SLEXMMObject.class) {
-							setObjectsTableContentFiltered(qr.result);
-						} else if (qr.type == SLEXMMObjectVersion.class) {
-							setObjectVersionsTableContent(qr.result); //FIXME
-						} else if (qr.type == SLEXMMEvent.class) {
-							setEventsTableContentFiltered(qr.result);
-						} else {
-							System.err.println("Unknown type of result");
-						}
+		sqlQueryTabbedPane.addTab("Query "+sqlQueryRightPanel.getId(), sqlQueryRightPanel);
+		
+		sqlQueryTabbedPane.addTab("+", new JLabel());
+		sqlQueryTabbedPane.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (sqlQueryTabbedPane.getSelectedComponent() instanceof JLabel) {
+					if (!e.isControlDown()) {
+						int count = sqlQueryTabbedPane.getTabCount();
+						SQLQueryPanel newTab = new SQLQueryPanel(getMetaModel(),incSQLQueryTabCounter());
+						sqlQueryTabbedPane.add(newTab, count - 1);
+						sqlQueryTabbedPane.setTitleAt(count - 1, "Query "
+								+ newTab.getId());
+						sqlQueryTabbedPane.setSelectedComponent(newTab);
 					}
-				});
-				queryPOQLThread.start();
-			}
-		});
-		poqlQueryPanel.add(btnExecuteQuery, BorderLayout.EAST);
+	            } else if (e.isControlDown()) {
+	            	int selected = sqlQueryTabbedPane.getSelectedIndex();
+	            	sqlQueryTabbedPane.remove(selected);
+	            }
+	        }
+	        
+	    });
 		
-		JPanel sqlQueryPanel = new JPanel();
-		panel.add(sqlQueryPanel, BorderLayout.SOUTH);
+		DataModel dm = getMetaModelDataModel();
 		
-		final JTextField sqlQueryField = new JTextField();
+		DiagramComponent dmDiagram = new DiagramComponent(null);
+		dmDiagram.setDataModel(dm);
+		sqlSplitPane.setLeftComponent(dmDiagram);
 		
-		JButton btnExecuteSQLQuery = new JButton("Execute SQL Query");
-		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
+		/* END SQL Tab */
+		return sqlTab;
+	}
+	
+	private JPanel createPOQLPanel() {
+		/* START POQL Tab */
+		JPanel poqlTab = new JPanel();
 		
-		sqlQueryPanel.add(sqlQueryField, BorderLayout.CENTER);
-		sqlQueryPanel.add(btnExecuteSQLQuery, BorderLayout.EAST);
-		
-		btnExecuteSQLQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Thread querySQLThread = new Thread(new Runnable() {
-					
-					@Override
-					public void run() {
-						String query = sqlQueryField.getText();
-						
-						try {
-							SLEXMMSQLResultSet rset = getMetaModel()
-									.executeSQL(query);
-							
-							if (rset != null) {
-								SLEXMMSQLResult r = null;
-								
-								while ((r = rset.getNext()) != null) {
-									System.out.println(Arrays.toString(r.getValues()));
-								}
-							} else {
-								System.out.println("No Values");
-							}
+		poqlTab.setLayout(new BorderLayout(0, 0));
 
-						} catch (Exception e) {
-							e.printStackTrace();
-							System.err.println("Error executing sql query: "
-									+ query);
-						}
-					}
-				});
-				querySQLThread.start();
-			}
-		});
+		JSplitPane poqlSplitPane = new JSplitPane();
+		poqlSplitPane.setResizeWeight(0.5);
+		poqlTab.add(poqlSplitPane);
+
+		final JTabbedPane poqlQueryTabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+		poqlSplitPane.setRightComponent(poqlQueryTabbedPane);
+
+		POQLQueryPanel poqlQueryRightPanel = new POQLQueryPanel(getMetaModel(),incPOQLQueryTabCounter());
 		
-		setObjectsTableContentAll();
-		setEventsTableContent();
-		setDataModel();
+		poqlQueryTabbedPane.addTab("Query "+poqlQueryRightPanel.getId(), poqlQueryRightPanel);
+		
+		poqlQueryTabbedPane.addTab("+", new JLabel());
+		poqlQueryTabbedPane.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (poqlQueryTabbedPane.getSelectedComponent() instanceof JLabel) {
+					if (!e.isControlDown()) {
+						int count = poqlQueryTabbedPane.getTabCount();
+						POQLQueryPanel newTab = new POQLQueryPanel(getMetaModel(),incPOQLQueryTabCounter());
+						poqlQueryTabbedPane.add(newTab, count - 1);
+						poqlQueryTabbedPane.setTitleAt(count - 1, "Query "
+								+ newTab.getId());
+						poqlQueryTabbedPane.setSelectedComponent(newTab);
+					}
+	            } else if (e.isControlDown()) {
+	            	int selected = poqlQueryTabbedPane.getSelectedIndex();
+	            	poqlQueryTabbedPane.remove(selected);
+	            }
+	        }
+	        
+	    });
+		
+		DataModel dm = getMetaModelDataModel();
+		
+		DiagramComponent dmDiagram = new DiagramComponent(null);
+		dmDiagram.setDataModel(dm);
+		poqlSplitPane.setLeftComponent(dmDiagram);
+		/* END POQL Tab */
+		
+		return poqlTab;
+	}
+	
+	private int incSQLQueryTabCounter() {
+		sqlTabCounter++;
+		return sqlTabCounter;
+	}
+	
+	private int incPOQLQueryTabCounter() {
+		poqlTabCounter++;
+		return poqlTabCounter;
+	}
+	
+	private DataModel getMetaModelDataModel() {
+		
+		DataModel dm = new DataModel();
+		List<TableInfo> tables = new ArrayList<TableInfo>();
+		Hashtable<String, Key> foreignKeys = new Hashtable<>();
+		Hashtable<String, Key> primaryKeys = new Hashtable<>();
+		Hashtable<TableInfo, List<Key>> keysPerTable = new Hashtable<>();
+			
+		/* DataModel Table */
+		TableInfo t_datamodel = createTable("", "datamodel",
+				new String[] {"id","name"},tables);
+		
+		// PK
+		Key pk_datamodel = createKey("pk_datamodel", t_datamodel, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Class Table */
+		TableInfo t_class = createTable("", "class",
+				new String[] {"id","datamodel_id","name"},tables);
+		
+		// PK
+		Key pk_class = createKey("pk_class", t_class, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK
+		Key fk_class_datamodel = createKey("fk_class_datamodel", t_class, Key.FOREIGN_KEY,
+				pk_datamodel, new String[] {"datamodel_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Object Table */
+		TableInfo t_object = createTable("", "object",
+				new String[] {"id","class_id"}, tables);
+		
+		// PK
+		Key pk_object = createKey("pk_object", t_object, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		
+		// FK
+		Key k_o_c_id = createKey("k_o_c_id", t_object, Key.FOREIGN_KEY,
+				pk_class, new String[] {"class_id"}, primaryKeys, foreignKeys);
+		
+		/**/
+		
+		/* Object Table */
+		TableInfo t_attribute = createTable("", "attribute",
+				new String[] {"id","class_id","name"}, tables);
+		
+		// PK
+		Key pk_attribute = createKey("pk_object", t_attribute, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		
+		// FK
+		Key k_a_c_id = createKey("k_a_c_id", t_attribute, Key.FOREIGN_KEY,
+				pk_class, new String[] {"class_id"}, primaryKeys, foreignKeys);
+		
+		/**/
+		
+		/* Relationship Table */
+		TableInfo t_relationship = createTable("", "relationship",
+				new String[] {"id","source",
+				"target","name"},tables);
+		
+		// PK
+		Key pk_relationship = createKey("pk_relationship", t_relationship, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		
+		// FK
+		Key k_rs_c_s_id = createKey("k_rs_c_s_id", t_relationship, Key.FOREIGN_KEY,
+				pk_class, new String[] {"source"}, primaryKeys, foreignKeys);
+		
+		Key k_rs_c_t_id = createKey("k_rs_c_t_id", t_relationship, Key.FOREIGN_KEY,
+				pk_class, new String[] {"target"}, primaryKeys, foreignKeys);
+		
+		/**/
+		
+		
+		/* Object Version Table */
+		TableInfo t_object_version = createTable("", "object_version",
+				new String[] {"id","object_id","start_timestamp","end_timestamp"}, tables);
+		
+		// PK 
+		Key pk_object_version = createKey("pk_object_version", t_object_version, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK 
+		Key k_ov_o_id = createKey("k_ov_o_id", t_object_version, Key.FOREIGN_KEY,
+				pk_object, new String[] {"object_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Attribute value Table */
+		TableInfo t_attribute_value = createTable("", "attribute_value",
+				new String[] {"id","object_version_id","attribute_id","value","type"}, tables);
+		
+		// PK
+		Key pk_attribute_value = createKey("pk_attribute_value", t_attribute_value, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		
+		// FK
+		Key k_av_ov_id = createKey("k_av_ov_id", t_attribute_value, Key.FOREIGN_KEY,
+				pk_object_version, new String[] {"object_version_id"}, primaryKeys, foreignKeys);
+		
+		Key k_av_a_id = createKey("k_av_a_id", t_attribute_value, Key.FOREIGN_KEY,
+				pk_attribute, new String[] {"attribute_id"}, primaryKeys, foreignKeys);
+		
+		/**/
+		
+		/* Relation Table */
+		TableInfo t_relation = createTable("", "relation",
+				new String[] {"id","source_object_version_id","target_object_version_id",
+				"relationship_id","start_timestamp","end_timestamp"}, tables);
+		
+		// PK
+		Key pk_relation = createKey("pk_relation", t_relation, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		
+		// FK
+		Key k_r_ov_s_id = createKey("k_r_ov_s_id", t_relation, Key.FOREIGN_KEY,
+				pk_object_version, new String[] {"source_object_version_id"}, primaryKeys, foreignKeys);
+		
+		Key k_r_ov_t_id = createKey("k_r_ov_t_id", t_relation, Key.FOREIGN_KEY,
+				pk_object_version, new String[] {"target_object_version_id"}, primaryKeys, foreignKeys);
+		
+		Key k_r_rs_id = createKey("k_r_rs_id", t_relation, Key.FOREIGN_KEY,
+				pk_relationship, new String[] {"relationship_id"}, primaryKeys, foreignKeys);
+		
+		/**/
+		
+		
+		/* Building Keys Per Table HashMap */
+		for (Key k: primaryKeys.values()) {
+			TableInfo t = k.table;
+			List<Key> keysForT = keysPerTable.get(t);
+			if (keysForT == null) {
+				keysForT = new ArrayList<>();
+				keysPerTable.put(t, keysForT);
+			}
+			keysForT.add(k);
+		}
+		
+		for (Key k: foreignKeys.values()) {
+			TableInfo t = k.table;
+			List<Key> keysForT = keysPerTable.get(t);
+			if (keysForT == null) {
+				keysForT = new ArrayList<>();
+				keysPerTable.put(t, keysForT);
+			}
+			keysForT.add(k);
+		}
+		/**/
+		
+		dm.setTables(tables);
+		dm.setForeignKeys(foreignKeys);
+		dm.setPrimaryKeys(primaryKeys);
+		dm.setKeysPerTable(keysPerTable);
+		
+		return dm;
+	}
+	
+	private Key createKey(String name, TableInfo table, int type, Key refers_to_key,
+			String[] colnames_source_ordered, Hashtable<String, Key> primaryKeys, Hashtable<String, Key> foreignKeys) {
+		
+		Key k = new Key();
+		k.name = name;
+		k.table = table;
+		k.type = type;
+		
+		k.fields = new ArrayList<>();
+		k.fields_ordered = new HashMap<>();
+		
+		int j = 0;
+		for (String cn: colnames_source_ordered) {
+			for (Column c: table.columns) {
+				if (c.name.equals(cn)) {
+					k.fields.add(c);
+					k.fields_ordered.put(j, c);
+					j++;
+				}
+			}
+		}
+				
+		if (type == Key.FOREIGN_KEY) {
+			k.refers_to = refers_to_key;
+			k.refers_to_column = new HashMap<>();
+				
+			for (int i = 0; i < k.fields_ordered.size(); i++) {
+				Column s = k.fields_ordered.get(i);
+				Column t = k.refers_to.fields_ordered.get(i);
+				k.refers_to_column.put(s, t);
+			}
+			foreignKeys.put(k.name, k);
+		} else if (type == Key.PRIMARY_KEY) {
+			primaryKeys.put(k.name, k);
+		}
+		
+		return k;
+	}
+	
+	private TableInfo createTable(String db, String name, String[] columnNames, List<TableInfo> tables) {
+		TableInfo t = new TableInfo();
+		t.db = db;
+		t.name = name;
+		
+		for (String cn: columnNames) {
+			Column c = createColumn(t,cn);
+		}
+		
+		tables.add(t);
+		return t;
+	}
+	
+	private Column createColumn(TableInfo table, String name) {
+		Column c = new Column();
+		c.table = table;
+		c.name = name;
+		if (table.columns == null) {
+			table.columns = new ArrayList<>();
+		}
+		table.columns.add(c);
+		return c;
 	}
 	
 	private void setDataModel() {
 		SLEXMMDataModelResultSet dmrset = mmstrg.getDataModels();
-		
+
 		SLEXMMDataModel dm = dmrset.getNext();
-		
+
 		if (dm != null) {
 			datamodelPanel.setDataModel(dm);
 		}
 	}
-	
-	private Integer[] getSelectedObject(JTable table) {
-		Integer[] selected = new Integer[2];
-		
-		int selectedRow = table.getSelectedRow();
-		if (selectedRow >= 0) {
-			selected[0] = (int) table.getModel().getValueAt(selectedRow, 0);
-			selected[1] = (int) table.getModel().getValueAt(selectedRow, 1);
-		
-			return selected;
-		} else {
-			return null;
-		}
-	}
-	
-	private Integer getSelectedCase(JTable table) {
-		int selectedRow = table.getSelectedRow();
-		if (selectedRow >= 0) {
-			return (int) table.getModel().getValueAt(selectedRow, 0);
-		} else {
-			return null;
-		}
-	}
-	
-	private Integer getSelectedEvent(JTable table) {
-		int selectedRow = table.getSelectedRow();
-		if (selectedRow >= 0) {
-			return (int) table.getModel().getValueAt(selectedRow, 0);
-		} else {
-			return null;
-		}
-	}
-	
-	private class ActivitiesTableModel extends DefaultTableModel {
-		
-		Class[] columnTypes = new Class[] {	Integer.class, String.class, Integer.class };
-		boolean[] columnEditables = new boolean[] { false, false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public ActivitiesTableModel() {
-			super(new String[] { "Activity Id", "Name", "Process Id" }, 0);
-		}
-		
-	}
-	
-	public void setActivitiesTableContent() {
-		ActivitiesTableModel model = (ActivitiesTableModel) processActivitiesTable.getModel();
-		processActivitiesTable.getColumnModel().getColumn(0).setMinWidth(75);
-		processActivitiesTable.getColumnModel().getColumn(1).setMinWidth(75);
-		processActivitiesTable.getColumnModel().getColumn(2).setMinWidth(75);
-		
-		List<SLEXMMActivity> activitiesList = mmstrg.getActivities();
-		
-		for (SLEXMMActivity act: activitiesList) {
-			model.addRow(new Object[] {act.getId(),act.getName(),act.getProcessId()});
-		}
-		
-	}
-	
-	private class ObjectsTableModel extends DefaultTableModel {
-	
-		Class[] columnTypes = new Class[] {	Integer.class, Integer.class	};
-		boolean[] columnEditables = new boolean[] { false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public ObjectsTableModel() {
-			super(new String[] { "Object Id", "Class Id" }, 0);
-		}
-		
-	}
-	
-	public void setObjectsTableContentAll() {
-		ObjectsTableModel model = (ObjectsTableModel) tableObjectsAll.getModel();
-		tableObjectsAll.getColumnModel().getColumn(0).setMinWidth(75);
-		tableObjectsAll.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		SLEXMMObjectResultSet orset = mmstrg.getObjects();
-		SLEXMMObject obj = null;
-		
-		while ((obj = orset.getNext()) != null) {
-			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
-		}
-		
-	}
-	
-	public void setObjectsTableContentPerClass(int classId) {
-		ObjectsTableModel model = new ObjectsTableModel();
-		tableObjectsPerClass.setModel(model);
-		tableObjectsPerClass.getColumnModel().getColumn(0).setMinWidth(75);
-		tableObjectsPerClass.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		SLEXMMObjectResultSet orset = mmstrg.getObjectsPerClass(classId);
-		SLEXMMObject obj = null;
-		
-		while ((obj = orset.getNext()) != null) {
-			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
-		}
-		
-	}
-	
-	public void setObjectsTableContentFiltered(SLEXMMObjectResultSet orset) {
-		ObjectsTableModel model = (ObjectsTableModel) tableObjectsFiltered.getModel();
-		tableObjectsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
-		tableObjectsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		SLEXMMObject obj = null;
-		
-		while ((obj = orset.getNext()) != null) {
-			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
-		}
-		
-	}
-	
-	public void setObjectsTableContentFiltered(List<Object> list) {
-		ObjectsTableModel model = new ObjectsTableModel();
-		tableObjectsFiltered.setModel(model);
-		tableObjectsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
-		tableObjectsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		SLEXMMObject obj = null;
-		for (Object o: list) {
-			obj = (SLEXMMObject) o;
-			model.addRow(new Object[] {obj.getId(),obj.getClassId()});
-		}
-		
-	}
-	
-	private class ObjectVersionsTableModel extends DefaultTableModel {
-		
-		ArrayList<Class> columnTypes = new ArrayList<>();
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes.get(columnIndex);
-		}
-		
-		public void addColumnClass(Class c) {
-			columnTypes.add(c);
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return false;
-		}
-			
-		public ObjectVersionsTableModel() {
-			super(new String[] { "Version Id", "Object Id",
-					"Start Timestamp", "End Timestamp"}, 0);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Long.class);
-			columnTypes.add(Long.class);
-		}
-		
-	}
-	
-	public void setObjectVersionsTableContent(int objectId) {
-		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
-		
-		tableObjectVersions.setModel(model);
-		
-		SLEXMMObjectVersionResultSet orset = mmstrg.getObjectVersionsForObjectOrdered(objectId);
-		SLEXMMObjectVersion objv = null;
-		
-		while ((objv = orset.getNext()) != null) {
-			
-			Object[] row = new Object[model.getColumnCount()];
-			
-			row[0] = Integer.valueOf(objv.getId());
-			row[1] = Integer.valueOf(objv.getObjectId());
-			row[2] = Long.valueOf(objv.getStartTimestamp());
-			row[3] = Long.valueOf(objv.getEndTimestamp());
-			
-			model.addRow(row);
-		}
-		
-	}
-	
-	public void setObjectVersionsTableContent(List<Object> list) {
-		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
-		
-		tableObjectVersions.setModel(model);
-		
-		for (Object o: list) {
-			SLEXMMObjectVersion objv = (SLEXMMObjectVersion) o;
-			
-			Object[] row = new Object[model.getColumnCount()];
-			
-			row[0] = Integer.valueOf(objv.getId());
-			row[1] = Integer.valueOf(objv.getObjectId());
-			row[2] = Long.valueOf(objv.getStartTimestamp());
-			row[3] = Long.valueOf(objv.getEndTimestamp());
-			
-			model.addRow(row);
-		}
-		
-	}
-	
-	private class ObjectRelationsTableModel extends DefaultTableModel {
-		
-		ArrayList<Class> columnTypes = new ArrayList<>();
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes.get(columnIndex);
-		}
-		
-		public void addColumnClass(Class c) {
-			columnTypes.add(c);
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return false;
-		}
-			
-		public ObjectRelationsTableModel() {
-			super(new String[] { "Relation Id", "Relationship Id",
-					"Source Object Version Id", "Target Object Version Id",
-					"Start Timestamp", "End Timestamp"}, 0);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Integer.class);
-			columnTypes.add(Long.class);
-			columnTypes.add(Long.class);
-		}
-		
-	}
-	
-	public void setObjectRelationsTableContent(int objectId) {
-		ObjectRelationsTableModel model = new ObjectRelationsTableModel();
-		
-		tableObjectRelations.setModel(model);
-		
-		SLEXMMRelationResultSet orrset = mmstrg.getRelationsForSourceObjectOrdered(objectId);
-		SLEXMMRelation rel = null;
-						
-		while ((rel = orrset.getNext()) != null) {
-			
-			Object[] row = new Object[model.getColumnCount()];
-			
-			row[0] = Integer.valueOf(rel.getId());
-			row[1] = Integer.valueOf(rel.getRelationshipId());
-			row[2] = Integer.valueOf(rel.getSourceObjectVersionId());
-			row[3] = Integer.valueOf(rel.getTargetObjectVersionId());
-			row[4] = Long.valueOf(rel.getStartTimestamp());
-			row[5] = Long.valueOf(rel.getEndTimestamp());
-			
-			model.addRow(row);
-		}
-		
-		orrset = mmstrg.getRelationsForTargetObjectOrdered(objectId);
-		rel = null;
-		
-		while ((rel = orrset.getNext()) != null) {
-			
-			Object[] row = new Object[model.getColumnCount()];
-			
-			row[0] = Integer.valueOf(rel.getId());
-			row[1] = Integer.valueOf(rel.getRelationshipId());
-			row[2] = Integer.valueOf(rel.getSourceObjectVersionId());
-			row[3] = Integer.valueOf(rel.getTargetObjectVersionId());
-			row[4] = Long.valueOf(rel.getStartTimestamp());
-			row[5] = Long.valueOf(rel.getEndTimestamp());
-						
-			model.addRow(row);
-		}
-		
-	}
-	
-	private class CasesTableModel extends DefaultTableModel {
-		
-		Class[] columnTypes = new Class[] {	Integer.class, String.class	};
-		boolean[] columnEditables = new boolean[] { false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public CasesTableModel() {
-			super(new String[] { "Case Id", "Name" }, 0);
-		}
-		
-	}
-	
-	public void setCasesTableContent(JTable table) {
-		CasesTableModel model = (CasesTableModel) table.getModel();
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		SLEXMMCaseResultSet orset = mmstrg.getCases();
-		SLEXMMCase c = null;
-		
-		while ((c = orset.getNext()) != null) {
-			model.addRow(new Object[] {c.getId(),c.getName()});
-		}
-		
-	}
-	
-	private class EventsTableModel extends DefaultTableModel {
-		
-		Class[] columnTypes = new Class[] {	Integer.class, Integer.class };
-		boolean[] columnEditables = new boolean[] { false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public EventsTableModel() {
-			super(new String[] { "Event Id", "Ordering" }, 0);
-		}
-		
-	}
-	
-	public void setEventsTableContent() {
-		
-		Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {
-					topProgressBar.setIndeterminate(true);
-					//tableCollections.setEnabled(false);
-					
-					EventsTableModel model = new EventsTableModel();
-					
-					tableEventsAll.setModel(model);
-					
-					tableEventsAll.getColumnModel().getColumn(0).setMinWidth(75);
-					tableEventsAll.getColumnModel().getColumn(1).setMinWidth(75);
-				
-					SLEXMMEventResultSet orset = mmstrg.getEventsOrdered();
-					SLEXMMEvent ev = null;
-				
-					while ((ev = orset.getNext()) != null) {
-						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				topProgressBar.setIndeterminate(false);
-				//tableCollections.setEnabled(true);
-			}
-		});
-		
-		thread.start();
-		
-	}
-	
-	public void setEventsTableContentFromCase(final int caseId) {
-		
-		Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {
-					topProgressBar.setIndeterminate(true);
-					casesTabbedPane.setEnabled(false);
-					
-					EventsTableModel model = new EventsTableModel();
-					
-					tableEventsPerCase.setModel(model);
-					
-					tableEventsPerCase.getColumnModel().getColumn(0).setMinWidth(75);
-					tableEventsPerCase.getColumnModel().getColumn(1).setMinWidth(75);
-				
-					SLEXMMEventResultSet orset = mmstrg.getEventsForCaseOrdered(caseId);
-					SLEXMMEvent ev = null;
-				
-					while ((ev = orset.getNext()) != null) {
-						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				topProgressBar.setIndeterminate(false);
-				casesTabbedPane.setEnabled(true);
-			}
-		});
-		
-		thread.start();
-		
-	}
-	
-	public void setEventsTableContentFiltered(final SLEXMMEventResultSet erset) {
-		
-		Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {
-					topProgressBar.setIndeterminate(true);
-					casesTabbedPane.setEnabled(false);
-					
-					EventsTableModel model = new EventsTableModel();
-					
-					tableEventsFiltered.setModel(model);
-					
-					tableEventsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
-					tableEventsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
-				
-					SLEXMMEvent ev = null;
-				
-					while ((ev = erset.getNext()) != null) {
-						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				topProgressBar.setIndeterminate(false);
-				casesTabbedPane.setEnabled(true);
-			}
-		});
-		
-		thread.start();
-		
-	}
-	
-	public void setEventsTableContentFiltered(final List<Object> list) {
-		
-		Thread thread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				try {
-					topProgressBar.setIndeterminate(true);
-					casesTabbedPane.setEnabled(false);
-					
-					EventsTableModel model = new EventsTableModel();
-					
-					tableEventsFiltered.setModel(model);
-					
-					tableEventsFiltered.getColumnModel().getColumn(0).setMinWidth(75);
-					tableEventsFiltered.getColumnModel().getColumn(1).setMinWidth(75);
-				
-					for (Object o: list) {
-						SLEXMMEvent ev = (SLEXMMEvent) o;
-						model.addRow(new Object[] {ev.getId(), ev.getOrder()});
-					}
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				topProgressBar.setIndeterminate(false);
-				casesTabbedPane.setEnabled(true);
-			}
-		});
-		
-		thread.start();
-		
-	}
-	
-	private class EventAttributesTableModel extends DefaultTableModel {
-		
-		Class[] columnTypes = new Class[] {	String.class, String.class, String.class };
-		boolean[] columnEditables = new boolean[] { false, false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public EventAttributesTableModel() {
-			super(new String[] { "Attribute Name", "Value", "Type" }, 0);
-		}
-		
-	}
-	
-	public void setEventAttributesTableContent(int evId) {
-		
-		EventAttributesTableModel model = new EventAttributesTableModel();
-		
-		tableEventAttributes.setModel(model);
-		
-		tableEventAttributes.getColumnModel().getColumn(0).setMinWidth(75);
-		tableEventAttributes.getColumnModel().getColumn(1).setMinWidth(75);
-		tableEventAttributes.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attrs = mmstrg.getAttributeValuesForEvent(evId);
-		
-		for (SLEXMMEventAttribute at: attrs.keySet()) {
-			SLEXMMEventAttributeValue attV = attrs.get(at);
-			model.addRow(new Object[] {at.getName(),attV.getValue(),attV.getType()});
-		}
-		
-		SLEXMMEvent e = mmstrg.getEventForId(evId);
-		model.addRow(new Object[] {"Event Lifecycle", e.getLifecycle(), "STRING"});
-		model.addRow(new Object[] {"Event Resource", e.getResource(), "STRING"});
-		model.addRow(new Object[] {"Event Timestamp", e.getTimestamp(), "LONG"});
-		
-	}
-	
-	private class ObjectVersionAttributesTableModel extends DefaultTableModel {
-		
-		Class[] columnTypes = new Class[] {	String.class, String.class, String.class };
-		boolean[] columnEditables = new boolean[] { false, false, false };
-		
-		public Class getColumnClass(int columnIndex) {
-			return columnTypes[columnIndex];
-		}
-		
-		public boolean isCellEditable(int row, int column) {
-			return columnEditables[column];
-		}
-			
-		public ObjectVersionAttributesTableModel() {
-			super(new String[] { "Attribute Name", "Value", "Type" }, 0);
-		}
-		
-	}
-	
-	public void setObjectVersionAttributesTableContent(int ovId) {
-		
-		ObjectVersionAttributesTableModel model = new ObjectVersionAttributesTableModel();
-		
-		tableObjectVersionAttributes.setModel(model);
-		
-		tableObjectVersionAttributes.getColumnModel().getColumn(0).setMinWidth(75);
-		tableObjectVersionAttributes.getColumnModel().getColumn(1).setMinWidth(75);
-		tableObjectVersionAttributes.getColumnModel().getColumn(1).setMinWidth(75);
-		
-		HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attrs = mmstrg.getAttributeValuesForObjectVersion(ovId);
-		
-		for (SLEXMMAttribute at: attrs.keySet()) {
-			SLEXMMAttributeValue attV = attrs.get(at);
-			model.addRow(new Object[] {at.getName(),attV.getValue(),attV.getType()});
-		}
-		
-	}
+
 }
