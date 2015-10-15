@@ -6,18 +6,27 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+
 import org.processmining.database.metamodel.poql.POQLRunner;
 import org.processmining.database.metamodel.poql.QueryResult;
+import org.processmining.openslex.metamodel.SLEXMMActivity;
+import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
+import org.processmining.openslex.metamodel.SLEXMMCase;
+import org.processmining.openslex.metamodel.SLEXMMClass;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
 import org.processmining.openslex.metamodel.SLEXMMObject;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
+import org.processmining.openslex.metamodel.SLEXMMRelation;
+import org.processmining.openslex.metamodel.SLEXMMRelationship;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.ui.components.Autocomplete;
+import org.processmining.redologs.ui.components.metamodel.MetaModelTableUtils.ObjectsTableModel;
 
 public class POQLQueryPanel extends JPanel {
 	
@@ -30,6 +39,8 @@ public class POQLQueryPanel extends JPanel {
 	
 	private JTable sqlResultTable = null;
 	private JTextField poqlQueryField = null;
+	
+	private JScrollPane scrollPane = null;
 	
 	/**/
 	private static final String COMMIT_ACTION = "commit";
@@ -71,7 +82,7 @@ public class POQLQueryPanel extends JPanel {
 		sqlQueryPanel.add(poqlQueryField, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecutePOQLQuery, BorderLayout.EAST);
 
-		JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		this.add(scrollPane, BorderLayout.CENTER);
 
 		sqlResultTable = new JTable();
@@ -82,6 +93,16 @@ public class POQLQueryPanel extends JPanel {
 		
 	}
 	
+	private void setMessage(String msg) {
+		JLabel msgLabel = new JLabel();
+		msgLabel.setText(msg);
+		scrollPane.setViewportView(msgLabel);
+	}
+	
+	private void setTable(JTable table) {
+		scrollPane.setViewportView(table);
+	}
+	
 	public class ExecutePOQLQueryAction implements ActionListener {
 		
 		public void actionPerformed(ActionEvent e) {
@@ -90,18 +111,44 @@ public class POQLQueryPanel extends JPanel {
 
 				@Override
 				public void run() {
-					String query = poqlQueryField.getText();
-					POQLRunner runner = new POQLRunner();
-					QueryResult qr = runner.executeQuery(slxmm, query);
-
-					if (qr.type == SLEXMMObject.class) {
-						//setObjectsTableContentFiltered(qr.result);
-					} else if (qr.type == SLEXMMObjectVersion.class) {
-						//setObjectVersionsTableContent(qr.result); // FIXME
-					} else if (qr.type == SLEXMMEvent.class) {
-						//setEventsTableContentFiltered(qr.result);
-					} else {
-						System.err.println("Unknown type of result");
+					try {
+						String query = poqlQueryField.getText();
+						POQLRunner runner = new POQLRunner();
+						QueryResult qr = runner.executeQuery(slxmm, query);
+						
+						setTable(sqlResultTable);
+						
+						if (qr.type == SLEXMMObject.class) {
+							MetaModelTableUtils.setObjectsTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMObjectVersion.class) {
+							MetaModelTableUtils.setObjectVersionsTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMEvent.class) {
+							MetaModelTableUtils.setEventsTableContent(sqlResultTable, qr.result, null);
+						} else if (qr.type == SLEXMMActivity.class) {
+							MetaModelTableUtils.setActivitiesTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMCase.class) {
+							MetaModelTableUtils.setCasesTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMActivityInstance.class) {
+							MetaModelTableUtils.setActivityInstancesTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMClass.class) {
+							MetaModelTableUtils.setClassesTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMRelation.class) {
+							MetaModelTableUtils.setObjectRelationsTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMRelationship.class) {
+							MetaModelTableUtils.setRelationshipsTableContent(sqlResultTable, qr.result);
+						} else {
+							String msg = "ERROR: Unknown type of result "+qr.type;
+							System.err.println(msg);
+							setMessage(msg);
+						}
+					
+					} catch (Exception e) {
+						e.printStackTrace();
+						String msg = e.getMessage();
+						if (msg == null) {
+							msg = e.toString();
+						}
+						setMessage(msg);
 					}
 				}
 			});

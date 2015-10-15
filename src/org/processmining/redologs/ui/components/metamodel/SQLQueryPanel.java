@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -26,6 +27,8 @@ public class SQLQueryPanel extends JPanel {
 	
 	private JTable sqlResultTable = null;
 	private JTextField sqlQueryField = null;
+	
+	private JScrollPane scrollPane = null;
 	
 	public int getId() {
 		return this.id;
@@ -51,7 +54,7 @@ public class SQLQueryPanel extends JPanel {
 		sqlQueryPanel.add(sqlQueryField, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecuteSQLQuery, BorderLayout.EAST);
 
-		JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		this.add(scrollPane, BorderLayout.CENTER);
 
 		sqlResultTable = new JTable();
@@ -60,6 +63,16 @@ public class SQLQueryPanel extends JPanel {
 		
 		btnExecuteSQLQuery.addActionListener(new ExecuteSQLQueryAction());
 		
+	}
+	
+	private void setMessage(String msg) {
+		JLabel msgLabel = new JLabel();
+		msgLabel.setText(msg);
+		scrollPane.setViewportView(msgLabel);
+	}
+	
+	private void setTable(JTable table) {
+		scrollPane.setViewportView(table);
 	}
 	
 	public class ExecuteSQLQueryAction implements ActionListener {
@@ -81,6 +94,8 @@ public class SQLQueryPanel extends JPanel {
 							DefaultTableModel model = new DefaultTableModel(rset.getColumnNames(), rset.getRowCount());
 							
 							sqlResultTable.setModel(model);
+							
+							setTable(sqlResultTable);
 
 							while ((r = rset.getNext()) != null) {
 								model.addRow(r.getValues());
@@ -93,6 +108,11 @@ public class SQLQueryPanel extends JPanel {
 						e.printStackTrace();
 						System.err.println("Error executing sql query: "
 								+ query);
+						String msg = e.getMessage();
+						if (msg == null) {
+							msg = e.toString();
+						}
+						setMessage(msg);
 					}
 				}
 			});

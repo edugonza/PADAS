@@ -68,7 +68,7 @@ public class POQLRunner {
         return result;
 	}
 	
-	public QueryResult executeQuery(SLEXMMStorageMetaModel slxmm, String query) {
+	public QueryResult executeQuery(SLEXMMStorageMetaModel slxmm, String query) throws Exception {
 
 		System.out.println("Executing query: "+query);
 		long start_time = System.currentTimeMillis();
@@ -104,6 +104,7 @@ public class POQLRunner {
         
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw e;
 		}
         
         long end_time = System.currentTimeMillis();

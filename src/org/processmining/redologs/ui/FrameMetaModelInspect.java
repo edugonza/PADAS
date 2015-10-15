@@ -1,22 +1,15 @@
 package org.processmining.redologs.ui;
 
-import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
-import org.processmining.openslex.metamodel.SLEXMMCase;
 import org.processmining.openslex.metamodel.SLEXMMCaseResultSet;
 import org.processmining.openslex.metamodel.SLEXMMClass;
 import org.processmining.openslex.metamodel.SLEXMMDataModel;
 import org.processmining.openslex.metamodel.SLEXMMDataModelResultSet;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
-import org.processmining.openslex.metamodel.SLEXMMEventAttribute;
-import org.processmining.openslex.metamodel.SLEXMMEventAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMEventResultSet;
-import org.processmining.openslex.metamodel.SLEXMMObject;
 import org.processmining.openslex.metamodel.SLEXMMObjectResultSet;
-import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMObjectVersionResultSet;
-import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationResultSet;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.redologs.common.Column;
@@ -48,7 +41,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
@@ -81,8 +73,6 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private DiagramComponent datamodelPanel;
 	private JPanel processModelPanel;
 	private JTable processActivitiesTable;
-
-	private JTabbedPane casesTabbedPane;
 	
 	private int sqlTabCounter = 0;
 	private int poqlTabCounter = 0;
@@ -109,19 +99,22 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		tabbedPane_1.addTab("SQL", null, createSQLPanel(), null);
 		
-		SLEXMMCaseResultSet crset = getMetaModel().getCases();
-		MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
+		try {
+			SLEXMMCaseResultSet crset = getMetaModel().getCases();
+			MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
 		
-		MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
+			MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
 		
-		SLEXMMObjectResultSet orset = getMetaModel().getObjects();
-		MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
+			SLEXMMObjectResultSet orset = getMetaModel().getObjects();
+			MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
 		
-		SLEXMMEventResultSet erset = getMetaModel().getEvents();
-		MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
+			SLEXMMEventResultSet erset = getMetaModel().getEvents();
+			MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
 		
-		setDataModel();
-		
+			setDataModel();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private JPanel createInspectorPanel() {
@@ -176,7 +169,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
 						if (selected != null) {
 							SLEXMMEventResultSet erset = getMetaModel().getEventsForCaseOrdered(selected);
-							MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+							try {
+								MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -197,9 +194,13 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsAll);
 						if (selected != null) {
 							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
-							MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
-									ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-									String.valueOf(ev.getTimestamp()));
+							try {
+								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+										String.valueOf(ev.getTimestamp()));
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -218,9 +219,13 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerCase);
 						if (selected != null) {
 							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
-							MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
-									ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-									String.valueOf(ev.getTimestamp()));
+							try {
+								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+										String.valueOf(ev.getTimestamp()));
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -267,7 +272,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			@Override
 			public void run(SLEXMMClass c) {
 				SLEXMMObjectResultSet orset = getMetaModel().getObjectsPerClass(c.getId());
-				MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
+				try {
+					MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		};
 		
@@ -287,13 +296,17 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					public void valueChanged(ListSelectionEvent e) {
 						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsAll);
 						if (selected != null) {
-							SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+							try {
+								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
 									getObjectVersionsForObjectOrdered(selected[0]);
-							MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
-							SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
-							rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
-							rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
-							MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+								rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+								MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -311,13 +324,17 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					public void valueChanged(ListSelectionEvent e) {
 						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsPerClass);
 						if (selected != null) {
-							SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+							try {
+								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
 									getObjectVersionsForObjectOrdered(selected[0]);
-							MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
-							SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
-							rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
-							rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
-							MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+								rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+								MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -377,7 +394,11 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						if (selected != null) {
 							HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
 									getMetaModel().getAttributeValuesForObjectVersion(selected);
-							MetaModelTableUtils.setObjectVersionAttributesTableContent(tableObjectVersionAttributes,atts);
+							try {
+								MetaModelTableUtils.setObjectVersionAttributesTableContent(tableObjectVersionAttributes,atts);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				});
@@ -532,7 +553,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		Key pk_class = createKey("pk_class", t_class, Key.PRIMARY_KEY,
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		// FK
-		Key fk_class_datamodel = createKey("fk_class_datamodel", t_class, Key.FOREIGN_KEY,
+		createKey("fk_class_datamodel", t_class, Key.FOREIGN_KEY,
 				pk_datamodel, new String[] {"datamodel_id"}, primaryKeys, foreignKeys);
 		/**/
 		
@@ -545,7 +566,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		
 		// FK
-		Key k_o_c_id = createKey("k_o_c_id", t_object, Key.FOREIGN_KEY,
+		createKey("k_o_c_id", t_object, Key.FOREIGN_KEY,
 				pk_class, new String[] {"class_id"}, primaryKeys, foreignKeys);
 		
 		/**/
@@ -559,7 +580,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		
 		// FK
-		Key k_a_c_id = createKey("k_a_c_id", t_attribute, Key.FOREIGN_KEY,
+		createKey("k_a_c_id", t_attribute, Key.FOREIGN_KEY,
 				pk_class, new String[] {"class_id"}, primaryKeys, foreignKeys);
 		
 		/**/
@@ -574,10 +595,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		
 		// FK
-		Key k_rs_c_s_id = createKey("k_rs_c_s_id", t_relationship, Key.FOREIGN_KEY,
+		createKey("k_rs_c_s_id", t_relationship, Key.FOREIGN_KEY,
 				pk_class, new String[] {"source"}, primaryKeys, foreignKeys);
 		
-		Key k_rs_c_t_id = createKey("k_rs_c_t_id", t_relationship, Key.FOREIGN_KEY,
+		createKey("k_rs_c_t_id", t_relationship, Key.FOREIGN_KEY,
 				pk_class, new String[] {"target"}, primaryKeys, foreignKeys);
 		
 		/**/
@@ -591,7 +612,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		Key pk_object_version = createKey("pk_object_version", t_object_version, Key.PRIMARY_KEY,
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		// FK 
-		Key k_ov_o_id = createKey("k_ov_o_id", t_object_version, Key.FOREIGN_KEY,
+		createKey("k_ov_o_id", t_object_version, Key.FOREIGN_KEY,
 				pk_object, new String[] {"object_id"}, primaryKeys, foreignKeys);
 		/**/
 		
@@ -600,14 +621,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				new String[] {"id","object_version_id","attribute_id","value","type"}, tables);
 		
 		// PK
-		Key pk_attribute_value = createKey("pk_attribute_value", t_attribute_value, Key.PRIMARY_KEY,
+		createKey("pk_attribute_value", t_attribute_value, Key.PRIMARY_KEY,
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		
 		// FK
-		Key k_av_ov_id = createKey("k_av_ov_id", t_attribute_value, Key.FOREIGN_KEY,
+		createKey("k_av_ov_id", t_attribute_value, Key.FOREIGN_KEY,
 				pk_object_version, new String[] {"object_version_id"}, primaryKeys, foreignKeys);
 		
-		Key k_av_a_id = createKey("k_av_a_id", t_attribute_value, Key.FOREIGN_KEY,
+		createKey("k_av_a_id", t_attribute_value, Key.FOREIGN_KEY,
 				pk_attribute, new String[] {"attribute_id"}, primaryKeys, foreignKeys);
 		
 		/**/
@@ -618,17 +639,17 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				"relationship_id","start_timestamp","end_timestamp"}, tables);
 		
 		// PK
-		Key pk_relation = createKey("pk_relation", t_relation, Key.PRIMARY_KEY,
+		createKey("pk_relation", t_relation, Key.PRIMARY_KEY,
 				null, new String[] {"id"}, primaryKeys, foreignKeys);
 		
 		// FK
-		Key k_r_ov_s_id = createKey("k_r_ov_s_id", t_relation, Key.FOREIGN_KEY,
+		createKey("k_r_ov_s_id", t_relation, Key.FOREIGN_KEY,
 				pk_object_version, new String[] {"source_object_version_id"}, primaryKeys, foreignKeys);
 		
-		Key k_r_ov_t_id = createKey("k_r_ov_t_id", t_relation, Key.FOREIGN_KEY,
+		createKey("k_r_ov_t_id", t_relation, Key.FOREIGN_KEY,
 				pk_object_version, new String[] {"target_object_version_id"}, primaryKeys, foreignKeys);
 		
-		Key k_r_rs_id = createKey("k_r_rs_id", t_relation, Key.FOREIGN_KEY,
+		createKey("k_r_rs_id", t_relation, Key.FOREIGN_KEY,
 				pk_relationship, new String[] {"relationship_id"}, primaryKeys, foreignKeys);
 		
 		/**/
@@ -709,7 +730,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		t.name = name;
 		
 		for (String cn: columnNames) {
-			Column c = createColumn(t,cn);
+			createColumn(t,cn);
 		}
 		
 		tables.add(t);
