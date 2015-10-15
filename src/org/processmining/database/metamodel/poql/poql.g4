@@ -15,6 +15,7 @@ grammar poql;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
   import org.processmining.openslex.metamodel.SLEXMMRelationship;
+  import org.processmining.openslex.metamodel.SLEXMMAttribute;
 }
 
 @lexer::members 
@@ -39,6 +40,7 @@ grammar poql;
   public static final int ID_TYPE_RELATIONSHIP = 7;
   public static final int ID_TYPE_ACTIVITY_INSTANCE = 8;
   public static final int ID_TYPE_CASE = 9;
+  public static final int ID_TYPE_ATTRIBUTE = 10;
   
   @Override
   public void notifyErrorListeners(Token offendingToken, String msg, RecognitionException ex)
@@ -66,6 +68,7 @@ things returns [List<Object> list, Class type]:
 	| t7=relations { $list = $t7.list; $type = $t7.type; }
 	| t8=relationships { $list = $t8.list; $type = $t8.type; }
 	| t9=activityinstances { $list = $t9.list; $type = $t9.type; }
+	| t10=attributes { $list = $t10.list; $type = $t10.type; }
 	;
  	
 objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
@@ -114,6 +117,11 @@ activityinstances returns [List<Object> list, Class type]: ACTIVITYINSTANCESOF O
 	| t3=activityinstances f=filter[ID_TYPE_ACTIVITY_INSTANCE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
+attributes returns [List<Object> list, Class type]: ATTRIBUTESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.attributesOf($t1.list,$t1.type); $type=SLEXMMAttribute.class;}
+	| t2=allAttributes { $list = $t2.list; $type = $t2.type; }
+	| t3=attributes f=filter[ID_TYPE_ATTRIBUTE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
+	;
+	
 filter [int type_id] returns [FilterTree conditions]: WHERE f=filter_expression[$type_id] { $conditions = $f.tree; }
 	;
 
@@ -155,6 +163,7 @@ ids [int type_id] returns [String name, boolean att, int id]:
 	| {$type_id == ID_TYPE_CASE}? i7=id_case {$name = $i7.name; $att = $i7.att; $id = $i7.id;}
 	| {$type_id == ID_TYPE_ACTIVITY_INSTANCE}? i8=id_activity_instance {$name = $i8.name; $att = $i8.att; $id = $i8.id;}
 	| {$type_id == ID_TYPE_ACTIVITY}? i9=id_activity {$name = $i9.name; $att = $i9.att; $id = $i9.id;}
+	| {$type_id == ID_TYPE_ATTRIBUTE}? i10=id_attribute {$name = $i10.name; $att = $i10.att; $id = $i10.id;}
 	;
 
 id_version returns [String name, boolean att, int id]:
@@ -174,7 +183,6 @@ id_class returns [String name, boolean att, int id]:
 	  ID {$name = $ID.text; $att = false; $id = $ID.type;}
 	| DATAMODEL_ID {$name = $DATAMODEL_ID.text; $att = false; $id = $DATAMODEL_ID.type;}
 	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type;}
-	| IDATT {$name = $IDATT.text; $att = true;}
 	;
 	
 id_relationship returns [String name, boolean att, int id]:
@@ -218,6 +226,12 @@ id_activity returns [String name, boolean att, int id]:
 	| PROCESS_ID {$name = $PROCESS_ID.text; $att = false; $id = $PROCESS_ID.type; }
 	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type; }
 	;
+	
+id_attribute returns [String name, boolean att, int id]:
+	  ID {$name = $ID.text; $att = false; $id = $ID.type; }
+	| CLASS_ID {$name = $CLASS_ID.text; $att = false; $id = $CLASS_ID.type; }
+	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type; }
+	;
 
 allObjects returns [List<Object> list, Class type]: ALLOBJECTS { $list = poql.getAllObjects(); $type=SLEXMMObject.class;};
 allCases returns [List<Object> list, Class type]: ALLCASES { $list = poql.getAllCases(); $type=SLEXMMCase.class;};
@@ -228,6 +242,7 @@ allActivities returns [List<Object> list, Class type]: ALLACTIVITIES { $list = p
 allRelations returns [List<Object> list, Class type]: ALLRELATIONS { $list = poql.getAllRelations(); $type=SLEXMMRelation.class;};
 allRelationships returns [List<Object> list, Class type]: ALLRELATIONSHIPS { $list = poql.getAllRelationships(); $type=SLEXMMRelationship.class;};
 allActivityInstances returns [List<Object> list, Class type]: ALLACTIVITYINSTANCES { $list = poql.getAllActivityInstances(); $type=SLEXMMActivityInstance.class;};
+allAttributes returns [List<Object> list, Class type]: ALLATTRIBUTES { $list = poql.getAllAttributes(); $type=SLEXMMAttribute.class;};
 
 CASESOF: C A S E S O F ;
 OBJECTSOF: O B J E C T S O F ;
@@ -239,6 +254,7 @@ VERSIONSRELATEDTO: V E R S I O N S R E L A T E D T O ;
 RELATIONSOF: R E L A T I O N S O F ;
 RELATIONSHIPSOF: R E L A T I O N S H I P S O F ;
 ACTIVITYINSTANCESOF: A C T I V I T Y I N S T A N C E S O F ;
+ATTRIBUTESOF: A T T R I B U T E S O F ;
 
 ALLOBJECTS: A L L O B J E C T S ;
 ALLCASES: A L L C A S E S ;
@@ -249,6 +265,7 @@ ALLACTIVITIES: A L L A C T I V I T I E S ;
 ALLRELATIONS: A L L R E L A T I O N S ;
 ALLRELATIONSHIPS: A L L R E L A T I O N S H I P S ;
 ALLACTIVITYINSTANCES: A L L A C T I V I T Y I N S T A N C E S ;
+ALLATTRIBUTES: A L L A T T R I B U T E S ;
 
 // tokens for filters
 ID: I D ;

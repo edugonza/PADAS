@@ -13,6 +13,7 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
   import org.processmining.openslex.metamodel.SLEXMMRelationship;
+  import org.processmining.openslex.metamodel.SLEXMMAttribute;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -131,6 +132,16 @@ public interface poqlListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitActivityinstances(poqlParser.ActivityinstancesContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterAttributes(poqlParser.AttributesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#attributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitAttributes(poqlParser.AttributesContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link poqlParser#filter}.
 	 * @param ctx the parse tree
@@ -272,6 +283,16 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitId_activity(poqlParser.Id_activityContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link poqlParser#id_attribute}.
+	 * @param ctx the parse tree
+	 */
+	void enterId_attribute(poqlParser.Id_attributeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#id_attribute}.
+	 * @param ctx the parse tree
+	 */
+	void exitId_attribute(poqlParser.Id_attributeContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link poqlParser#allObjects}.
 	 * @param ctx the parse tree
 	 */
@@ -361,4 +382,14 @@ public interface poqlListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAllActivityInstances(poqlParser.AllActivityInstancesContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link poqlParser#allAttributes}.
+	 * @param ctx the parse tree
+	 */
+	void enterAllAttributes(poqlParser.AllAttributesContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#allAttributes}.
+	 * @param ctx the parse tree
+	 */
+	void exitAllAttributes(poqlParser.AllAttributesContext ctx);
 }

@@ -13,6 +13,7 @@ package org.processmining.database.metamodel.poql;
   import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
   import org.processmining.openslex.metamodel.SLEXMMRelation;
   import org.processmining.openslex.metamodel.SLEXMMRelationship;
+  import org.processmining.openslex.metamodel.SLEXMMAttribute;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -157,6 +158,18 @@ public class poqlBaseListener implements poqlListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitActivityinstances(poqlParser.ActivityinstancesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAttributes(poqlParser.AttributesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAttributes(poqlParser.AttributesContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -330,6 +343,18 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterId_attribute(poqlParser.Id_attributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitId_attribute(poqlParser.Id_attributeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAllObjects(poqlParser.AllObjectsContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -433,6 +458,18 @@ public class poqlBaseListener implements poqlListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitAllActivityInstances(poqlParser.AllActivityInstancesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAllAttributes(poqlParser.AllAttributesContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAllAttributes(poqlParser.AllAttributesContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

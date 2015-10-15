@@ -134,6 +134,42 @@ public class MetaModelTableUtils {
 		}
 
 	}
+	
+	public static class AttributesTableModel extends DefaultTableModel {
+
+		Class[] columnTypes = new Class[] { Integer.class, Integer.class,
+				String.class };
+		boolean[] columnEditables = new boolean[] { false, false, false };
+
+		public Class getColumnClass(int columnIndex) {
+			return columnTypes[columnIndex];
+		}
+
+		public boolean isCellEditable(int row, int column) {
+			return columnEditables[column];
+		}
+
+		public AttributesTableModel() {
+			super(new String[] { "Attribute Id", "Class Id", "Name" }, 0);
+		}
+
+	}
+
+	public static void setAttributesTableContent(JTable table, List<Object> classes) throws Exception {
+		AttributesTableModel model = new AttributesTableModel();
+		table.setModel(model);
+		
+		table.getColumnModel().getColumn(0).setMinWidth(75);
+		table.getColumnModel().getColumn(1).setMinWidth(75);
+		table.getColumnModel().getColumn(2).setMinWidth(75);
+
+		for (Object o : classes) {
+			SLEXMMAttribute c = (SLEXMMAttribute) o;
+			model.addRow(new Object[] { c.getId(), c.getClassId(),
+					c.getName() });
+		}
+
+	}
 
 	public static class ObjectsTableModel extends DefaultTableModel {
 

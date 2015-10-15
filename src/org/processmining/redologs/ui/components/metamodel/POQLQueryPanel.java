@@ -17,6 +17,7 @@ import org.processmining.database.metamodel.poql.POQLRunner;
 import org.processmining.database.metamodel.poql.QueryResult;
 import org.processmining.openslex.metamodel.SLEXMMActivity;
 import org.processmining.openslex.metamodel.SLEXMMActivityInstance;
+import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMCase;
 import org.processmining.openslex.metamodel.SLEXMMClass;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
@@ -136,6 +137,8 @@ public class POQLQueryPanel extends JPanel {
 							MetaModelTableUtils.setObjectRelationsTableContent(sqlResultTable, qr.result);
 						} else if (qr.type == SLEXMMRelationship.class) {
 							MetaModelTableUtils.setRelationshipsTableContent(sqlResultTable, qr.result);
+						} else if (qr.type == SLEXMMAttribute.class) {
+							MetaModelTableUtils.setAttributesTableContent(sqlResultTable, qr.result);
 						} else {
 							String msg = "ERROR: Unknown type of result "+qr.type;
 							System.err.println(msg);
