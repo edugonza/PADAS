@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -40,7 +41,9 @@ public class POQLQueryPanel extends JPanel {
 	
 	private JTable sqlResultTable = null;
 	private JTextField poqlQueryField = null;
+	private JButton btnExecutePOQLQuery = null;
 	
+	private JProgressBar progressBar = null;
 	private JScrollPane scrollPane = null;
 	
 	/**/
@@ -77,11 +80,14 @@ public class POQLQueryPanel extends JPanel {
 		poqlQueryField.getActionMap().put(COMMIT_ACTION,autoComplete.new CommitAction());
 		poqlQueryField.getActionMap().put(SHIFT_ACTION,autoComplete.new ShiftAction());
 
-		JButton btnExecutePOQLQuery = new JButton("Execute POQL Query");
+		btnExecutePOQLQuery = new JButton("Execute POQL Query");
 		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
 
+		progressBar = new JProgressBar();
+		
 		sqlQueryPanel.add(poqlQueryField, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecutePOQLQuery, BorderLayout.EAST);
+		sqlQueryPanel.add(progressBar, BorderLayout.SOUTH);
 
 		scrollPane = new JScrollPane();
 		this.add(scrollPane, BorderLayout.CENTER);
@@ -113,6 +119,9 @@ public class POQLQueryPanel extends JPanel {
 				@Override
 				public void run() {
 					try {
+						poqlQueryField.setEnabled(false);
+						btnExecutePOQLQuery.setEnabled(false);
+						progressBar.setIndeterminate(true);
 						String query = poqlQueryField.getText();
 						POQLRunner runner = new POQLRunner();
 						QueryResult qr = runner.executeQuery(slxmm, query);
@@ -152,6 +161,10 @@ public class POQLQueryPanel extends JPanel {
 							msg = e.toString();
 						}
 						setMessage(msg);
+					} finally {
+						poqlQueryField.setEnabled(true);
+						btnExecutePOQLQuery.setEnabled(true);
+						progressBar.setIndeterminate(false);
 					}
 				}
 			});

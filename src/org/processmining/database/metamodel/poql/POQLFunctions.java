@@ -23,6 +23,7 @@ import org.processmining.openslex.metamodel.SLEXMMDataModel;
 import org.processmining.openslex.metamodel.SLEXMMDataModelResultSet;
 import org.processmining.openslex.metamodel.SLEXMMEvent;
 import org.processmining.openslex.metamodel.SLEXMMEventAttribute;
+import org.processmining.openslex.metamodel.SLEXMMEventAttributeResultSet;
 import org.processmining.openslex.metamodel.SLEXMMEventAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMEventResultSet;
 import org.processmining.openslex.metamodel.SLEXMMObject;
@@ -158,26 +159,35 @@ public class POQLFunctions {
 
 			}
 		} else if (type == SLEXMMEvent.class) {
+			
+			List<SLEXMMEventAttribute> slxAtts = new ArrayList<>();
+			
+			if (condition.isAttribute()) {
+				SLEXMMEventAttributeResultSet earset = slxmm.getEventAttributes();
+				SLEXMMEventAttribute ea = null;
+				while ((ea = earset.getNext()) != null) {
+					if (ea.getName().equals(condition.getKey())) {
+						slxAtts.add(ea);
+						break;
+					}
+				}
+			}
+			
 			for (Object o : list) {
 				SLEXMMEvent ob = (SLEXMMEvent) o;
 				String v = null;
 				if (condition.isAttribute()) {
 					HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attsMap = ob
 							.getAttributeValues();
-					SLEXMMEventAttribute slxAtt = null;
-
-					for (SLEXMMEventAttribute at : attsMap.keySet()) {
-						if (at.getName().equals(condition.getKey())) {
-							slxAtt = at;
-							break;
-						}
-					}
-
-					if (slxAtt != null) {
-						SLEXMMEventAttributeValue slxAttVal = attsMap
-								.get(slxAtt);
-						if (slxAttVal != null) {
-							v = slxAttVal.getValue();
+					
+					if (!slxAtts.isEmpty()) {
+						for (SLEXMMEventAttribute at: slxAtts) {
+							SLEXMMEventAttributeValue slxAttVal = attsMap
+								.get(at);
+							if (slxAttVal != null) {
+								v = slxAttVal.getValue();
+								break;
+							}
 						}
 					}
 
@@ -565,13 +575,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMCase.class) {
 			// TODO
 		} else if (type == SLEXMMActivity.class) {
-			objectsOf(
-					versionsOf(
-							eventsOf(
-									activityInstancesOf(list, type),
-									SLEXMMActivityInstance.class),
-							SLEXMMEvent.class),
-					SLEXMMObjectVersion.class); // FIXME
+			// TODO
 		} else if (type == SLEXMMClass.class) {
 			for (Object o : list) {
 				SLEXMMClass c = (SLEXMMClass) o;
@@ -621,7 +625,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMEvent.class) {
 			// TODO
 		} else if (type == SLEXMMCase.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMActivity.class) {
 			// TODO
 		} else if (type == SLEXMMClass.class) {

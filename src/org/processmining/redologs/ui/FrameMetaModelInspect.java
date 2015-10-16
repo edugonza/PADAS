@@ -1,5 +1,6 @@
 package org.processmining.redologs.ui;
 
+import org.processmining.openslex.metamodel.SLEXMMActivityInstanceResultSet;
 import org.processmining.openslex.metamodel.SLEXMMAttribute;
 import org.processmining.openslex.metamodel.SLEXMMAttributeValue;
 import org.processmining.openslex.metamodel.SLEXMMCaseResultSet;
@@ -62,8 +63,12 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 	private JTable tableCasesAll;
 
+	private JTable tableActivityInstancesAll;
+	private JTable tableActivityInstancesPerCase;
+	
 	private JTable tableEventsAll;
 	private JTable tableEventsPerCase;
+	private JTable tableEventsPerActivityInstance;
 
 	private JTable tableEventAttributes;
 
@@ -111,7 +116,10 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 			SLEXMMEventResultSet erset = getMetaModel().getEvents();
 			MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
 		
-			setDataModel();
+			SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstances();
+			MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesAll,airset);
+			
+			datamodelPanel.setDataModel(getDataModel());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -169,15 +177,17 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
 						if (selected != null) {
 							SLEXMMEventResultSet erset = getMetaModel().getEventsForCaseOrdered(selected);
+							SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstancesForCase(selected);
 							try {
 								MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+								MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesPerCase, airset);
 							} catch (Exception ex) {
 								ex.printStackTrace();
 							}
 						}
 					}
 				});
-
+		
 		JScrollPane casesScrollPane_all = new JScrollPane(tableCasesAll);
 		casesScrollPane_all.setMinimumSize(new Dimension(220, 0));
 
@@ -229,23 +239,122 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						}
 					}
 				});
+		
+		tableEventsPerActivityInstance = new JTable();
+		tableEventsPerActivityInstance.setFillsViewportHeight(true);
+		tableEventsPerActivityInstance.setModel(new MetaModelTableUtils.EventsTableModel());
 
+		tableEventsPerActivityInstance
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableEventsPerActivityInstance.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerActivityInstance);
+						if (selected != null) {
+							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+							try {
+								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+										String.valueOf(ev.getTimestamp()));
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				});
+
+		tableActivityInstancesAll = new JTable();
+		tableActivityInstancesAll.setFillsViewportHeight(true);
+		tableActivityInstancesAll.setModel(new MetaModelTableUtils.ActivityInstanceTableModel());
+
+		tableActivityInstancesAll.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableActivityInstancesAll.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesAll);
+						if (selected != null) {
+							try {
+								MetaModelTableUtils.setEventsTableContent(
+										tableEventsPerActivityInstance,
+										getMetaModel().getEventsForActivityInstanceOrdered(selected),
+										topProgressBar);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				});
+
+		tableActivityInstancesPerCase = new JTable();
+		tableActivityInstancesPerCase.setFillsViewportHeight(true);
+		tableActivityInstancesPerCase.setModel(new MetaModelTableUtils.ActivityInstanceTableModel());
+
+		tableActivityInstancesPerCase
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableActivityInstancesPerCase.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesPerCase);
+						if (selected != null) {
+							try {
+								MetaModelTableUtils.setEventsTableContent(
+										tableEventsPerActivityInstance,
+										getMetaModel().getEventsForActivityInstanceOrdered(selected),
+										topProgressBar);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				});
+		
+		JTabbedPane activityInstancesTabbedPane = new JTabbedPane();
+		activityInstancesTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
+		
+		JScrollPane scrollPaneActivityInstancesAll = new JScrollPane(tableActivityInstancesAll);
+		scrollPaneActivityInstancesAll.setMinimumSize(new Dimension(180, 0));
+		
+		JScrollPane scrollPaneActivityInstancesPerCase = new JScrollPane(tableActivityInstancesPerCase);
+		scrollPaneActivityInstancesPerCase.setMinimumSize(new Dimension(180, 0));
+		
+		activityInstancesTabbedPane.addTab("All Activity Instances", scrollPaneActivityInstancesAll);
+		activityInstancesTabbedPane.addTab("Per Case", scrollPaneActivityInstancesPerCase);
+		
 		JSplitPane splitPanelTopRight = new JSplitPane();
 		splitPanelTopRight.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
 
+		JSplitPane splitPanelCasesActivityInstances = new JSplitPane();
+		splitPanelCasesActivityInstances.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+		
+		splitPanelCasesActivityInstances.setLeftComponent(casesScrollPane_all);
+		splitPanelCasesActivityInstances.setRightComponent(activityInstancesTabbedPane);
+		
 		splitPanelTopLeft.setRightComponent(splitPanelTopRight);
-		splitPanelTopLeft.setLeftComponent(casesScrollPane_all);
+		splitPanelTopLeft.setLeftComponent(splitPanelCasesActivityInstances);
 
 		JTabbedPane eventsTabbedPane = new JTabbedPane();
 		eventsTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 
 		JScrollPane scrollPaneEventsAll = new JScrollPane(tableEventsAll);
-		scrollPaneEventsAll.setMinimumSize(new Dimension(270, 0));
+		scrollPaneEventsAll.setMinimumSize(new Dimension(180, 0));
 		eventsTabbedPane.addTab("All Events", null, scrollPaneEventsAll, null);
 
+		JScrollPane scrollPaneEventsPerActivityInstance = new JScrollPane(
+				tableEventsPerActivityInstance);
+		scrollPaneEventsPerActivityInstance.setMinimumSize(new Dimension(180, 0));
+		eventsTabbedPane
+				.addTab("Per Activity Instance", null, scrollPaneEventsPerActivityInstance, null);
+
+		
 		JScrollPane scrollPaneEventsPerCase = new JScrollPane(
 				tableEventsPerCase);
-		scrollPaneEventsPerCase.setMinimumSize(new Dimension(270, 0));
+		scrollPaneEventsPerCase.setMinimumSize(new Dimension(180, 0));
 		eventsTabbedPane
 				.addTab("Per Case", null, scrollPaneEventsPerCase, null);
 
@@ -342,10 +451,13 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JTabbedPane objectsTabbedPane = new JTabbedPane();
 		objectsTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 		JScrollPane scrollPaneTableObjectsAll = new JScrollPane(tableObjectsAll);
+		scrollPaneTableObjectsAll.setMinimumSize(new Dimension(180, 0));
+		
 		objectsTabbedPane.addTab("All Objects", null,
 				scrollPaneTableObjectsAll, null);
 		JScrollPane scrollPaneTableObjectsPerClass = new JScrollPane(
 				tableObjectsPerClass);
+		scrollPaneTableObjectsPerClass.setMinimumSize(new Dimension(180, 0));
 		objectsTabbedPane.addTab("Per Class", null,
 				scrollPaneTableObjectsPerClass, null);
 
@@ -405,6 +517,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 		JScrollPane scrollPaneTableObjectVersions = new JScrollPane(
 				tableObjectVersions);
+		scrollPaneTableObjectVersions.setMinimumSize(new Dimension(360, 0));
 		topObjectVersionsPanel.add(scrollPaneTableObjectVersions);
 
 		JPanel bottomObjectVersionsPanel = new JPanel();
@@ -460,11 +573,19 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	        
 	    });
 		
-		DataModel dm = getMetaModelDataModel();
+		JTabbedPane diagramsTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		sqlSplitPane.setLeftComponent(diagramsTabbedPane);
+		
+		SLEXMMDataModel dm = getDataModel();
+		DataModel mm = getMetaModelDataModel();
 		
 		DiagramComponent dmDiagram = new DiagramComponent(null);
+		DiagramComponent mmDiagram = new DiagramComponent(null);
 		dmDiagram.setDataModel(dm);
-		sqlSplitPane.setLeftComponent(dmDiagram);
+		mmDiagram.setDataModel(mm);
+		
+		diagramsTabbedPane.addTab("MetaModel", mmDiagram);
+		diagramsTabbedPane.addTab("DataModel", dmDiagram);
 		
 		/* END SQL Tab */
 		return sqlTab;
@@ -508,11 +629,19 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	        
 	    });
 		
-		DataModel dm = getMetaModelDataModel();
+		JTabbedPane diagramsTabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		poqlSplitPane.setLeftComponent(diagramsTabbedPane);
+		
+		SLEXMMDataModel dm = getDataModel();
+		DataModel mm = getMetaModelDataModel();
 		
 		DiagramComponent dmDiagram = new DiagramComponent(null);
+		DiagramComponent mmDiagram = new DiagramComponent(null);
 		dmDiagram.setDataModel(dm);
-		poqlSplitPane.setLeftComponent(dmDiagram);
+		mmDiagram.setDataModel(mm);
+		
+		diagramsTabbedPane.addTab("MetaModel", mmDiagram);
+		diagramsTabbedPane.addTab("DataModel", dmDiagram);
 		/* END POQL Tab */
 		
 		return poqlTab;
@@ -572,7 +701,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		/**/
 		
 		/* Object Table */
-		TableInfo t_attribute = createTable("", "attribute",
+		TableInfo t_attribute = createTable("", "attribute_name",
 				new String[] {"id","class_id","name"}, tables);
 		
 		// PK
@@ -618,7 +747,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		/* Attribute value Table */
 		TableInfo t_attribute_value = createTable("", "attribute_value",
-				new String[] {"id","object_version_id","attribute_id","value","type"}, tables);
+				new String[] {"id","object_version_id","attribute_name_id","value","type"}, tables);
 		
 		// PK
 		createKey("pk_attribute_value", t_attribute_value, Key.PRIMARY_KEY,
@@ -629,7 +758,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 				pk_object_version, new String[] {"object_version_id"}, primaryKeys, foreignKeys);
 		
 		createKey("k_av_a_id", t_attribute_value, Key.FOREIGN_KEY,
-				pk_attribute, new String[] {"attribute_id"}, primaryKeys, foreignKeys);
+				pk_attribute, new String[] {"attribute_name_id"}, primaryKeys, foreignKeys);
 		
 		/**/
 		
@@ -654,6 +783,110 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		/**/
 		
+		/* Process Table */
+		TableInfo t_process = createTable("", "process",
+				new String[] {"id","name"},tables);
+		
+		// PK
+		Key pk_process = createKey("pk_process", t_process, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Activity Table */
+		TableInfo t_activity = createTable("", "activity",
+				new String[] {"id","process_id","name"},tables);
+		
+		// PK
+		Key pk_activity = createKey("pk_activity", t_activity, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_activity_process", t_activity, Key.FOREIGN_KEY,
+				pk_process, new String[] {"process_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Activity Instance Table */
+		TableInfo t_activity_instance = createTable("", "activity_instance",
+				new String[] {"id","activity_id"},tables);
+		
+		// PK
+		Key pk_activity_instance = createKey("pk_activity_instance", t_activity_instance, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_activity_instance_activity", t_activity_instance, Key.FOREIGN_KEY,
+				pk_activity, new String[] {"activity_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Case Table */
+		TableInfo t_case = createTable("", "case",
+				new String[] {"id","name"},tables);
+		
+		// PK
+		Key pk_case = createKey("pk_case", t_case, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Activity Instance To Case Table */
+		TableInfo t_activity_instance_to_case = createTable("", "activity_instance_to_case",
+				new String[] {"case_id","activity_instance_id"},tables);
+		
+		// PK
+		Key pk_activity_instance_to_case = createKey("pk_activity_instance_to_case", t_activity_instance_to_case, Key.PRIMARY_KEY,
+				null, new String[] {"case_id","activity_instance_id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_activity_instance_to_case_case", t_activity_instance_to_case, Key.FOREIGN_KEY,
+				pk_case, new String[] {"case_id"}, primaryKeys, foreignKeys);
+		createKey("fk_activity_instance_to_case_activity_instance", t_activity_instance_to_case, Key.FOREIGN_KEY,
+				pk_activity_instance, new String[] {"activity_instance_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Event Table */
+		TableInfo t_event = createTable("", "event",
+				new String[] {"id","activity_instance_id","ordering","timestamp","lifecycle","resource"},tables);
+		
+		// PK
+		Key pk_event = createKey("pk_event", t_event, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_event_activity_instance", t_event, Key.FOREIGN_KEY,
+				pk_activity_instance, new String[] {"activity_instance_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Event Attribute Table */
+		TableInfo t_event_attribute = createTable("", "event_attribute_name",
+				new String[] {"id","name"},tables);
+		
+		// PK
+		Key pk_event_attribute = createKey("pk_event_attribute", t_event_attribute, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Event_attribute_value Table */
+		TableInfo t_event_attribute_value = createTable("", "event_attribute_value",
+				new String[] {"id","event_id","event_attribute_name_id","value","type"},tables);
+		
+		// PK
+		Key pk_event_attribute_value = createKey("pk_event_attribute_value", t_event_attribute_value, Key.PRIMARY_KEY,
+				null, new String[] {"id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_event_attribute_value_event", t_event_attribute_value, Key.FOREIGN_KEY,
+				pk_event, new String[] {"event_id"}, primaryKeys, foreignKeys);
+		createKey("fk_event_attribute_value_event_attribute", t_event_attribute_value, Key.FOREIGN_KEY,
+				pk_event_attribute, new String[] {"event_attribute_name_id"}, primaryKeys, foreignKeys);
+		/**/
+		
+		/* Event_to_object_version Table */
+		TableInfo t_event_to_object_version = createTable("", "event_to_object_version",
+				new String[] {"event_id","object_version_id","label"},tables);
+		
+		// PK
+		Key pk_event_to_object_version = createKey("pk_event_to_object_version", t_event_to_object_version, Key.PRIMARY_KEY,
+				null, new String[] {"event_id","object_version_id"}, primaryKeys, foreignKeys);
+		// FK
+		createKey("fk_event_to_object_version_event", t_event_to_object_version, Key.FOREIGN_KEY,
+				pk_event, new String[] {"event_id"}, primaryKeys, foreignKeys);
+		createKey("fk_event_to_object_version_object_version", t_event_to_object_version, Key.FOREIGN_KEY,
+				pk_object_version, new String[] {"object_version_id"}, primaryKeys, foreignKeys);
+		/**/
 		
 		/* Building Keys Per Table HashMap */
 		for (Key k: primaryKeys.values()) {
@@ -748,13 +981,15 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		return c;
 	}
 	
-	private void setDataModel() {
+	private SLEXMMDataModel getDataModel() {
 		SLEXMMDataModelResultSet dmrset = mmstrg.getDataModels();
 
 		SLEXMMDataModel dm = dmrset.getNext();
 
 		if (dm != null) {
-			datamodelPanel.setDataModel(dm);
+			return dm;
+		} else {
+			return null;
 		}
 	}
 

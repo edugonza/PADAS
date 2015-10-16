@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -27,8 +28,10 @@ public class SQLQueryPanel extends JPanel {
 	
 	private JTable sqlResultTable = null;
 	private JTextField sqlQueryField = null;
+	private JButton btnExecuteSQLQuery = null;
 	
 	private JScrollPane scrollPane = null;
+	private JProgressBar progressBar = null;
 	
 	public int getId() {
 		return this.id;
@@ -48,11 +51,14 @@ public class SQLQueryPanel extends JPanel {
 
 		sqlQueryField = new JTextField();
 
-		JButton btnExecuteSQLQuery = new JButton("Execute SQL Query");
+		btnExecuteSQLQuery = new JButton("Execute SQL Query");
 		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
 
+		progressBar = new JProgressBar();
+		
 		sqlQueryPanel.add(sqlQueryField, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecuteSQLQuery, BorderLayout.EAST);
+		sqlQueryPanel.add(progressBar, BorderLayout.SOUTH);
 
 		scrollPane = new JScrollPane();
 		this.add(scrollPane, BorderLayout.CENTER);
@@ -82,8 +88,12 @@ public class SQLQueryPanel extends JPanel {
 
 				@Override
 				public void run() {
+					sqlQueryField.setEnabled(false);
+					btnExecuteSQLQuery.setEnabled(false);
+					progressBar.setIndeterminate(true);
+					
 					String query = SQLQueryPanel.this.sqlQueryField.getText();
-
+					
 					try {
 						SLEXMMSQLResultSet rset = SQLQueryPanel.this.slxmm
 								.executeSQL(query);
@@ -113,6 +123,10 @@ public class SQLQueryPanel extends JPanel {
 							msg = e.toString();
 						}
 						setMessage(msg);
+					} finally {
+						sqlQueryField.setEnabled(true);
+						btnExecuteSQLQuery.setEnabled(true);
+						progressBar.setIndeterminate(false);
 					}
 				}
 			});

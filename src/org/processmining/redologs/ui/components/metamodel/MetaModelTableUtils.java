@@ -62,6 +62,15 @@ public class MetaModelTableUtils {
 		}
 	}
 	
+	public static Integer getSelectedActivityInstance(JTable table) {
+		int selectedRow = table.getSelectedRow();
+		if (selectedRow >= 0) {
+			return (int) table.getModel().getValueAt(selectedRow, 0);
+		} else {
+			return null;
+		}
+	}
+	
 	
 	public static class ActivitiesTableModel extends DefaultTableModel {
 
