@@ -655,7 +655,7 @@ public class POQLFunctions {
 		if (type == SLEXMMObject.class) {
 			// TODO
 		} else if (type == SLEXMMEvent.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMCase.class) {
 			// TODO
 		} else if (type == SLEXMMActivity.class) {
@@ -758,7 +758,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMCase.class) {
 			// TODO
 		} else if (type == SLEXMMActivity.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMClass.class) {
 			// TODO
 		} else if (type == SLEXMMRelationship.class) {
@@ -791,7 +791,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMActivity.class) {
 			// TODO
 		} else if (type == SLEXMMClass.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMRelationship.class) {
 			// TODO
 		} else if (type == SLEXMMObjectVersion.class) {
@@ -828,7 +828,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMObjectVersion.class) {
 			// TODO
 		} else if (type == SLEXMMRelation.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMActivityInstance.class) {
 			// TODO
 		} else if (type == SLEXMMAttribute.class) {
@@ -855,7 +855,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMClass.class) {
 			// TODO
 		} else if (type == SLEXMMRelationship.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMObjectVersion.class) {
 			// TODO
 		} else if (type == SLEXMMRelation.class) {
@@ -892,7 +892,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMRelation.class) {
 			// TODO
 		} else if (type == SLEXMMActivityInstance.class) {
-			// TODO
+			return list;
 		} else if (type == SLEXMMAttribute.class) {
 			// TODO
 		} else {
@@ -925,7 +925,7 @@ public class POQLFunctions {
 		} else if (type == SLEXMMActivityInstance.class) {
 			// TODO
 		} else if (type == SLEXMMAttribute.class) {
-			// TODO
+			return list;
 		} else {
 			// ERROR
 			System.err.println("Unknown type");
