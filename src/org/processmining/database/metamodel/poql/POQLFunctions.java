@@ -2,6 +2,7 @@ package org.processmining.database.metamodel.poql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,34 @@ public class POQLFunctions {
 		this.slxmm = strg;
 	}
 
+	public List<Object> set_operation(int op, List<Object> listA, List<Object> listB, Class type) {
+		List<Object> resultList = new ArrayList<>();
+		
+		if (op == poqlParser.UNION) {
+			HashSet<Object> unionSet = new HashSet<>();
+			unionSet.addAll(listA);
+			unionSet.addAll(listB);
+			resultList.addAll(unionSet);
+		} else if (op == poqlParser.EXCLUDING) {
+			HashSet<Object> excusionSet = new HashSet<>();
+			excusionSet.addAll(listA);
+			excusionSet.removeAll(listB);
+			resultList.addAll(excusionSet);
+		} else if (op == poqlParser.INTERSECTION) {
+			HashSet<Object> intersectionSet = new HashSet<>();
+			intersectionSet.addAll(listA);
+			for (Object o: listB) {
+				if (intersectionSet.contains(o)) {
+					resultList.add(o);
+				}
+			}
+		} else {
+			return listA;
+		}
+		
+		return resultList;
+	}
+	
 	public List<Object> filterTerminal(List<Object> list, Class type,
 			FilterTree condition) {
 		List<Object> filteredList = new ArrayList<>();

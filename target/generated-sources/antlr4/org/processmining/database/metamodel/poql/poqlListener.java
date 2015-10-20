@@ -33,6 +33,16 @@ public interface poqlListener extends ParseTreeListener {
 	 */
 	void exitProg(poqlParser.ProgContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link poqlParser#set_operator}.
+	 * @param ctx the parse tree
+	 */
+	void enterSet_operator(poqlParser.Set_operatorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link poqlParser#set_operator}.
+	 * @param ctx the parse tree
+	 */
+	void exitSet_operator(poqlParser.Set_operatorContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link poqlParser#things}.
 	 * @param ctx the parse tree
 	 */

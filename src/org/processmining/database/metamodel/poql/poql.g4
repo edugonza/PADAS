@@ -58,17 +58,23 @@ grammar poql;
 prog returns [List<Object> result, Class type]: t=things { $result = $t.list; $type = $t.type; }
 ;
 
+set_operator returns [Integer type]:
+	  UNION { $type = $UNION.type; }
+	| INTERSECTION { $type = $INTERSECTION.type; }
+	| EXCLUDING { $type = $EXCLUDING.type; }
+	;
+
 things returns [List<Object> list, Class type]:
-	  t1=cases { $list = $t1.list; $type = $t1.type; }
-	| t2=objects { $list = $t2.list; $type = $t2.type; }
-	| t3=events { $list = $t3.list; $type = $t3.type; }
-	| t4=classes { $list = $t4.list; $type = $t4.type; }
-	| t5=versions { $list = $t5.list; $type = $t5.type; }
-	| t6=activities { $list = $t6.list; $type = $t6.type; }
-	| t7=relations { $list = $t7.list; $type = $t7.type; }
-	| t8=relationships { $list = $t8.list; $type = $t8.type; }
-	| t9=activityinstances { $list = $t9.list; $type = $t9.type; }
-	| t10=attributes { $list = $t10.list; $type = $t10.type; }
+	  t1=cases (o=set_operator tt1=cases)? { $type = $t1.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t1.list,$tt1.list,$type);} else { $list = $t1.list; } }
+	| t2=objects (o=set_operator tt2=objects)? { $type = $t2.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t2.list,$tt2.list,$type);} else { $list = $t2.list; } }
+	| t3=events (o=set_operator tt3=events)? { $type = $t3.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t3.list,$tt3.list,$type);} else { $list = $t3.list; } }
+	| t4=classes (o=set_operator tt4=classes)? { $type = $t4.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t4.list,$tt4.list,$type);} else { $list = $t4.list; } }
+	| t5=versions (o=set_operator tt5=versions)? { $type = $t5.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t5.list,$tt5.list,$type);} else { $list = $t5.list; } }
+	| t6=activities (o=set_operator tt6=activities)? { $type = $t6.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t6.list,$tt6.list,$type);} else { $list = $t6.list; } }
+	| t7=relations (o=set_operator tt7=relations)? { $type = $t7.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t7.list,$tt7.list,$type);} else { $list = $t7.list; } }
+	| t8=relationships (o=set_operator tt8=relationships)? { $type = $t8.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t8.list,$tt8.list,$type);} else { $list = $t8.list; } }
+	| t9=activityinstances (o=set_operator tt9=activityinstances)? { $type = $t9.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t9.list,$tt9.list,$type);} else { $list = $t9.list; } }
+	| t10=attributes (o=set_operator tt10=attributes)? { $type = $t10.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t10.list,$tt10.list,$type);} else { $list = $t10.list; } }
 	;
  	
 objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
@@ -243,6 +249,10 @@ allRelations returns [List<Object> list, Class type]: ALLRELATIONS { $list = poq
 allRelationships returns [List<Object> list, Class type]: ALLRELATIONSHIPS { $list = poql.getAllRelationships(); $type=SLEXMMRelationship.class;};
 allActivityInstances returns [List<Object> list, Class type]: ALLACTIVITYINSTANCES { $list = poql.getAllActivityInstances(); $type=SLEXMMActivityInstance.class;};
 allAttributes returns [List<Object> list, Class type]: ALLATTRIBUTES { $list = poql.getAllAttributes(); $type=SLEXMMAttribute.class;};
+
+UNION: U N I O N ;
+INTERSECTION: I N T E R S E C T I O N ;
+EXCLUDING: E X C L U D I N G ;
 
 CASESOF: C A S E S O F ;
 OBJECTSOF: O B J E C T S O F ;

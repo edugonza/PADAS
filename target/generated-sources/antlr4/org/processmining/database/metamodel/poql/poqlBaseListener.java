@@ -43,6 +43,18 @@ public class poqlBaseListener implements poqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSet_operator(poqlParser.Set_operatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSet_operator(poqlParser.Set_operatorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterThings(poqlParser.ThingsContext ctx) { }
 	/**
 	 * {@inheritDoc}
