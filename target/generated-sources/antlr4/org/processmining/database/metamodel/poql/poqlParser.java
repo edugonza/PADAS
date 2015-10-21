@@ -163,7 +163,7 @@ public class poqlParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class ProgContext extends ParserRuleContext {
-		public List<Object> result;
+		public Set<Object> result;
 		public Class type;
 		public ThingsContext t;
 		public ThingsContext things() {
@@ -273,7 +273,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class ThingsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public CasesContext t1;
 		public Set_operatorContext o;
@@ -597,7 +597,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class ObjectsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public ObjectsContext t3;
 		public ThingsContext t1;
@@ -712,7 +712,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class CasesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public CasesContext t3;
 		public ThingsContext t1;
@@ -827,7 +827,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class EventsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public EventsContext t3;
 		public ThingsContext t1;
@@ -942,7 +942,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class ClassesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public ClassesContext t3;
 		public ThingsContext t1;
@@ -1057,7 +1057,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class VersionsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public VersionsContext t3;
 		public ThingsContext t1;
@@ -1187,7 +1187,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class ActivitiesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public ActivitiesContext t3;
 		public ThingsContext t1;
@@ -1302,7 +1302,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class RelationsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public RelationsContext t3;
 		public ThingsContext t1;
@@ -1417,7 +1417,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class RelationshipsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public RelationshipsContext t3;
 		public ThingsContext t1;
@@ -1532,7 +1532,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class ActivityinstancesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public ActivityinstancesContext t3;
 		public ThingsContext t1;
@@ -1647,7 +1647,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AttributesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public AttributesContext t3;
 		public ThingsContext t1;
@@ -3071,7 +3071,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllObjectsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLOBJECTS() { return getToken(poqlParser.ALLOBJECTS, 0); }
 		public AllObjectsContext(ParserRuleContext parent, int invokingState) {
@@ -3111,7 +3111,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllCasesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLCASES() { return getToken(poqlParser.ALLCASES, 0); }
 		public AllCasesContext(ParserRuleContext parent, int invokingState) {
@@ -3151,7 +3151,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllEventsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLEVENTS() { return getToken(poqlParser.ALLEVENTS, 0); }
 		public AllEventsContext(ParserRuleContext parent, int invokingState) {
@@ -3191,7 +3191,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllClassesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLCLASSES() { return getToken(poqlParser.ALLCLASSES, 0); }
 		public AllClassesContext(ParserRuleContext parent, int invokingState) {
@@ -3231,7 +3231,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllVersionsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLVERSIONS() { return getToken(poqlParser.ALLVERSIONS, 0); }
 		public AllVersionsContext(ParserRuleContext parent, int invokingState) {
@@ -3271,7 +3271,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllActivitiesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLACTIVITIES() { return getToken(poqlParser.ALLACTIVITIES, 0); }
 		public AllActivitiesContext(ParserRuleContext parent, int invokingState) {
@@ -3311,7 +3311,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllRelationsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLRELATIONS() { return getToken(poqlParser.ALLRELATIONS, 0); }
 		public AllRelationsContext(ParserRuleContext parent, int invokingState) {
@@ -3351,7 +3351,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllRelationshipsContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLRELATIONSHIPS() { return getToken(poqlParser.ALLRELATIONSHIPS, 0); }
 		public AllRelationshipsContext(ParserRuleContext parent, int invokingState) {
@@ -3391,7 +3391,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllActivityInstancesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLACTIVITYINSTANCES() { return getToken(poqlParser.ALLACTIVITYINSTANCES, 0); }
 		public AllActivityInstancesContext(ParserRuleContext parent, int invokingState) {
@@ -3431,7 +3431,7 @@ public class poqlParser extends Parser {
 	}
 
 	public static class AllAttributesContext extends ParserRuleContext {
-		public List<Object> list;
+		public Set<Object> list;
 		public Class type;
 		public TerminalNode ALLATTRIBUTES() { return getToken(poqlParser.ALLATTRIBUTES, 0); }
 		public AllAttributesContext(ParserRuleContext parent, int invokingState) {

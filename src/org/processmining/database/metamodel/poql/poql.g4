@@ -55,7 +55,7 @@ grammar poql;
   
 }
 
-prog returns [List<Object> result, Class type]: t=things { $result = $t.list; $type = $t.type; }
+prog returns [Set<Object> result, Class type]: t=things { $result = $t.list; $type = $t.type; }
 ;
 
 set_operator returns [Integer type]:
@@ -64,7 +64,7 @@ set_operator returns [Integer type]:
 	| EXCLUDING { $type = $EXCLUDING.type; }
 	;
 
-things returns [List<Object> list, Class type]:
+things returns [Set<Object> list, Class type]:
 	  t1=cases (o=set_operator tt1=cases)? { $type = $t1.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t1.list,$tt1.list,$type);} else { $list = $t1.list; } }
 	| t2=objects (o=set_operator tt2=objects)? { $type = $t2.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t2.list,$tt2.list,$type);} else { $list = $t2.list; } }
 	| t3=events (o=set_operator tt3=events)? { $type = $t3.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t3.list,$tt3.list,$type);} else { $list = $t3.list; } }
@@ -77,53 +77,53 @@ things returns [List<Object> list, Class type]:
 	| t10=attributes (o=set_operator tt10=attributes)? { $type = $t10.type; if ($o.ctx != null) {$list = poql.set_operation($o.type,$t10.list,$tt10.list,$type);} else { $list = $t10.list; } }
 	;
  	
-objects returns [List<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
+objects returns [Set<Object> list, Class type]: OBJECTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.objectsOf($t1.list,$t1.type); $type=SLEXMMObject.class; }
 	| t3=objects f=filter[ID_TYPE_OBJECT] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	| t2=allObjects{ $list = $t2.list; $type = $t2.type; }
 	;
  	
-cases returns [List<Object> list, Class type] : CASESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.casesOf($t1.list,$t1.type); $type=SLEXMMCase.class; }
+cases returns [Set<Object> list, Class type] : CASESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.casesOf($t1.list,$t1.type); $type=SLEXMMCase.class; }
 	| t2=allCases{ $list = $t2.list; $type = $t2.type; }
 	| t3=cases f=filter[ID_TYPE_CASE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-events returns [List<Object> list, Class type]: EVENTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.eventsOf($t1.list,$t1.type); $type=SLEXMMEvent.class;}
+events returns [Set<Object> list, Class type]: EVENTSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.eventsOf($t1.list,$t1.type); $type=SLEXMMEvent.class;}
 	| t2=allEvents{ $list = $t2.list; $type = $t2.type; }
 	| t3=events f=filter[ID_TYPE_EVENT] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-classes returns [List<Object> list, Class type]: CLASSESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.classesOf($t1.list,$t1.type); $type=SLEXMMClass.class;}
+classes returns [Set<Object> list, Class type]: CLASSESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.classesOf($t1.list,$t1.type); $type=SLEXMMClass.class;}
 	| t2=allClasses{ $list = $t2.list; $type = $t2.type; }
 	| t3=classes f=filter[ID_TYPE_CLASS] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	; 
 	
-versions returns [List<Object> list, Class type]: VERSIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.versionsOf($t1.list,$t1.type); $type=SLEXMMObjectVersion.class;}
+versions returns [Set<Object> list, Class type]: VERSIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.versionsOf($t1.list,$t1.type); $type=SLEXMMObjectVersion.class;}
 	| t2=allVersions{ $list = $t2.list; $type = $t2.type; }
 	| VERSIONSRELATEDTO OPEN_PARENTHESIS t4=versions CLOSE_PARENTHESIS { $list = poql.versionsRelatedTo($t4.list,$t4.type); $type=SLEXMMObjectVersion.class; }
 	| t3=versions f=filter[ID_TYPE_VERSION] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-activities returns [List<Object> list, Class type]: ACTIVITIESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activitiesOf($t1.list,$t1.type); $type=SLEXMMActivity.class;}
+activities returns [Set<Object> list, Class type]: ACTIVITIESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activitiesOf($t1.list,$t1.type); $type=SLEXMMActivity.class;}
 	| t2=allActivities { $list = $t2.list; $type = $t2.type; }
 	| t3=activities f=filter[ID_TYPE_ACTIVITY] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-relations returns [List<Object> list, Class type]: RELATIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationsOf($t1.list,$t1.type); $type=SLEXMMRelation.class;}
+relations returns [Set<Object> list, Class type]: RELATIONSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationsOf($t1.list,$t1.type); $type=SLEXMMRelation.class;}
 	| t2=allRelations { $list = $t2.list; $type = $t2.type; }
 	| t3=relations f=filter[ID_TYPE_RELATION] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-relationships returns [List<Object> list, Class type]: RELATIONSHIPSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationshipsOf($t1.list,$t1.type); $type=SLEXMMRelationship.class;}
+relationships returns [Set<Object> list, Class type]: RELATIONSHIPSOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.relationshipsOf($t1.list,$t1.type); $type=SLEXMMRelationship.class;}
 	| t2=allRelationships { $list = $t2.list; $type = $t2.type; }
 	| t3=relationships f=filter[ID_TYPE_RELATIONSHIP] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-activityinstances returns [List<Object> list, Class type]: ACTIVITYINSTANCESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activityInstancesOf($t1.list,$t1.type); $type=SLEXMMActivityInstance.class;}
+activityinstances returns [Set<Object> list, Class type]: ACTIVITYINSTANCESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.activityInstancesOf($t1.list,$t1.type); $type=SLEXMMActivityInstance.class;}
 	| t2=allActivityInstances { $list = $t2.list; $type = $t2.type; }
 	| t3=activityinstances f=filter[ID_TYPE_ACTIVITY_INSTANCE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
 	
-attributes returns [List<Object> list, Class type]: ATTRIBUTESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.attributesOf($t1.list,$t1.type); $type=SLEXMMAttribute.class;}
+attributes returns [Set<Object> list, Class type]: ATTRIBUTESOF OPEN_PARENTHESIS t1=things CLOSE_PARENTHESIS { $list = poql.attributesOf($t1.list,$t1.type); $type=SLEXMMAttribute.class;}
 	| t2=allAttributes { $list = $t2.list; $type = $t2.type; }
 	| t3=attributes f=filter[ID_TYPE_ATTRIBUTE] { $list = poql.filter($t3.list,$t3.type,$f.conditions); $type = $t3.type; }
 	;
@@ -239,16 +239,16 @@ id_attribute returns [String name, boolean att, int id]:
 	| NAME {$name = $NAME.text; $att = false; $id = $NAME.type; }
 	;
 
-allObjects returns [List<Object> list, Class type]: ALLOBJECTS { $list = poql.getAllObjects(); $type=SLEXMMObject.class;};
-allCases returns [List<Object> list, Class type]: ALLCASES { $list = poql.getAllCases(); $type=SLEXMMCase.class;};
-allEvents returns [List<Object> list, Class type]: ALLEVENTS { $list = poql.getAllEvents(); $type=SLEXMMEvent.class;};
-allClasses returns [List<Object> list, Class type]: ALLCLASSES { $list = poql.getAllClasses(); $type=SLEXMMClass.class;};
-allVersions returns [List<Object> list, Class type]: ALLVERSIONS { $list = poql.getAllVersions(); $type=SLEXMMObjectVersion.class;};
-allActivities returns [List<Object> list, Class type]: ALLACTIVITIES { $list = poql.getAllActivities(); $type=SLEXMMActivity.class;};
-allRelations returns [List<Object> list, Class type]: ALLRELATIONS { $list = poql.getAllRelations(); $type=SLEXMMRelation.class;};
-allRelationships returns [List<Object> list, Class type]: ALLRELATIONSHIPS { $list = poql.getAllRelationships(); $type=SLEXMMRelationship.class;};
-allActivityInstances returns [List<Object> list, Class type]: ALLACTIVITYINSTANCES { $list = poql.getAllActivityInstances(); $type=SLEXMMActivityInstance.class;};
-allAttributes returns [List<Object> list, Class type]: ALLATTRIBUTES { $list = poql.getAllAttributes(); $type=SLEXMMAttribute.class;};
+allObjects returns [Set<Object> list, Class type]: ALLOBJECTS { $list = poql.getAllObjects(); $type=SLEXMMObject.class;};
+allCases returns [Set<Object> list, Class type]: ALLCASES { $list = poql.getAllCases(); $type=SLEXMMCase.class;};
+allEvents returns [Set<Object> list, Class type]: ALLEVENTS { $list = poql.getAllEvents(); $type=SLEXMMEvent.class;};
+allClasses returns [Set<Object> list, Class type]: ALLCLASSES { $list = poql.getAllClasses(); $type=SLEXMMClass.class;};
+allVersions returns [Set<Object> list, Class type]: ALLVERSIONS { $list = poql.getAllVersions(); $type=SLEXMMObjectVersion.class;};
+allActivities returns [Set<Object> list, Class type]: ALLACTIVITIES { $list = poql.getAllActivities(); $type=SLEXMMActivity.class;};
+allRelations returns [Set<Object> list, Class type]: ALLRELATIONS { $list = poql.getAllRelations(); $type=SLEXMMRelation.class;};
+allRelationships returns [Set<Object> list, Class type]: ALLRELATIONSHIPS { $list = poql.getAllRelationships(); $type=SLEXMMRelationship.class;};
+allActivityInstances returns [Set<Object> list, Class type]: ALLACTIVITYINSTANCES { $list = poql.getAllActivityInstances(); $type=SLEXMMActivityInstance.class;};
+allAttributes returns [Set<Object> list, Class type]: ALLATTRIBUTES { $list = poql.getAllAttributes(); $type=SLEXMMAttribute.class;};
 
 UNION: U N I O N ;
 INTERSECTION: I N T E R S E C T I O N ;

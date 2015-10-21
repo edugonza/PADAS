@@ -1,6 +1,7 @@
 package org.processmining.redologs.ui.components.metamodel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -92,7 +93,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setActivitiesTableContent(JTable table, List activities) throws Exception {
+	public static void setActivitiesTableContent(JTable table, Collection activities) throws Exception {
 		ActivitiesTableModel model = new ActivitiesTableModel();
 		table.setModel(model);
 		
@@ -128,7 +129,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setClassesTableContent(JTable table, List<Object> classes) throws Exception {
+	public static void setClassesTableContent(JTable table, Collection<Object> classes) throws Exception {
 		ClassesTableModel model = new ClassesTableModel();
 		table.setModel(model);
 		
@@ -164,7 +165,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setAttributesTableContent(JTable table, List<Object> classes) throws Exception {
+	public static void setAttributesTableContent(JTable table, Collection<Object> classes) throws Exception {
 		AttributesTableModel model = new AttributesTableModel();
 		table.setModel(model);
 		
@@ -214,7 +215,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectsTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setObjectsTableContent(JTable table, Collection<Object> list) throws Exception {
 		ObjectsTableModel model = new ObjectsTableModel();
 		table.setModel(model);
 		
@@ -263,7 +264,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setActivityInstancesTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setActivityInstancesTableContent(JTable table, Collection<Object> list) throws Exception {
 		ActivityInstanceTableModel model = new ActivityInstanceTableModel();
 		table.setModel(model);
 		
@@ -326,7 +327,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectVersionsTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setObjectVersionsTableContent(JTable table, Collection<Object> list) throws Exception {
 		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
 
 		table.setModel(model);
@@ -373,7 +374,7 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setRelationshipsTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setRelationshipsTableContent(JTable table, Collection<Object> list) throws Exception {
 		RelationshipTableModel model = new RelationshipTableModel();
 
 		table.setModel(model);
@@ -449,7 +450,7 @@ public class MetaModelTableUtils {
 
 	}
 	
-	public static void setObjectRelationsTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setObjectRelationsTableContent(JTable table, Collection<Object> list) throws Exception {
 		ObjectRelationsTableModel model = new ObjectRelationsTableModel();
 
 		table.setModel(model);
@@ -505,7 +506,7 @@ public class MetaModelTableUtils {
 
 	}
 	
-	public static void setCasesTableContent(JTable table, List<Object> list) throws Exception {
+	public static void setCasesTableContent(JTable table, Collection<Object> list) throws Exception {
 		try {
 			CasesTableModel model = new CasesTableModel();
 			table.setModel(model);
@@ -583,7 +584,7 @@ public class MetaModelTableUtils {
 
 	}
 	
-	public static void setEventsTableContent(final JTable table, final List<Object> list, final JProgressBar progress) throws Exception {
+	public static void setEventsTableContent(final JTable table, final Collection<Object> list, final JProgressBar progress) throws Exception {
 
 		Thread thread = new Thread(new Runnable() {
 
