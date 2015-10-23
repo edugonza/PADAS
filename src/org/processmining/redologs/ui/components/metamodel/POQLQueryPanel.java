@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -35,6 +36,7 @@ import org.processmining.openslex.metamodel.SLEXMMObjectVersion;
 import org.processmining.openslex.metamodel.SLEXMMRelation;
 import org.processmining.openslex.metamodel.SLEXMMRelationship;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.openslex.metamodel.SLEXMMStorageMetaModelImpl;
 import org.processmining.redologs.ui.components.Autocomplete;
 import org.processmining.redologs.ui.components.metamodel.MetaModelTableUtils.ObjectsTableModel;
 
@@ -49,7 +51,7 @@ public class POQLQueryPanel extends JPanel {
 	
 	private JTable sqlResultTable = null;
 	private JTable detailsTable = null;
-	private JTextField poqlQueryField = null;
+	private JTextArea poqlQueryField = null;
 	private JButton btnExecutePOQLQuery = null;
 	
 	private JProgressBar progressBar = null;
@@ -65,19 +67,25 @@ public class POQLQueryPanel extends JPanel {
 		return this.id;
 	}
 	
-	public POQLQueryPanel(SLEXMMStorageMetaModel slxmm, int id) {
+	public POQLQueryPanel(SLEXMMStorageMetaModel mm, int id) {
 		super();
 		
 		this.id = id;
-		
-		this.slxmm = slxmm;
+		try {
+			this.slxmm = new SLEXMMStorageMetaModelImpl(mm.getPath(),mm.getFilename());
+		} catch (Exception e) {
+			e.printStackTrace();
+			this.slxmm = mm;
+		}
 		
 		this.setLayout(new BorderLayout(0, 0));
 
 		JPanel sqlQueryPanel = new JPanel();
 		this.add(sqlQueryPanel, BorderLayout.NORTH);
 
-		poqlQueryField = new JTextField();
+		
+		poqlQueryField = new JTextArea(5, 0);
+		JScrollPane scrollQueryPane = new JScrollPane(poqlQueryField);
 		
 		// Without this, cursor always leaves text field
 		poqlQueryField.setFocusTraversalKeysEnabled(false);
@@ -87,7 +95,7 @@ public class POQLQueryPanel extends JPanel {
 		// autocomplete
 		// when given a suggestion
 		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("TAB"),SHIFT_ACTION);
-		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("ENTER"),COMMIT_ACTION);
+		poqlQueryField.getInputMap().put(KeyStroke.getKeyStroke("SPACE"),COMMIT_ACTION);
 		poqlQueryField.getActionMap().put(COMMIT_ACTION,autoComplete.new CommitAction());
 		poqlQueryField.getActionMap().put(SHIFT_ACTION,autoComplete.new ShiftAction());
 
@@ -96,7 +104,7 @@ public class POQLQueryPanel extends JPanel {
 
 		progressBar = new JProgressBar();
 		
-		sqlQueryPanel.add(poqlQueryField, BorderLayout.CENTER);
+		sqlQueryPanel.add(scrollQueryPane, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecutePOQLQuery, BorderLayout.EAST);
 		sqlQueryPanel.add(progressBar, BorderLayout.SOUTH);
 

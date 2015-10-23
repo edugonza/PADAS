@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
@@ -23,13 +24,13 @@ import org.processmining.database.metamodel.poql.poqlParser;
 
 public class Autocomplete implements DocumentListener {
 
-	private JTextField textField;
+	private JTextArea textField;
 	private List<String> keywords;
 
 	private boolean shift = false;
 	private int shift_count = 0;
 
-	public Autocomplete(JTextField textField, List<String> keywords) {
+	public Autocomplete(JTextArea textField, List<String> keywords) {
 		this.textField = textField;
 		setKeywords(keywords);
 	}
@@ -71,9 +72,8 @@ public class Autocomplete implements DocumentListener {
 		public void actionPerformed(ActionEvent ev) {
 			int pos = textField.getSelectionEnd();
 			StringBuffer sb = new StringBuffer(textField.getText());
-			sb.insert(pos, " ");
 			textField.setText(sb.toString());
-			textField.setCaretPosition(pos + 1);
+			textField.setCaretPosition(pos);
 			shift = false;
 		}
 	}

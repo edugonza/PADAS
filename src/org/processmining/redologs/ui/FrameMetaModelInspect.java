@@ -40,6 +40,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.BoxLayout;
@@ -104,25 +105,31 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		tabbedPane_1.addTab("SQL", null, createSQLPanel(), null);
 		
-		try {
-			SLEXMMCaseResultSet crset = getMetaModel().getCases();
-			MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
-		
-			MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
-		
-			SLEXMMObjectResultSet orset = getMetaModel().getObjects();
-			MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
-		
-			SLEXMMEventResultSet erset = getMetaModel().getEvents();
-			MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
-		
-			SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstances();
-			MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesAll,airset);
+		SwingUtilities.invokeLater(new Runnable() {
 			
-			datamodelPanel.setDataModel(getDataModel());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			@Override
+			public void run() {
+				try {
+					SLEXMMCaseResultSet crset = getMetaModel().getCases();
+					MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
+				
+					MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
+				
+					SLEXMMObjectResultSet orset = getMetaModel().getObjects();
+					MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
+				
+					SLEXMMEventResultSet erset = getMetaModel().getEvents();
+					MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
+				
+					SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstances();
+					MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesAll,airset);
+					
+					datamodelPanel.setDataModel(getDataModel());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 	
 	private JPanel createInspectorPanel() {

@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
@@ -27,7 +28,7 @@ public class SQLQueryPanel extends JPanel {
 	private SLEXMMStorageMetaModel slxmm = null;
 	
 	private JTable sqlResultTable = null;
-	private JTextField sqlQueryField = null;
+	private JTextArea sqlQueryField = null;
 	private JButton btnExecuteSQLQuery = null;
 	
 	private JScrollPane scrollPane = null;
@@ -49,14 +50,15 @@ public class SQLQueryPanel extends JPanel {
 		JPanel sqlQueryPanel = new JPanel();
 		this.add(sqlQueryPanel, BorderLayout.NORTH);
 
-		sqlQueryField = new JTextField();
+		sqlQueryField = new JTextArea(5,0);
+		JScrollPane scrollQueryPane = new JScrollPane(sqlQueryField);
 
 		btnExecuteSQLQuery = new JButton("Execute SQL Query");
 		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
 
 		progressBar = new JProgressBar();
 		
-		sqlQueryPanel.add(sqlQueryField, BorderLayout.CENTER);
+		sqlQueryPanel.add(scrollQueryPane, BorderLayout.CENTER);
 		sqlQueryPanel.add(btnExecuteSQLQuery, BorderLayout.EAST);
 		sqlQueryPanel.add(progressBar, BorderLayout.SOUTH);
 
