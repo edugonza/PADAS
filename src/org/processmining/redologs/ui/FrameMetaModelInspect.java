@@ -183,7 +183,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					public void valueChanged(ListSelectionEvent e) {
 						Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
 						if (selected != null) {
-							SLEXMMEventResultSet erset = getMetaModel().getEventsForCaseOrdered(selected);
+							SLEXMMEventResultSet erset = getMetaModel().getEventsForCase(selected);
 							SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstancesForCase(selected);
 							try {
 								MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
@@ -287,7 +287,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 							try {
 								MetaModelTableUtils.setEventsTableContent(
 										tableEventsPerActivityInstance,
-										getMetaModel().getEventsForActivityInstanceOrdered(selected),
+										getMetaModel().getEventsForActivityInstance(selected),
 										topProgressBar);
 							} catch (Exception ex) {
 								ex.printStackTrace();
@@ -312,7 +312,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 							try {
 								MetaModelTableUtils.setEventsTableContent(
 										tableEventsPerActivityInstance,
-										getMetaModel().getEventsForActivityInstanceOrdered(selected),
+										getMetaModel().getEventsForActivityInstance(selected),
 										topProgressBar);
 							} catch (Exception ex) {
 								ex.printStackTrace();
@@ -387,7 +387,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 			@Override
 			public void run(SLEXMMClass c) {
-				SLEXMMObjectResultSet orset = getMetaModel().getObjectsPerClass(c.getId());
+				SLEXMMObjectResultSet orset = getMetaModel().getObjectsForClass(c.getId());
 				try {
 					MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
 				} catch (Exception ex) {
@@ -414,7 +414,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						if (selected != null) {
 							try {
 								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
-									getObjectVersionsForObjectOrdered(selected[0]);
+									getObjectVersionsForObject(selected[0]);
 								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
 								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
 								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
@@ -442,7 +442,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 						if (selected != null) {
 							try {
 								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
-									getObjectVersionsForObjectOrdered(selected[0]);
+									getObjectVersionsForObject(selected[0]);
 								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
 								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
 								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);

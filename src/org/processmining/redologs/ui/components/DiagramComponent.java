@@ -115,7 +115,7 @@ public class DiagramComponent extends JPanel {
 			widgetNameToClassMap.put(name,c);
 			classToWidgetIdMap.put(c.getId(),nodeId);
 			
-			List<SLEXMMAttribute> attrs = mmstrg.getAttributesForClass(c);
+			List<SLEXMMAttribute> attrs = mmstrg.getListAttributesForClass(c);
 			for (SLEXMMAttribute at: attrs) {
 				createPin(scene, nodeId, String.valueOf(at.getId()), null, at.getName(), "Attribute");
 			}
