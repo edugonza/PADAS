@@ -58,10 +58,16 @@ public class POQLQueryPanel extends JPanel {
 	private JScrollPane scrollPane1 = null;
 	private JScrollPane scrollPane2 = null;
 	
+	private QueryThread queryThread = null;
+	private boolean queryRunning = false;
 	
 	/**/
 	private static final String COMMIT_ACTION = "commit";
 	private static final String SHIFT_ACTION = "shift";
+	
+	private static final String EXECUTE_BUTTON_TEXT = "Execute POQL Query";
+	private static final String STOP_BUTTON_TEXT = "Stop POQL Query";
+	private static final String STOPPING_BUTTON_TEXT = "Stopping POQL Query";
 	
 	public int getId() {
 		return this.id;
@@ -99,7 +105,7 @@ public class POQLQueryPanel extends JPanel {
 		poqlQueryField.getActionMap().put(COMMIT_ACTION,autoComplete.new CommitAction());
 		poqlQueryField.getActionMap().put(SHIFT_ACTION,autoComplete.new ShiftAction());
 
-		btnExecutePOQLQuery = new JButton("Execute POQL Query");
+		btnExecutePOQLQuery = new JButton(EXECUTE_BUTTON_TEXT);
 		sqlQueryPanel.setLayout(new BorderLayout(0, 0));
 
 		progressBar = new JProgressBar();
@@ -185,67 +191,114 @@ public class POQLQueryPanel extends JPanel {
 		
 		public void actionPerformed(ActionEvent e) {
 			
-			Thread queryPOQLThread = new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						poqlQueryField.setEnabled(false);
-						btnExecutePOQLQuery.setEnabled(false);
-						progressBar.setIndeterminate(true);
-						String query = poqlQueryField.getText();
-						POQLRunner runner = new POQLRunner();
-						QueryResult qr = runner.executeQuery(slxmm, query);
-						
-						setTable(sqlResultTable);
-						setSelectionListener(qr.type);
-						scrollPane2.setVisible(false);
-						
-						if (qr.type == SLEXMMObject.class) {
-							MetaModelTableUtils.setObjectsTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMObjectVersion.class) {
-							MetaModelTableUtils.setObjectVersionsTableContent(sqlResultTable, qr.result);
-							scrollPane2.setVisible(true);
-						} else if (qr.type == SLEXMMEvent.class) {
-							MetaModelTableUtils.setEventsTableContent(sqlResultTable, qr.result, null);
-							scrollPane2.setVisible(true);
-						} else if (qr.type == SLEXMMActivity.class) {
-							MetaModelTableUtils.setActivitiesTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMCase.class) {
-							MetaModelTableUtils.setCasesTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMActivityInstance.class) {
-							MetaModelTableUtils.setActivityInstancesTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMClass.class) {
-							MetaModelTableUtils.setClassesTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMRelation.class) {
-							MetaModelTableUtils.setObjectRelationsTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMRelationship.class) {
-							MetaModelTableUtils.setRelationshipsTableContent(sqlResultTable, qr.result);
-						} else if (qr.type == SLEXMMAttribute.class) {
-							MetaModelTableUtils.setAttributesTableContent(sqlResultTable, qr.result);
-						} else {
-							String msg = "ERROR: Unknown type of result "+qr.type;
-							System.err.println(msg);
-							setMessage(msg);
-						}
-						
-						revalidate();
+			if (queryRunning) {
+				if (queryThread != null) {
+					btnExecutePOQLQuery.setEnabled(false);
+					btnExecutePOQLQuery.setText(STOPPING_BUTTON_TEXT);
 					
-					} catch (Exception e) {
-						e.printStackTrace();
-						String msg = e.getMessage();
-						if (msg == null) {
-							msg = e.toString();
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							queryThread.stopThread();
+							poqlQueryField.setEnabled(true);
+							progressBar.setIndeterminate(false);
+							queryRunning = false;
+							btnExecutePOQLQuery.setText(EXECUTE_BUTTON_TEXT);
+							btnExecutePOQLQuery.setEnabled(true);
+							try {
+								slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
-						setMessage(msg);
-					} finally {
-						poqlQueryField.setEnabled(true);
-						btnExecutePOQLQuery.setEnabled(true);
-						progressBar.setIndeterminate(false);
-					}
+					}).start();
 				}
-			});
+				return;
+			}
+			
+			QueryThread queryPOQLThread = new QueryThread();
+			
+			queryThread = queryPOQLThread;
+			
 			queryPOQLThread.start();
+		}
+	}
+	
+	private class QueryThread extends Thread {
+		
+		POQLRunner runner = null;
+		
+		private void stopThread() {
+			if (runner != null) {
+				runner.cancel();
+				this.interrupt();
+			}
+		}
+		
+		@Override
+		public void run() {
+			
+			queryRunning = true;
+			
+			try {
+				poqlQueryField.setEnabled(false);
+				//btnExecutePOQLQuery.setEnabled(false);
+				btnExecutePOQLQuery.setText(STOP_BUTTON_TEXT);
+				progressBar.setIndeterminate(true);
+				String query = poqlQueryField.getText();
+				runner = new POQLRunner();
+				QueryResult qr = runner.executeQuery(slxmm, query);
+				
+				setTable(sqlResultTable);
+				setSelectionListener(qr.type);
+				scrollPane2.setVisible(false);
+				
+				if (qr.type == SLEXMMObject.class) {
+					MetaModelTableUtils.setObjectsTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMObjectVersion.class) {
+					MetaModelTableUtils.setObjectVersionsTableContent(sqlResultTable, qr.result);
+					scrollPane2.setVisible(true);
+				} else if (qr.type == SLEXMMEvent.class) {
+					MetaModelTableUtils.setEventsTableContent(sqlResultTable, qr.result, null);
+					scrollPane2.setVisible(true);
+				} else if (qr.type == SLEXMMActivity.class) {
+					MetaModelTableUtils.setActivitiesTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMCase.class) {
+					MetaModelTableUtils.setCasesTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMActivityInstance.class) {
+					MetaModelTableUtils.setActivityInstancesTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMClass.class) {
+					MetaModelTableUtils.setClassesTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMRelation.class) {
+					MetaModelTableUtils.setObjectRelationsTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMRelationship.class) {
+					MetaModelTableUtils.setRelationshipsTableContent(sqlResultTable, qr.result);
+				} else if (qr.type == SLEXMMAttribute.class) {
+					MetaModelTableUtils.setAttributesTableContent(sqlResultTable, qr.result);
+				} else {
+					String msg = "ERROR: Unknown type of result "+qr.type;
+					System.err.println(msg);
+					setMessage(msg);
+				}
+				
+				revalidate();
+			
+			} catch (Exception e) {
+				e.printStackTrace();
+				String msg = e.getMessage();
+				if (msg == null) {
+					msg = e.toString();
+				}
+				setMessage(msg);
+			} finally {
+				poqlQueryField.setEnabled(true);
+				//btnExecutePOQLQuery.setEnabled(true);
+				progressBar.setIndeterminate(false);
+				queryRunning = false;
+				btnExecutePOQLQuery.setText(EXECUTE_BUTTON_TEXT);
+			}
 		}
 	}
 }

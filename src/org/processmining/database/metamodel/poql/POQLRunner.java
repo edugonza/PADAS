@@ -10,6 +10,14 @@ import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 
 public class POQLRunner {
 
+	SLEXMMStorageMetaModel slxmm = null;
+	
+	public void cancel() {
+		if (slxmm != null) {
+			slxmm.disconnect();
+		}
+	}
+	
 	public SuggestionsResult executeQueryForSuggestions(String query) {
 
 		System.out.println("Executing query: "+query);
@@ -70,6 +78,7 @@ public class POQLRunner {
 	
 	public QueryResult executeQuery(SLEXMMStorageMetaModel slxmm, String query) throws Exception {
 
+		this.slxmm = slxmm;
 		System.out.println("Executing query: "+query);
 		long start_time = System.currentTimeMillis();
 		System.out.println("Start time: "+start_time);
