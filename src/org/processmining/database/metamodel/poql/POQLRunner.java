@@ -14,7 +14,7 @@ public class POQLRunner {
 	
 	public void cancel() {
 		if (slxmm != null) {
-			slxmm.disconnect();
+			slxmm.abort();
 		}
 	}
 	
