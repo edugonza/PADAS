@@ -12,6 +12,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import org.processmining.openslex.metamodel.SLEXMMSQLResult;
@@ -46,12 +47,16 @@ public class SQLQueryPanel extends JPanel {
 		return this.id;
 	}
 	
-	public SQLQueryPanel(SLEXMMStorageMetaModel slxmm, int id) {
+	public SQLQueryPanel(SLEXMMStorageMetaModel mm, int id) {
 		super();
 		
 		this.id = id;
-		
-		this.slxmm = slxmm;
+		try {
+			this.slxmm = new SLEXMMStorageMetaModelImpl(mm.getPath(),mm.getFilename());
+		} catch (Exception e) {
+			e.printStackTrace();
+			this.slxmm = mm;
+		}
 		
 		this.setLayout(new BorderLayout(0, 0));
 
@@ -107,15 +112,15 @@ public class SQLQueryPanel extends JPanel {
 							queryThread.stopThread();
 							sqlQueryField.setEnabled(true);
 							progressBar.setIndeterminate(false);
-							queryRunning = false;
-							btnExecuteSQLQuery.setText(EXECUTE_BUTTON_TEXT);
-							btnExecuteSQLQuery.setEnabled(true);
 							try {
 								slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
 							} catch (Exception e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
+							queryRunning = false;
+							btnExecuteSQLQuery.setText(EXECUTE_BUTTON_TEXT);
+							btnExecuteSQLQuery.setEnabled(true);
 						}
 					}).start();
 				}
@@ -150,22 +155,28 @@ public class SQLQueryPanel extends JPanel {
 				btnExecuteSQLQuery.setText(STOP_BUTTON_TEXT);
 				progressBar.setIndeterminate(true);
 			
-			
 				SLEXMMSQLResultSet rset = SQLQueryPanel.this.slxmm
 						.executeSQL(query);
 
 				if (rset != null) {
 					SLEXMMSQLResult r = null;
 					
-					DefaultTableModel model = new DefaultTableModel(rset.getColumnNames(), rset.getRowCount());
-					
-					sqlResultTable.setModel(model);
+					final DefaultTableModel model = new DefaultTableModel(rset.getColumnNames(), rset.getRowCount());
 					
 					setTable(sqlResultTable);
 
 					while ((r = rset.getNext()) != null) {
 						model.addRow(r.getValues());
 					}
+					
+					SwingUtilities.invokeAndWait(new Runnable() {
+						
+						@Override
+						public void run() {
+							sqlResultTable.setModel(model);
+						}
+					});
+					
 				} else {
 					System.out.println("No Values");
 				}

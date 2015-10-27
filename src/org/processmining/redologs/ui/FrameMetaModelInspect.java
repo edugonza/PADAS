@@ -28,6 +28,8 @@ import javax.swing.JSplitPane;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -80,6 +83,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private JPanel processModelPanel;
 	private JTable processActivitiesTable;
 	
+	private JButton refreshButton;
+	
 	private int sqlTabCounter = 0;
 	private int poqlTabCounter = 0;
 
@@ -104,32 +109,30 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		tabbedPane_1.addTab("POQL", null, createPOQLPanel(), null);
 		
 		tabbedPane_1.addTab("SQL", null, createSQLPanel(), null);
-		
-		SwingUtilities.invokeLater(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					SLEXMMCaseResultSet crset = getMetaModel().getCases();
-					MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
+
+	}
+	
+	private void fillWithData() {
+		try {
+			SLEXMMCaseResultSet crset = getMetaModel().getCases();
+			MetaModelTableUtils.setCasesTableContent(tableCasesAll,crset);
 				
-					MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
+			MetaModelTableUtils.setActivitiesTableContent(processActivitiesTable,getMetaModel().getActivities());
 				
-					SLEXMMObjectResultSet orset = getMetaModel().getObjects();
-					MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
+			SLEXMMObjectResultSet orset = getMetaModel().getObjects();
+			MetaModelTableUtils.setObjectsTableContent(tableObjectsAll,orset);
 				
-					SLEXMMEventResultSet erset = getMetaModel().getEvents();
-					MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
+			SLEXMMEventResultSet erset = getMetaModel().getEvents();
+			MetaModelTableUtils.setEventsTableContent(tableEventsAll,erset,topProgressBar);
 				
-					SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstances();
-					MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesAll,airset);
+			SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstances();
+			MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesAll,airset);
 					
-					datamodelPanel.setDataModel(getDataModel());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+			datamodelPanel.setDataModel(getDataModel());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private JPanel createInspectorPanel() {
@@ -164,8 +167,27 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		splitPane_1.setRightComponent(rightTopPanel);
 		rightTopPanel.setLayout(new BorderLayout(0, 0));
 
+		refreshButton = new JButton("Refresh");
+		refreshButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						refreshButton.setEnabled(false);
+						fillWithData();
+						refreshButton.setEnabled(true);
+					}
+				}).start();
+			}
+		});
 		topProgressBar = new JProgressBar();
-		rightTopPanel.add(topProgressBar, BorderLayout.NORTH);
+		JPanel progressAndRefreshPanel = new JPanel(new BorderLayout());
+		progressAndRefreshPanel.add(topProgressBar, BorderLayout.CENTER);
+		progressAndRefreshPanel.add(refreshButton, BorderLayout.EAST);
+		rightTopPanel.add(progressAndRefreshPanel, BorderLayout.NORTH);
 
 		JSplitPane splitPanelTopLeft = new JSplitPane();
 		splitPanelTopLeft.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
@@ -181,17 +203,23 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
-						if (selected != null) {
-							SLEXMMEventResultSet erset = getMetaModel().getEventsForCase(selected);
-							SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstancesForCase(selected);
-							try {
-								MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
-								MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesPerCase, airset);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesAll);
+								if (selected != null) {
+									SLEXMMEventResultSet erset = getMetaModel().getEventsForCase(selected);
+									SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstancesForCase(selected);
+									try {
+										MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+										MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesPerCase, airset);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
 					}
 				});
 		
@@ -208,17 +236,24 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsAll);
-						if (selected != null) {
-							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
-							try {
-								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
-										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-										String.valueOf(ev.getTimestamp()));
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsAll);
+								if (selected != null) {
+									SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+									try {
+										MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+												ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+												String.valueOf(ev.getTimestamp()));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
+								
 					}
 				});
 
@@ -233,17 +268,23 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerCase);
-						if (selected != null) {
-							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
-							try {
-								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
-										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-										String.valueOf(ev.getTimestamp()));
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerCase);
+								if (selected != null) {
+									SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+									try {
+										MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+												ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+												String.valueOf(ev.getTimestamp()));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
 					}
 				});
 		
@@ -258,17 +299,24 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerActivityInstance);
-						if (selected != null) {
-							SLEXMMEvent ev = getMetaModel().getEventForId(selected);
-							try {
-								MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
-										ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-										String.valueOf(ev.getTimestamp()));
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerActivityInstance);
+								if (selected != null) {
+									SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+									try {
+										MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+												ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+												String.valueOf(ev.getTimestamp()));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
+						
 					}
 				});
 
@@ -282,17 +330,23 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesAll);
-						if (selected != null) {
-							try {
-								MetaModelTableUtils.setEventsTableContent(
-										tableEventsPerActivityInstance,
-										getMetaModel().getEventsForActivityInstance(selected),
-										topProgressBar);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesAll);
+								if (selected != null) {
+									try {
+										MetaModelTableUtils.setEventsTableContent(
+												tableEventsPerActivityInstance,
+												getMetaModel().getEventsForActivityInstance(selected),
+												topProgressBar);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
 					}
 				});
 
@@ -307,17 +361,23 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesPerCase);
-						if (selected != null) {
-							try {
-								MetaModelTableUtils.setEventsTableContent(
-										tableEventsPerActivityInstance,
-										getMetaModel().getEventsForActivityInstance(selected),
-										topProgressBar);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesPerCase);
+								if (selected != null) {
+									try {
+										MetaModelTableUtils.setEventsTableContent(
+												tableEventsPerActivityInstance,
+												getMetaModel().getEventsForActivityInstance(selected),
+												topProgressBar);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
 					}
 				});
 		
@@ -386,13 +446,19 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		NodeSelectionHandler classSelectionHandler = new NodeSelectionHandler() {
 
 			@Override
-			public void run(SLEXMMClass c) {
-				SLEXMMObjectResultSet orset = getMetaModel().getObjectsForClass(c.getId());
-				try {
-					MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+			public void run(final SLEXMMClass c) {
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						SLEXMMObjectResultSet orset = getMetaModel().getObjectsForClass(c.getId());
+						try {
+							MetaModelTableUtils.setObjectsTableContent(tableObjectsPerClass, orset);
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+					}
+				}).start();
 			}
 		};
 		
@@ -410,20 +476,27 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsAll);
-						if (selected != null) {
-							try {
-								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
-									getObjectVersionsForObject(selected[0]);
-								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
-								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
-								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
-								rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
-								MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsAll);
+								if (selected != null) {
+									try {
+										SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+											getObjectVersionsForObject(selected[0]);
+										MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+										SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+										rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+										rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+										MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
+						
 					}
 				});
 
@@ -438,20 +511,26 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsPerClass);
-						if (selected != null) {
-							try {
-								SLEXMMObjectVersionResultSet ovrset = getMetaModel().
-									getObjectVersionsForObject(selected[0]);
-								MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
-								SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
-								rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
-								rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
-								MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer[] selected = MetaModelTableUtils.getSelectedObject(tableObjectsPerClass);
+								if (selected != null) {
+									try {
+										SLEXMMObjectVersionResultSet ovrset = getMetaModel().
+											getObjectVersionsForObject(selected[0]);
+										MetaModelTableUtils.setObjectVersionsTableContent(tableObjectVersions,ovrset);
+										SLEXMMRelationResultSet[] rrset = new SLEXMMRelationResultSet[2];
+										rrset[0] = getMetaModel().getRelationsForSourceObject(selected[0]);
+										rrset[1] = getMetaModel().getRelationsForTargetObject(selected[0]);
+										MetaModelTableUtils.setObjectRelationsTableContent(tableObjectRelations,rrset);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
 					}
 				});
 
@@ -509,16 +588,23 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						Integer selected = MetaModelTableUtils.getSelectedEvent(tableObjectVersions);
-						if (selected != null) {
-							HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
-									getMetaModel().getAttributeValuesForObjectVersion(selected);
-							try {
-								MetaModelTableUtils.setObjectVersionAttributesTableContent(tableObjectVersionAttributes,atts);
-							} catch (Exception ex) {
-								ex.printStackTrace();
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedEvent(tableObjectVersions);
+								if (selected != null) {
+									HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
+											getMetaModel().getAttributeValuesForObjectVersion(selected);
+									try {
+										MetaModelTableUtils.setObjectVersionAttributesTableContent(tableObjectVersionAttributes,atts);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
 							}
-						}
+						}).start();
+						
 					}
 				});
 

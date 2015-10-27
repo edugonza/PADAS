@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import org.processmining.openslex.metamodel.SLEXMMActivity;
@@ -93,19 +94,26 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setActivitiesTableContent(JTable table, Collection activities) throws Exception {
-		ActivitiesTableModel model = new ActivitiesTableModel();
-		table.setModel(model);
-		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-		table.getColumnModel().getColumn(2).setMinWidth(75);
+	public static void setActivitiesTableContent(final JTable table, Collection activities) throws Exception {
+		final ActivitiesTableModel model = new ActivitiesTableModel();
 
 		for (Object o : activities) {
 			SLEXMMActivity act = (SLEXMMActivity) o;
 			model.addRow(new Object[] { act.getId(), act.getName(),
 					act.getProcessId() });
 		}
+		
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+				table.getColumnModel().getColumn(2).setMinWidth(75);
+			}
+		});
 
 	}
 	
@@ -129,13 +137,10 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setClassesTableContent(JTable table, Collection<Object> classes) throws Exception {
-		ClassesTableModel model = new ClassesTableModel();
-		table.setModel(model);
+	public static void setClassesTableContent(final JTable table, Collection<Object> classes) throws Exception {
+		final ClassesTableModel model = new ClassesTableModel();
 		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-		table.getColumnModel().getColumn(2).setMinWidth(75);
+		
 
 		for (Object o : classes) {
 			SLEXMMClass c = (SLEXMMClass) o;
@@ -143,6 +148,17 @@ public class MetaModelTableUtils {
 					c.getDataModelId() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+				table.getColumnModel().getColumn(2).setMinWidth(75);
+			}
+		});
 	}
 	
 	public static class AttributesTableModel extends DefaultTableModel {
@@ -165,13 +181,9 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setAttributesTableContent(JTable table, Collection<Object> classes) throws Exception {
-		AttributesTableModel model = new AttributesTableModel();
-		table.setModel(model);
+	public static void setAttributesTableContent(final JTable table, Collection<Object> classes) throws Exception {
+		final AttributesTableModel model = new AttributesTableModel();
 		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-		table.getColumnModel().getColumn(2).setMinWidth(75);
 
 		for (Object o : classes) {
 			SLEXMMAttribute c = (SLEXMMAttribute) o;
@@ -179,6 +191,17 @@ public class MetaModelTableUtils {
 					c.getName() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+				table.getColumnModel().getColumn(2).setMinWidth(75);
+			}
+		});
 	}
 
 	public static class ObjectsTableModel extends DefaultTableModel {
@@ -200,27 +223,30 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectsTableContent(JTable table, SLEXMMObjectResultSet orset) throws Exception {
-		ObjectsTableModel model = new ObjectsTableModel();
-		table.setModel(model);
+	public static void setObjectsTableContent(final JTable table, SLEXMMObjectResultSet orset) throws Exception {
+		final ObjectsTableModel model = new ObjectsTableModel();
 		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-
 		SLEXMMObject obj = null;
 
 		while ((obj = orset.getNext()) != null) {
 			model.addRow(new Object[] { obj.getId(), obj.getClassId() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
+
 	}
 
-	public static void setObjectsTableContent(JTable table, Collection<Object> list) throws Exception {
-		ObjectsTableModel model = new ObjectsTableModel();
-		table.setModel(model);
-		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
+	public static void setObjectsTableContent(final JTable table, Collection<Object> list) throws Exception {
+		final ObjectsTableModel model = new ObjectsTableModel();
 
 		SLEXMMObject obj = null;
 		for (Object o : list) {
@@ -228,6 +254,16 @@ public class MetaModelTableUtils {
 			model.addRow(new Object[] { obj.getId(), obj.getClassId() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
 	}
 
 	public static class ActivityInstanceTableModel extends DefaultTableModel {
@@ -249,27 +285,31 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setActivityInstancesTableContent(JTable table, SLEXMMActivityInstanceResultSet airset) throws Exception {
-		ActivityInstanceTableModel model = new ActivityInstanceTableModel();
-		table.setModel(model);
+	public static void setActivityInstancesTableContent(final JTable table, SLEXMMActivityInstanceResultSet airset) throws Exception {
+		final ActivityInstanceTableModel model = new ActivityInstanceTableModel();
 		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-
 		SLEXMMActivityInstance ai = null;
 
 		while ((ai = airset.getNext()) != null) {
 			model.addRow(new Object[] { ai.getId(), ai.getActivityId() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
+
 	}
 
-	public static void setActivityInstancesTableContent(JTable table, Collection<Object> list) throws Exception {
-		ActivityInstanceTableModel model = new ActivityInstanceTableModel();
-		table.setModel(model);
+	public static void setActivityInstancesTableContent(final JTable table, Collection<Object> list) throws Exception {
+		final ActivityInstanceTableModel model = new ActivityInstanceTableModel();
 		
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
 
 		SLEXMMActivityInstance ai = null;
 		for (Object o : list) {
@@ -277,6 +317,16 @@ public class MetaModelTableUtils {
 			model.addRow(new Object[] { ai.getId(), ai.getActivityId() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+		
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
 	}
 	
 	public static class ObjectVersionsTableModel extends DefaultTableModel {
@@ -306,10 +356,10 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectVersionsTableContent(JTable table, SLEXMMObjectVersionResultSet orset) throws Exception {
-		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
+	public static void setObjectVersionsTableContent(final JTable table, SLEXMMObjectVersionResultSet orset) throws Exception {
+		final ObjectVersionsTableModel model = new ObjectVersionsTableModel();
 
-		table.setModel(model);
+		
 
 		SLEXMMObjectVersion objv = null;
 
@@ -325,12 +375,17 @@ public class MetaModelTableUtils {
 			model.addRow(row);
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+			}
+		});
 	}
 
-	public static void setObjectVersionsTableContent(JTable table, Collection<Object> list) throws Exception {
-		ObjectVersionsTableModel model = new ObjectVersionsTableModel();
-
-		table.setModel(model);
+	public static void setObjectVersionsTableContent(final JTable table, Collection<Object> list) throws Exception {
+		final ObjectVersionsTableModel model = new ObjectVersionsTableModel();
 
 		for (Object o : list) {
 			SLEXMMObjectVersion objv = (SLEXMMObjectVersion) o;
@@ -344,6 +399,15 @@ public class MetaModelTableUtils {
 
 			model.addRow(row);
 		}
+		
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+			}
+		});
+		
 
 	}
 	
@@ -374,10 +438,8 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setRelationshipsTableContent(JTable table, Collection<Object> list) throws Exception {
-		RelationshipTableModel model = new RelationshipTableModel();
-
-		table.setModel(model);
+	public static void setRelationshipsTableContent(final JTable table, Collection<Object> list) throws Exception {
+		final RelationshipTableModel model = new RelationshipTableModel();
 
 		for (Object o : list) {
 			SLEXMMRelationship rs = (SLEXMMRelationship) o;
@@ -391,6 +453,14 @@ public class MetaModelTableUtils {
 
 			model.addRow(row);
 		}
+		
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+			}
+		});
 
 	}
 
@@ -424,10 +494,8 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectRelationsTableContent(JTable table, SLEXMMRelationResultSet[] orrset) throws Exception {
-		ObjectRelationsTableModel model = new ObjectRelationsTableModel();
-
-		table.setModel(model);
+	public static void setObjectRelationsTableContent(final JTable table, SLEXMMRelationResultSet[] orrset) throws Exception {
+		final ObjectRelationsTableModel model = new ObjectRelationsTableModel();
 
 		for (int i = 0; i < orrset.length; i++) {
 		
@@ -448,12 +516,17 @@ public class MetaModelTableUtils {
 			}
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+			}
+		});
 	}
 	
-	public static void setObjectRelationsTableContent(JTable table, Collection<Object> list) throws Exception {
-		ObjectRelationsTableModel model = new ObjectRelationsTableModel();
-
-		table.setModel(model);
+	public static void setObjectRelationsTableContent(final JTable table, Collection<Object> list) throws Exception {
+		final ObjectRelationsTableModel model = new ObjectRelationsTableModel();
 
 		for  (Object o: list) {
 				
@@ -470,6 +543,14 @@ public class MetaModelTableUtils {
 
 			model.addRow(row);
 		}
+		
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+			}
+		});
 
 	}
 
@@ -492,11 +573,8 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setCasesTableContent(JTable table, SLEXMMCaseResultSet orset) throws Exception {
-		CasesTableModel model = new CasesTableModel();
-		table.setModel(model);
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
+	public static void setCasesTableContent(final JTable table, SLEXMMCaseResultSet orset) throws Exception {
+		final CasesTableModel model = new CasesTableModel();
 
 		SLEXMMCase c = null;
 
@@ -504,20 +582,39 @@ public class MetaModelTableUtils {
 			model.addRow(new Object[] { c.getId(), c.getName() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
+
 	}
 	
-	public static void setCasesTableContent(JTable table, Collection<Object> list) throws Exception {
+	public static void setCasesTableContent(final JTable table, Collection<Object> list) throws Exception {
 		try {
-			CasesTableModel model = new CasesTableModel();
-			table.setModel(model);
-			table.getColumnModel().getColumn(0).setMinWidth(75);
-			table.getColumnModel().getColumn(1).setMinWidth(75);
+			final CasesTableModel model = new CasesTableModel();
+			
 
 			for (Object o : list) {
 				SLEXMMCase c = (SLEXMMCase) o;
 
 				model.addRow(new Object[] { c.getId(), c.getName() });
 			}
+			
+			SwingUtilities.invokeAndWait(new Runnable() {
+				
+				@Override
+				public void run() {
+					table.setModel(model);
+					table.getColumnModel().getColumn(0).setMinWidth(75);
+					table.getColumnModel().getColumn(1).setMinWidth(75);
+				}
+			});
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
@@ -556,20 +653,29 @@ public class MetaModelTableUtils {
 						progress.setIndeterminate(true);
 					}
 
-					EventsTableModel model = new EventsTableModel();
+					final EventsTableModel model = new EventsTableModel();
 
-					table.setModel(model);
-
-					table.getColumnModel().getColumn(0)
-							.setMinWidth(75);
-					table.getColumnModel().getColumn(1)
-							.setMinWidth(75);
+					
 
 					SLEXMMEvent ev = null;
 
 					while ((ev = orset.getNext()) != null) {
 						model.addRow(new Object[] { ev.getId(), ev.getOrder() });
 					}
+					
+					SwingUtilities.invokeAndWait(new Runnable() {
+						
+						@Override
+						public void run() {
+							table.setModel(model);
+
+							table.getColumnModel().getColumn(0)
+								.setMinWidth(75);
+							table.getColumnModel().getColumn(1)
+								.setMinWidth(75);
+						}
+					});
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -596,14 +702,9 @@ public class MetaModelTableUtils {
 						progress.setIndeterminate(true);
 					}
 
-					EventsTableModel model = new EventsTableModel();
+					final EventsTableModel model = new EventsTableModel();
 
-					table.setModel(model);
-
-					table.getColumnModel().getColumn(0)
-							.setMinWidth(75);
-					table.getColumnModel().getColumn(1)
-							.setMinWidth(75);
+					
 
 					SLEXMMEvent ev = null;
 
@@ -611,6 +712,19 @@ public class MetaModelTableUtils {
 						ev = (SLEXMMEvent) o;
 						model.addRow(new Object[] { ev.getId(), ev.getOrder() });
 					}
+					SwingUtilities.invokeAndWait(new Runnable() {
+						
+						@Override
+						public void run() {
+							table.setModel(model);
+
+							table.getColumnModel().getColumn(0)
+									.setMinWidth(75);
+							table.getColumnModel().getColumn(1)
+									.setMinWidth(75);
+						}
+					});
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -645,17 +759,13 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setEventAttributesTableContent(JTable table,
+	public static void setEventAttributesTableContent(final JTable table,
 			HashMap<SLEXMMEventAttribute, SLEXMMEventAttributeValue> attrs,
 			String lifecycle, String resource, String timestamp) throws Exception {
 
-		EventAttributesTableModel model = new EventAttributesTableModel();
+		final EventAttributesTableModel model = new EventAttributesTableModel();
 
-		table.setModel(model);
-
-		table.getColumnModel().getColumn(0).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
-		table.getColumnModel().getColumn(1).setMinWidth(75);
+		
 
 		for (SLEXMMEventAttribute at : attrs.keySet()) {
 			SLEXMMEventAttributeValue attV = attrs.get(at);
@@ -668,6 +778,17 @@ public class MetaModelTableUtils {
 		model.addRow(new Object[] { "Event Resource", resource, "STRING" });
 		model.addRow(new Object[] { "Event Timestamp", timestamp, "LONG" });
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+
+				table.getColumnModel().getColumn(0).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+				table.getColumnModel().getColumn(1).setMinWidth(75);
+			}
+		});
 	}
 
 	public static class ObjectVersionAttributesTableModel extends DefaultTableModel {
@@ -690,19 +811,12 @@ public class MetaModelTableUtils {
 
 	}
 
-	public static void setObjectVersionAttributesTableContent(JTable table,
+	public static void setObjectVersionAttributesTableContent(final JTable table,
 			HashMap<SLEXMMAttribute, SLEXMMAttributeValue> attrs) throws Exception {
 
-		ObjectVersionAttributesTableModel model = new ObjectVersionAttributesTableModel();
+		final ObjectVersionAttributesTableModel model = new ObjectVersionAttributesTableModel();
 
-		table.setModel(model);
-
-		table.getColumnModel().getColumn(0)
-				.setMinWidth(75);
-		table.getColumnModel().getColumn(1)
-				.setMinWidth(75);
-		table.getColumnModel().getColumn(1)
-				.setMinWidth(75);
+		
 
 		for (SLEXMMAttribute at : attrs.keySet()) {
 			SLEXMMAttributeValue attV = attrs.get(at);
@@ -710,5 +824,19 @@ public class MetaModelTableUtils {
 					attV.getType() });
 		}
 
+		SwingUtilities.invokeAndWait(new Runnable() {
+			
+			@Override
+			public void run() {
+				table.setModel(model);
+
+				table.getColumnModel().getColumn(0)
+					.setMinWidth(75);
+				table.getColumnModel().getColumn(1)
+					.setMinWidth(75);
+				table.getColumnModel().getColumn(1)
+					.setMinWidth(75);
+			}
+		});
 	}
 }

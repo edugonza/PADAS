@@ -157,33 +157,45 @@ public class POQLQueryPanel extends JPanel {
 	private class EventSelectionListener implements ListSelectionListener {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			Integer selected = MetaModelTableUtils.getSelectedEvent(sqlResultTable);
-			if (selected != null) {
-				SLEXMMEvent ev = slxmm.getEventForId(selected);
-				try {
-					MetaModelTableUtils.setEventAttributesTableContent(detailsTable,
-							ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
-							String.valueOf(ev.getTimestamp()));
-				} catch (Exception ex) {
-					ex.printStackTrace();
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					Integer selected = MetaModelTableUtils.getSelectedEvent(sqlResultTable);
+					if (selected != null) {
+						SLEXMMEvent ev = slxmm.getEventForId(selected);
+						try {
+							MetaModelTableUtils.setEventAttributesTableContent(detailsTable,
+									ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+									String.valueOf(ev.getTimestamp()));
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+					}
 				}
-			}
+			}).start();
 		}
 	}
 	
 	private class ObjectVersionSelectionListener implements ListSelectionListener {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			Integer selected = MetaModelTableUtils.getSelectedEvent(sqlResultTable);
-			if (selected != null) {
-				HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
-						slxmm.getAttributeValuesForObjectVersion(selected);
-				try {
-					MetaModelTableUtils.setObjectVersionAttributesTableContent(detailsTable,atts);
-				} catch (Exception ex) {
-					ex.printStackTrace();
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					Integer selected = MetaModelTableUtils.getSelectedEvent(sqlResultTable);
+					if (selected != null) {
+						HashMap<SLEXMMAttribute, SLEXMMAttributeValue> atts =
+								slxmm.getAttributeValuesForObjectVersion(selected);
+						try {
+							MetaModelTableUtils.setObjectVersionAttributesTableContent(detailsTable,atts);
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+					}
 				}
-			}
+			}).start();
 		}
 	}
 	

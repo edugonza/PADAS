@@ -9,6 +9,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 import org.netbeans.api.visual.action.ActionFactory;
 import org.netbeans.api.visual.action.EditProvider;
@@ -55,11 +56,17 @@ public class DiagramComponent extends JPanel {
 		
 		nodeSelectionHandler = handler;
 		
+		init();
+	}
+	
+	private void init() {
 		scene = new VMDGraphScene (VMDFactory.getNetBeans60Scheme ());
 		
 		myView = scene.createView();
 		
 		JScrollPane scrollPane = new JScrollPane(myView);
+		
+		this.removeAll();
 		
 		this.add(scrollPane, BorderLayout.CENTER);
 		
@@ -99,9 +106,11 @@ public class DiagramComponent extends JPanel {
 	public void setDataModel(SLEXMMDataModel dm) {
 		
 		//this.dm = dm;
+		init();
 		SLEXMMStorageMetaModel mmstrg = dm.getStorage();
 		
 		widgetIdToClassMap = new HashMap<>();
+		widgetNameToClassMap = new HashMap<>();
 		classToWidgetIdMap = new HashMap<>();
 		
 		SLEXMMClassResultSet crset = mmstrg.getClassesForDataModel(dm);
@@ -140,14 +149,17 @@ public class DiagramComponent extends JPanel {
 		
 		scene.layoutScene();
 		
+		revalidate();
 	}
 	
 	public void setDataModel(DataModel dm) {
 		
 		//this.dm = dm;
 		//this.mmstrg = dm.getStorage();
+		init();
 		
 		widgetIdToClassMap = new HashMap<>();
+		widgetNameToClassMap = new HashMap<>();
 		classToWidgetIdMap = new HashMap<>();
 		
 		for (TableInfo t: dm.getTables()) {
@@ -178,6 +190,7 @@ public class DiagramComponent extends JPanel {
 		
 		scene.layoutScene();
 		
+		revalidate();
 	}
 	
 	private class CreateProvider implements SelectProvider {
