@@ -68,11 +68,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 	private JTable tableObjectRelations;
 
 	private JTable tableCasesAll;
+	private JTable tableCasesPerActivity;
 
 	private JTable tableActivityInstancesAll;
+	private JTable tableActivityInstancesPerActivity;
 	private JTable tableActivityInstancesPerCase;
 	
 	private JTable tableEventsAll;
+	private JTable tableEventsPerActivity;
 	private JTable tableEventsPerCase;
 	private JTable tableEventsPerActivityInstance;
 
@@ -163,6 +166,46 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		processActivitiesTable = new JTable();
 		processActivitiesTable.setFillsViewportHeight(true);
 		processActivitiesTable.setModel(new MetaModelTableUtils.ActivitiesTableModel());
+		
+		processActivitiesTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedActivity(processActivitiesTable);
+								if (selected != null) {
+									try {
+										MetaModelTableUtils.setCasesTableContent(
+												tableCasesPerActivity,
+												getMetaModel().getCasesForActivity(selected));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+									try {
+										MetaModelTableUtils.setActivityInstancesTableContent(
+												tableActivityInstancesPerActivity,
+												getMetaModel().getActivityInstancesForActivity(selected));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+									try {
+										MetaModelTableUtils.setEventsTableContent(
+												tableEventsPerActivity,
+												getMetaModel().getEventsForActivity(selected),
+												topProgressBar);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}).start();
+					}
+				});
+		
 		scrollPaneProcessModel.setViewportView(processActivitiesTable);
 
 		JPanel rightTopPanel = new JPanel();
@@ -225,8 +268,41 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					}
 				});
 		
+		tableCasesPerActivity = new JTable();
+		tableCasesPerActivity.setFillsViewportHeight(true);
+		tableCasesPerActivity.setModel(new MetaModelTableUtils.CasesTableModel());
+
+		tableCasesPerActivity.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableCasesPerActivity.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedCase(tableCasesPerActivity);
+								if (selected != null) {
+									SLEXMMEventResultSet erset = getMetaModel().getEventsForCase(selected);
+									SLEXMMActivityInstanceResultSet airset = getMetaModel().getActivityInstancesForCase(selected);
+									try {
+										MetaModelTableUtils.setEventsTableContent(tableEventsPerCase,erset,topProgressBar);
+										MetaModelTableUtils.setActivityInstancesTableContent(tableActivityInstancesPerCase, airset);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}).start();
+					}
+				});
+		
 		JScrollPane casesScrollPane_all = new JScrollPane(tableCasesAll);
 		casesScrollPane_all.setMinimumSize(new Dimension(220, 0));
+		
+		JScrollPane casesScrollPane_perActivity = new JScrollPane(tableCasesPerActivity);
+		casesScrollPane_perActivity.setMinimumSize(new Dimension(220, 0));
 
 		tableEventsAll = new JTable();
 		tableEventsAll.setFillsViewportHeight(true);
@@ -259,6 +335,37 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					}
 				});
 
+		tableEventsPerActivity = new JTable();
+		tableEventsPerActivity.setFillsViewportHeight(true);
+		tableEventsPerActivity.setModel(new MetaModelTableUtils.EventsTableModel());
+
+		tableEventsPerActivity
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableEventsPerActivity.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedEvent(tableEventsPerActivity);
+								if (selected != null) {
+									SLEXMMEvent ev = getMetaModel().getEventForId(selected);
+									try {
+										MetaModelTableUtils.setEventAttributesTableContent(tableEventAttributes,
+												ev.getAttributeValues(),ev.getLifecycle(),ev.getResource(),
+												String.valueOf(ev.getTimestamp()));
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}).start();
+					}
+				});
+		
 		tableEventsPerCase = new JTable();
 		tableEventsPerCase.setFillsViewportHeight(true);
 		tableEventsPerCase.setModel(new MetaModelTableUtils.EventsTableModel());
@@ -352,6 +459,37 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					}
 				});
 
+		tableActivityInstancesPerActivity = new JTable();
+		tableActivityInstancesPerActivity.setFillsViewportHeight(true);
+		tableActivityInstancesPerActivity.setModel(new MetaModelTableUtils.ActivityInstanceTableModel());
+
+		tableActivityInstancesPerActivity
+				.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		tableActivityInstancesPerActivity.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					@Override
+					public void valueChanged(ListSelectionEvent e) {
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								Integer selected = MetaModelTableUtils.getSelectedActivityInstance(tableActivityInstancesPerActivity);
+								if (selected != null) {
+									try {
+										MetaModelTableUtils.setEventsTableContent(
+												tableEventsPerActivityInstance,
+												getMetaModel().getEventsForActivityInstance(selected),
+												topProgressBar);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}).start();
+					}
+				});
+		
 		tableActivityInstancesPerCase = new JTable();
 		tableActivityInstancesPerCase.setFillsViewportHeight(true);
 		tableActivityInstancesPerCase.setModel(new MetaModelTableUtils.ActivityInstanceTableModel());
@@ -389,10 +527,14 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JScrollPane scrollPaneActivityInstancesAll = new JScrollPane(tableActivityInstancesAll);
 		scrollPaneActivityInstancesAll.setMinimumSize(new Dimension(180, 0));
 		
+		JScrollPane scrollPaneActivityInstancesPerActivity = new JScrollPane(tableActivityInstancesPerActivity);
+		scrollPaneActivityInstancesPerActivity.setMinimumSize(new Dimension(180, 0));
+		
 		JScrollPane scrollPaneActivityInstancesPerCase = new JScrollPane(tableActivityInstancesPerCase);
 		scrollPaneActivityInstancesPerCase.setMinimumSize(new Dimension(180, 0));
 		
 		activityInstancesTabbedPane.addTab("All Activity Instances", scrollPaneActivityInstancesAll);
+		activityInstancesTabbedPane.addTab("Per Activity", scrollPaneActivityInstancesPerActivity);
 		activityInstancesTabbedPane.addTab("Per Case", scrollPaneActivityInstancesPerCase);
 		
 		JSplitPane splitPanelTopRight = new JSplitPane();
@@ -401,7 +543,13 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JSplitPane splitPanelCasesActivityInstances = new JSplitPane();
 		splitPanelCasesActivityInstances.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
 		
-		splitPanelCasesActivityInstances.setLeftComponent(casesScrollPane_all);
+		JTabbedPane casesTabbedPane = new JTabbedPane();
+		casesTabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
+		
+		casesTabbedPane.addTab("All Cases", casesScrollPane_all);
+		casesTabbedPane.addTab("Per Activity", casesScrollPane_perActivity);
+		
+		splitPanelCasesActivityInstances.setLeftComponent(casesTabbedPane);
 		splitPanelCasesActivityInstances.setRightComponent(activityInstancesTabbedPane);
 		
 		splitPanelTopLeft.setRightComponent(splitPanelTopRight);
@@ -414,6 +562,12 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		scrollPaneEventsAll.setMinimumSize(new Dimension(180, 0));
 		eventsTabbedPane.addTab("All Events", null, scrollPaneEventsAll, null);
 
+		JScrollPane scrollPaneEventsPerActivity = new JScrollPane(
+				tableEventsPerActivity);
+		scrollPaneEventsPerActivity.setMinimumSize(new Dimension(180, 0));
+		eventsTabbedPane
+				.addTab("Per Activity", null, scrollPaneEventsPerActivity, null);
+		
 		JScrollPane scrollPaneEventsPerActivityInstance = new JScrollPane(
 				tableEventsPerActivityInstance);
 		scrollPaneEventsPerActivityInstance.setMinimumSize(new Dimension(180, 0));
