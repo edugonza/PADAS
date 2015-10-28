@@ -17,6 +17,7 @@ import org.processmining.redologs.common.Column;
 import org.processmining.redologs.common.DataModel;
 import org.processmining.redologs.common.Key;
 import org.processmining.redologs.common.TableInfo;
+import org.processmining.redologs.ui.components.AskYesNoDialog;
 import org.processmining.redologs.ui.components.CustomInternalFrame;
 import org.processmining.redologs.ui.components.DiagramComponent;
 import org.processmining.redologs.ui.components.NodeSelectionHandler;
@@ -27,6 +28,7 @@ import org.processmining.redologs.ui.components.metamodel.SQLQueryPanel;
 import javax.swing.JSplitPane;
 
 import java.awt.BorderLayout;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -660,7 +662,17 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					}
 	            } else if (e.isControlDown()) {
 	            	int selected = sqlQueryTabbedPane.getSelectedIndex();
-	            	sqlQueryTabbedPane.remove(selected);
+	            	SQLQueryPanel sqlquerypanel = (SQLQueryPanel) sqlQueryTabbedPane.getComponentAt(selected);
+	            	if (sqlquerypanel.isQueryRunning()) {
+	            		AskYesNoDialog dialog = new AskYesNoDialog(sqlquerypanel, "A query is running in this Tab. Do you want to kill it?");
+	            		if (dialog.showDialog()) {
+	            			sqlquerypanel.killQuery();
+	            			sqlQueryTabbedPane.remove(selected);
+	            		}
+	            	} else {
+	            		sqlQueryTabbedPane.remove(selected);
+	            	}
+	            	
 	            }
 	        }
 	        
@@ -716,7 +728,16 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 					}
 	            } else if (e.isControlDown()) {
 	            	int selected = poqlQueryTabbedPane.getSelectedIndex();
-	            	poqlQueryTabbedPane.remove(selected);
+	            	POQLQueryPanel poqlquerypanel = (POQLQueryPanel) poqlQueryTabbedPane.getComponentAt(selected);
+	            	if (poqlquerypanel.isQueryRunning()) {
+	            		AskYesNoDialog dialog = new AskYesNoDialog(poqlquerypanel, "A query is running in this Tab. Do you want to kill it?");
+	            		if (dialog.showDialog()) {
+	            			poqlquerypanel.killQuery();
+	            			poqlQueryTabbedPane.remove(selected);
+	            		}
+	            	} else {
+	            		poqlQueryTabbedPane.remove(selected);
+	            	}
 	            }
 	        }
 	        

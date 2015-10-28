@@ -154,6 +154,36 @@ public class POQLQueryPanel extends JPanel {
 		}
 	}
 	
+	public boolean isQueryRunning() {
+		return this.queryRunning;
+	}
+	
+	public void killQuery() {
+		if (queryThread != null) {
+			btnExecutePOQLQuery.setEnabled(false);
+			btnExecutePOQLQuery.setText(STOPPING_BUTTON_TEXT);
+			
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					queryThread.stopThread();
+					poqlQueryField.setEnabled(true);
+					progressBar.setIndeterminate(false);
+					queryRunning = false;
+					btnExecutePOQLQuery.setText(EXECUTE_BUTTON_TEXT);
+					btnExecutePOQLQuery.setEnabled(true);
+					try {
+						slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}).start();
+		}
+	}
+	
 	private class EventSelectionListener implements ListSelectionListener {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
@@ -204,37 +234,17 @@ public class POQLQueryPanel extends JPanel {
 		public void actionPerformed(ActionEvent e) {
 			
 			if (queryRunning) {
-				if (queryThread != null) {
-					btnExecutePOQLQuery.setEnabled(false);
-					btnExecutePOQLQuery.setText(STOPPING_BUTTON_TEXT);
-					
-					new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							queryThread.stopThread();
-							poqlQueryField.setEnabled(true);
-							progressBar.setIndeterminate(false);
-							queryRunning = false;
-							btnExecutePOQLQuery.setText(EXECUTE_BUTTON_TEXT);
-							btnExecutePOQLQuery.setEnabled(true);
-							try {
-								slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
-							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-					}).start();
-				}
-				return;
+				
+				killQuery();
+				
+			} else {
+			
+				QueryThread queryPOQLThread = new QueryThread();
+			
+				queryThread = queryPOQLThread;
+			
+				queryPOQLThread.start();
 			}
-			
-			QueryThread queryPOQLThread = new QueryThread();
-			
-			queryThread = queryPOQLThread;
-			
-			queryPOQLThread.start();
 		}
 	}
 	

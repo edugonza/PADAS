@@ -96,40 +96,50 @@ public class SQLQueryPanel extends JPanel {
 		scrollPane.setViewportView(table);
 	}
 	
+	public boolean isQueryRunning() {
+		return queryRunning;
+	}
+	
+	public void killQuery() {
+		if (queryThread != null) {
+			btnExecuteSQLQuery.setEnabled(false);
+			btnExecuteSQLQuery.setText(STOPPING_BUTTON_TEXT);
+			
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					queryThread.stopThread();
+					sqlQueryField.setEnabled(true);
+					progressBar.setIndeterminate(false);
+					try {
+						slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					queryRunning = false;
+					btnExecuteSQLQuery.setText(EXECUTE_BUTTON_TEXT);
+					btnExecuteSQLQuery.setEnabled(true);
+				}
+			}).start();
+		}
+	}
+	
 	public class ExecuteSQLQueryAction implements ActionListener {
 		
 		public void actionPerformed(ActionEvent e) {
 			
 			if (queryRunning) {
-				if (queryThread != null) {
-					btnExecuteSQLQuery.setEnabled(false);
-					btnExecuteSQLQuery.setText(STOPPING_BUTTON_TEXT);
-					
-					new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							queryThread.stopThread();
-							sqlQueryField.setEnabled(true);
-							progressBar.setIndeterminate(false);
-							try {
-								slxmm = new SLEXMMStorageMetaModelImpl(slxmm.getPath(), slxmm.getFilename());
-							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							queryRunning = false;
-							btnExecuteSQLQuery.setText(EXECUTE_BUTTON_TEXT);
-							btnExecuteSQLQuery.setEnabled(true);
-						}
-					}).start();
-				}
-				return;
-			}
+				
+				killQuery();
+				
+			} else {
 			
-			QueryThread querySQLThread = new QueryThread();
-			queryThread = querySQLThread;
-			querySQLThread.start();
+				QueryThread querySQLThread = new QueryThread();
+				queryThread = querySQLThread;
+				querySQLThread.start();
+				
+			}
 		}
 	}
 	
