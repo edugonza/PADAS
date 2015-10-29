@@ -127,7 +127,7 @@ public class Autocomplete implements DocumentListener {
 				String match = keywords.get(-n - 1);
 				if (match.startsWith(prefix)) {
 					// A completion is found
-					String completion = match.substring(pos - w);
+					String completion = match.substring(pos - w).toLowerCase();
 					// We cannot modify Document from within notification,
 					// so we submit a task that does the change later
 					SwingUtilities.invokeLater(new CompletionTask(completion,
