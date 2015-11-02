@@ -27,15 +27,15 @@ import org.processmining.openslex.SLEXPerspective;
 import org.processmining.openslex.SLEXTrace;
 import org.processmining.openslex.SLEXTraceResultSet;
 import org.processmining.openslex.metamodel.*;
-import org.processmining.redologs.common.Column;
-import org.processmining.redologs.common.DataModel;
-import org.processmining.redologs.common.Key;
-import org.processmining.redologs.common.LogTraceSplitter;
-import org.processmining.redologs.common.SLEXAttributeMapper;
-import org.processmining.redologs.common.TableInfo;
-import org.processmining.redologs.common.TraceID;
-import org.processmining.redologs.common.TraceIDPattern;
-import org.processmining.redologs.oracle.OracleLogMinerExtractor;
+import org.processmining.database.redologs.common.Column;
+import org.processmining.database.redologs.common.DataModel;
+import org.processmining.database.redologs.common.Key;
+import org.processmining.database.redologs.common.LogTraceSplitter;
+import org.processmining.database.redologs.common.SLEXAttributeMapper;
+import org.processmining.database.redologs.common.TableInfo;
+import org.processmining.database.redologs.common.TraceID;
+import org.processmining.database.redologs.common.TraceIDPattern;
+import org.processmining.database.redologs.oracle.OracleLogMinerExtractor;
 
 public class MetaModelPopulator {
 

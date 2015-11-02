@@ -1,4 +1,0 @@
-[submodule "OpenSLEX"]
-	path = OpenSLEX
-	url = https://git.yerappa.com/gitbucket/git/TUE-PhD/OpenSLEX.git
-	branch = development

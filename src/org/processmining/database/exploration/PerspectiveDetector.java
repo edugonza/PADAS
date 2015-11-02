@@ -16,11 +16,11 @@ import org.processmining.openslex.SLEXEventResultSet;
 import org.processmining.openslex.SLEXFactory;
 import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXStorageCollection;
-import org.processmining.redologs.common.DataModel;
-import org.processmining.redologs.common.Key;
-import org.processmining.redologs.common.SLEXAttributeMapper;
-import org.processmining.redologs.common.TableInfo;
-import org.processmining.redologs.oracle.OracleLogMinerExtractor;
+import org.processmining.database.redologs.common.DataModel;
+import org.processmining.database.redologs.common.Key;
+import org.processmining.database.redologs.common.SLEXAttributeMapper;
+import org.processmining.database.redologs.common.TableInfo;
+import org.processmining.database.redologs.oracle.OracleLogMinerExtractor;
 
 public class PerspectiveDetector {
 	
