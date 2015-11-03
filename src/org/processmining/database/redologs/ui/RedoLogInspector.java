@@ -297,16 +297,16 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmLogSplitter);
 		
-		JMenuItem mntmPersInteract = new JMenuItem("Perspectives Interaction Miner");
-		mntmPersInteract.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				FramePerspectivesInteraction pIntMnr = new FramePerspectivesInteraction();
-				desktopPane.add(pIntMnr);
-				pIntMnr.setVisible(true);
-				pIntMnr.setFocusable(true);
-			}
-		});
-		mnTools.add(mntmPersInteract);
+//		JMenuItem mntmPersInteract = new JMenuItem("Perspectives Interaction Miner");
+//		mntmPersInteract.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				FramePerspectivesInteraction pIntMnr = new FramePerspectivesInteraction();
+//				desktopPane.add(pIntMnr);
+//				pIntMnr.setVisible(true);
+//				pIntMnr.setFocusable(true);
+//			}
+//		});
+//		mnTools.add(mntmPersInteract);
 		
 		JMenuItem mntmMetaModel = new JMenuItem("MetaModel Computer");
 		mntmMetaModel.addActionListener(new ActionListener() {
@@ -319,16 +319,16 @@ public class RedoLogInspector {
 		});
 		mnTools.add(mntmMetaModel);
 		
-		JMenuItem mntmPerspectiveDetector = new JMenuItem("Perspectives Detector");
-		mntmPerspectiveDetector.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				FramePerspectivesDetector pPersDetec = new FramePerspectivesDetector();
-				desktopPane.add(pPersDetec);
-				pPersDetec.setVisible(true);
-				pPersDetec.setFocusable(true);
-			}
-		});
-		mnTools.add(mntmPerspectiveDetector);
+//		JMenuItem mntmPerspectiveDetector = new JMenuItem("Perspectives Detector");
+//		mntmPerspectiveDetector.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				FramePerspectivesDetector pPersDetec = new FramePerspectivesDetector();
+//				desktopPane.add(pPersDetec);
+//				pPersDetec.setVisible(true);
+//				pPersDetec.setFocusable(true);
+//			}
+//		});
+//		mnTools.add(mntmPerspectiveDetector);
 		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
