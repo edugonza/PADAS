@@ -33,7 +33,8 @@
 	<dependency org="net.sf.jung" name="jung-graph-impl" rev="2.0.1" />
 	<dependency org="org.jfree" name="jfreechart" rev="1.0.19" />
 	<dependency org="prom-libs" name="OpenXES" rev="2.0" />
+	<dependency org="prom-libs" name="OpenXES-XStream" rev="2.0" />
 	<dependency org="com.jgoodies" name="jgoodies-forms" rev="1.9.0" /> 
-	<dependency org="db-process-mining" name="OpenSLEX" rev="0.4"/>
+ 	<dependency org="db-process-mining" name="OpenSLEX" rev="0.4"/>
 	<dependency org="db-process-mining" name="MetaModel-POQL" rev="0.4"/>
 </ivy-module>

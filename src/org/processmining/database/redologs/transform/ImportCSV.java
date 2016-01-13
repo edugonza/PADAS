@@ -33,14 +33,23 @@ import org.processmining.database.redologs.oracle.OracleLogMinerExtractor;
 public class ImportCSV {
 
 	private SLEXEventCollection evCol = null;
-	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+	private SimpleDateFormat dateFormatStandard = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 	
 	public ImportCSV(SLEXEventCollection evCol) {
 		this.evCol = evCol;
 	}
 	
-	public int importCSVFile(File f, int initOrder, String[] objectIDField, String className, String timestampField) {
+	public int importCSVFile(File f, int initOrder, String[] objectIDField, String className, String timestampField, String timestampFormat) {
 		int i = initOrder;
+		
+		SimpleDateFormat dateFormat = null;
+		
+		if (timestampFormat == null) {
+			dateFormat = dateFormatStandard;
+		} else {
+			dateFormat = new SimpleDateFormat(timestampFormat);
+		}
+		
 		if (f.exists()) {
 			Reader in = null;
 			CSVParser parser = null;
