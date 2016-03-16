@@ -2,12 +2,6 @@ package org.processmining.database.redologs.ui;
 
 import java.awt.Color;
 import java.awt.Desktop;
-import java.awt.EventQueue;
-
-import javax.swing.JDialog;
-
-import java.awt.GridLayout;
-
 import javax.swing.JLabel;
 import javax.swing.JWindow;
 import javax.swing.SwingConstants;
@@ -19,13 +13,8 @@ import javax.swing.ImageIcon;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.Window.Type;
-
-import javax.swing.JTextPane;
-
 import org.processmining.database.redologs.common.Constants;
 
-import java.awt.Font;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -53,13 +42,16 @@ public class AboutDialog extends JWindow {
 		setBackground(new Color(0, 0, 0, 0));
 		
 		addMouseListener(closeOnMouseRelease);
-		setBounds(100, 100, 358, 581);
+		//setBounds(100, 100, 720, 170);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		
 		JLabel lblByRrzeiconsown = new JLabel("");
 		lblByRrzeiconsown.addMouseListener(closeOnMouseRelease);
-		lblByRrzeiconsown.setToolTipText("<html>By RRZEicons (Own work) <br/>\n[CC-BY-SA-3.0]<br/>\nvia Wikimedia Commons</html>");
-		lblByRrzeiconsown.setIcon(new ImageIcon(AboutDialog.class.getResource("/org/processmining/redologs/resources/r.png")));
+		//lblByRrzeiconsown.setToolTipText("<html>By RRZEicons (Own work) <br/>\n[CC-BY-SA-3.0]<br/>\nvia Wikimedia Commons</html>");
+		//lblByRrzeiconsown.setIcon(new ImageIcon(AboutDialog.class.getResource("/org/processmining/redologs/resources/r.png")));
+		lblByRrzeiconsown.setToolTipText("<html>Logo made using Notegraphy</html>");
+		lblByRrzeiconsown.setIcon(new ImageIcon(AboutDialog.class.getResource("/org/processmining/database/resources/padas-logo-720.png")));
+		lblByRrzeiconsown.setBounds(0, 0, 720, 170);
 		lblByRrzeiconsown.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblByRrzeiconsown.setHorizontalAlignment(SwingConstants.CENTER);
 		getContentPane().add(lblByRrzeiconsown);
@@ -69,7 +61,7 @@ public class AboutDialog extends JWindow {
 		getContentPane().add(panel);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		
-		JLabel lblNewLabel = new JLabel("RedoLog Inspector");
+		JLabel lblNewLabel = new JLabel(Constants.APP_NAME);
 		lblNewLabel.setForeground(Color.WHITE);
 		panel.add(lblNewLabel);
 		lblNewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -94,7 +86,11 @@ public class AboutDialog extends JWindow {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					Desktop.getDesktop().browse(new URI(Constants.EMAIL));
+					if (Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
+						Desktop.getDesktop().mail(new URI("mailto",Constants.EMAIL,null));
+			        } else {
+			        	System.out.println("Mail links not supported");
+			        }
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} catch (URISyntaxException e1) {
@@ -104,7 +100,8 @@ public class AboutDialog extends JWindow {
 		});
 		lblNewLabel_3.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel_3.setAlignmentX(Component.CENTER_ALIGNMENT);
-
+		pack();
+		//getContentPane().setSize(getContentPane().getPreferredSize());
 		setLocationRelativeTo(null);
 	}
 

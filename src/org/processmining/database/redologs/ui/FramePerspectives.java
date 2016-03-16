@@ -19,21 +19,7 @@ import org.deckfour.xes.out.XesXmlSerializer;
 import org.processmining.database.redologs.ui.components.CustomInternalFrame;
 import org.processmining.openslex.SLEXExporter;
 import org.processmining.openslex.SLEXPerspective;
-import org.processmining.openslex.SLEXPerspectiveResultSet;
-import org.processmining.openslex.SLEXStoragePerspective;
-
-import com.sun.java.swing.plaf.windows.WindowsBorders.ProgressBarBorder;
-
-import javax.swing.BoxLayout;
-
-import java.awt.GridLayout;
-import java.awt.FlowLayout;
-
 import javax.swing.JProgressBar;
-
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 
 public class FramePerspectives extends CustomInternalFrame {
 
