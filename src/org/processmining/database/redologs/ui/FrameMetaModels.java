@@ -99,7 +99,7 @@ public class FrameMetaModels extends CustomInternalFrame {
 					try {
 						mmstrgAux = new SLEXMMStorageMetaModelImpl(mmstrg.getPath(),mmstrg.getFilename());
 						FrameMetaModelInspect fmmins = new FrameMetaModelInspect(mmstrgAux);
-						RedoLogInspector.getInstance().addFrame(fmmins);
+						PadasMainUI.getInstance().addFrame(fmmins);
 						fmmins.setVisible(true);
 						fmmins.setFocusable(true);
 					} catch (Exception e1) {

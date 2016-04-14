@@ -19,7 +19,12 @@ public class DatabaseConnectionData implements Serializable {
 	public String password = "";
 	public List<String> dbname = new Vector<>();
 	public String service = "XE";
-	
+	public List<String> redologFiles = new Vector<>();
+	public boolean isDictionaryOnline = true;
+	public String dictionaryPath = "";
+	public boolean switchRootContainer = false;
+	public boolean isRedoLogFilesListOnline = true;
+		
 	@Override
 	public String toString() {
 		return nameConnection;

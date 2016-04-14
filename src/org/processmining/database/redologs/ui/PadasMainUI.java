@@ -1,6 +1,5 @@
 package org.processmining.database.redologs.ui;
 
-import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Rectangle;
 
@@ -47,10 +46,11 @@ import java.util.Vector;
 import javax.swing.JPanel;
 import javax.swing.JDesktopPane;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 
-public class RedoLogInspector {
+public class PadasMainUI {
 
-	private static RedoLogInspector _instance;
+	private static PadasMainUI _instance;
 	private JFrame frmRedologInspector;
 	private JDesktopPane desktopPane;
 	
@@ -118,7 +118,7 @@ public class RedoLogInspector {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					RedoLogInspector.getInstance().frmRedologInspector.setVisible(true);
+					PadasMainUI.getInstance().frmRedologInspector.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -127,9 +127,9 @@ public class RedoLogInspector {
 		
 	}
 
-	public static RedoLogInspector getInstance() {
+	public static PadasMainUI getInstance() {
 		if (_instance == null) {
-			_instance = new RedoLogInspector();
+			_instance = new PadasMainUI();
 		}
 		return _instance;
 	}
@@ -141,7 +141,7 @@ public class RedoLogInspector {
 	/**
 	 * Create the application.
 	 */
-	private RedoLogInspector() {
+	private PadasMainUI() {
 		initialize();
 		
 		try {
@@ -219,7 +219,7 @@ public class RedoLogInspector {
 		frmRedologInspector = new JFrame();
 		frmRedologInspector.setTitle(Constants.APP_NAME+" v"+Constants.VERSION);
 		//frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/r.png")));
-		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/database/resources/letters/p.png")));
+		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(PadasMainUI.class.getResource("/org/processmining/database/resources/letters/p.png")));
 		frmRedologInspector.setBounds(100, 100, 1111, 829);
 		frmRedologInspector.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmRedologInspector.setLocationRelativeTo(null);
@@ -233,7 +233,7 @@ public class RedoLogInspector {
 		JMenuItem fileConnManagerMI = new JMenuItem("Connection Manager");
 		fileConnManagerMI.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ConnectionManager manager = new ConnectionManager();
+				ConnectionManager manager = new ConnectionManager((JComponent) frmRedologInspector.getContentPane());
 				manager.setVisible(true);
 				FrameTables.getInstance().refreshConnectionsComboBox();
 			}
@@ -338,7 +338,7 @@ public class RedoLogInspector {
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				AboutDialog about = new AboutDialog();
-				about.setLocationRelativeTo(RedoLogInspector.this.frmRedologInspector);
+				about.setLocationRelativeTo(PadasMainUI.this.frmRedologInspector);
 				about.setVisible(true);
 			}
 		});

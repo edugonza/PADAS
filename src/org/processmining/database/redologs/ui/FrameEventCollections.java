@@ -93,7 +93,7 @@ public class FrameEventCollections extends CustomInternalFrame {
 		btnMetrics.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				FrameMetrics fmetrics = new FrameMetrics(getEventCollectionFromSelector(),null);
-				RedoLogInspector.getInstance().addFrame(fmetrics);
+				PadasMainUI.getInstance().addFrame(fmetrics);
 				fmetrics.setVisible(true);
 				fmetrics.setFocusable(true);
 				//fmetrics.calculateMetrics(getEventCollectionFromSelector(), null); // FIXME calculate metrics according to data model

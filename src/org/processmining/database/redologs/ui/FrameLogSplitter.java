@@ -175,7 +175,7 @@ public class FrameLogSplitter extends CustomInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (model != null) {
 					FrameRelationsGraph relations = new FrameRelationsGraph(true,FrameLogSplitter.this);
-					RedoLogInspector.getInstance().addFrame(relations);
+					PadasMainUI.getInstance().addFrame(relations);
 					relations.setVisible(true);
 					relations.setFocusable(true);
 					relations.reloadGraph(model);

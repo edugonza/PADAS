@@ -10,7 +10,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -27,7 +26,6 @@ import javax.swing.table.DefaultTableModel;
 import org.processmining.database.redologs.ui.components.AskNameDialog;
 import org.processmining.database.redologs.ui.components.CustomInternalFrame;
 import org.processmining.database.redologs.ui.components.InfoDialog;
-import org.processmining.database.redologs.ui.components.TextDialog;
 import org.processmining.openslex.SLEXDMDataModel;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXFactory;
@@ -51,7 +49,6 @@ public class FrameTables extends CustomInternalFrame {
 	private static FrameTables _instance;
 	private JComboBox comboBoxConnections;
 	private final String[] tablesTableColumnNames = new String[] {"Name","Database Name","Table Name"};
-	private List<String> redoLogFilesList = null;
 	
 	private OracleLogMinerExtractor extractor = null;
 	private boolean stopExtractor = false;
@@ -95,13 +92,26 @@ public class FrameTables extends CustomInternalFrame {
 		return (DatabaseConnectionData) comboBoxConnections.getSelectedItem();
 	}
 	
-	public List<String> getRedoFilesFromUI() {
-		return this.redoLogFilesList;
-	}
-	
-	public void setRedoLogFiles(List<String> redoLogFiles) {
-		this.redoLogFilesList = redoLogFiles;
-	}
+//	public List<String> getRedoFilesFromUI() {
+//		return this.redoLogFilesList;
+//	}
+//	
+//	public void setRedoLogFiles(List<String> redoLogFiles) {
+//		this.redoLogFilesList = redoLogFiles;
+//	}
+//	
+//	public void setDictionary(boolean dictionaryOnline, String dictionaryPath) {
+//		this.dictionaryOnline = dictionaryOnline;
+//		this.dictionaryPath = dictionaryPath;
+//	}
+//	
+//	public boolean isDictionaryOnline() {
+//		return this.dictionaryOnline;
+//	}
+//	
+//	public String getDictionaryPath() {
+//		return this.dictionaryPath;
+//	}
 	
 	private FrameTables() {		
 		super("Tables list");
@@ -267,16 +277,19 @@ public class FrameTables extends CustomInternalFrame {
 							progressBar_1.setStringPainted(true);
 
 							List<TableInfo> tables = getSelectedTables();
-
+							
+							DatabaseConnectionData dbcond = getSelectedConnection();
 							extractor = new OracleLogMinerExtractor(
-									getSelectedConnection(), tables);
+									dbcond, tables);
 							extractor.setExtractionFlag(true);
 							if (extractor.connect()) {
-								List<String> redoFiles = getRedoFilesFromUI();
-								if (redoFiles == null || redoFiles.isEmpty()) {
+								List<String> redoFiles = null;
+								if (dbcond.isRedoLogFilesListOnline) {
 									redoFiles = extractor.getRedoLogFiles();
+								} else {
+									redoFiles = dbcond.redologFiles;
 								}
-								if (extractor.startLogMiner(redoFiles)) {
+								if (extractor.startLogMiner(redoFiles,dbcond.isDictionaryOnline,dbcond.dictionaryPath,dbcond.switchRootContainer)) {
 									
 									SLEXEventCollection eventCollection = null;
 									
@@ -372,21 +385,22 @@ public class FrameTables extends CustomInternalFrame {
 		gbc_btnStop.gridy = 3;
 		panel_5.add(btnStop, gbc_btnStop);
 		
-		final TextDialog tdiag = new TextDialog(FrameTables.this);
-		JButton btnSetredologfiles = new JButton("Set Redo Log Files");
-		btnSetredologfiles.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String redoLogFilesStr = tdiag.showDialog();
-				if (redoLogFilesStr != null) {
-					String[] redoLogFilesArr = redoLogFilesStr.split("\\r?\\n");
-					List<String> redoLogFilesList = Arrays.asList(redoLogFilesArr);
-					setRedoLogFiles(redoLogFilesList);
-				}
-			}
-		});
-		GridBagConstraints gbc_btnSetredologfiles = new GridBagConstraints();
-		gbc_btnSetredologfiles.gridx = 1;
-		gbc_btnSetredologfiles.gridy = 3;
-		panel_5.add(btnSetredologfiles, gbc_btnSetredologfiles);
+		//final TextDialog tdiag = new TextDialog(FrameTables.this);
+//		JButton btnSetredologfiles = new JButton("Set Redo Log Files");
+//		btnSetredologfiles.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				String redoLogFilesStr = tdiag.showDialog();
+//				if (redoLogFilesStr != null) {
+//					String[] redoLogFilesArr = redoLogFilesStr.split("\\r?\\n");
+//					List<String> redoLogFilesList = Arrays.asList(redoLogFilesArr);
+//					setRedoLogFiles(redoLogFilesList);
+//				}
+//				setDictionary(tdiag.isOnlineDictionary(),tdiag.getDictionaryPath());
+//			}
+//		});
+//		GridBagConstraints gbc_btnSetredologfiles = new GridBagConstraints();
+//		gbc_btnSetredologfiles.gridx = 1;
+//		gbc_btnSetredologfiles.gridy = 3;
+//		panel_5.add(btnSetredologfiles, gbc_btnSetredologfiles);
 	}
 }

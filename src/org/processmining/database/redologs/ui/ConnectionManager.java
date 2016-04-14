@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -45,10 +46,14 @@ public class ConnectionManager extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public ConnectionManager() {
+	public ConnectionManager(final JComponent comp) {
 		setModal(true);
-		setResizable(false);
 		setBounds(100, 100, 450, 300);
+		
+		if (comp != null) {
+			setLocationRelativeTo(comp);
+		}
+		
 		BorderLayout borderLayout = new BorderLayout();
 		borderLayout.setVgap(5);
 		borderLayout.setHgap(5);
@@ -88,7 +93,7 @@ public class ConnectionManager extends JDialog {
 				btnNewButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						DatabaseConnectionData connection = new DatabaseConnectionData();
-						EditConnectionDialog editDialog = new EditConnectionDialog(connection);
+						EditConnectionDialog editDialog = new EditConnectionDialog(connection,comp);
 						if (editDialog.showDialog()) {
 							Config.getInstance().getConnections().add(connection);
 							listConnectionsModel.addElement(connection);
@@ -111,7 +116,7 @@ public class ConnectionManager extends JDialog {
 						DatabaseConnectionData connection = listConnections.getSelectedValue();
 						if (connection != null) {
 							EditConnectionDialog editDialog = new EditConnectionDialog(
-									connection);
+									connection,comp);
 							if (editDialog.showDialog()) {
 								listConnections.repaint();
 								Config.getInstance().save();

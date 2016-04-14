@@ -188,7 +188,7 @@ public class OracleLogMinerExtractor {
 		return result;
 	}
 	
-	public boolean startLogMiner(List<String> logs) {
+	public boolean startLogMiner(List<String> logs, boolean isDictionaryOnline, String dictionaryPath, boolean switchRootContainer) {
 		
 		if (logs == null || logs.size() == 0) { 
 			return false;
@@ -197,7 +197,13 @@ public class OracleLogMinerExtractor {
 		try {
 			
 			Statement stm = con.createStatement();
-			
+
+			if (switchRootContainer) {
+				/* Switch to the root container */
+				stm.execute("ALTER SESSION SET CONTAINER = CDB$ROOT");
+				/**/
+			}
+
 			Iterator<String> it = logs.iterator();
 			
 			boolean first = true;
@@ -215,11 +221,16 @@ public class OracleLogMinerExtractor {
 
 			}
 			
-			stm.execute("begin DBMS_LOGMNR.START_LOGMNR("
-					+" OPTIONS => "
-					+" DBMS_LOGMNR.DICT_FROM_ONLINE_CATALOG "
+			String strlmnrStr = "begin DBMS_LOGMNR.START_LOGMNR("
+//					+" OPTIONS => "
+					+ ((isDictionaryOnline) ? " OPTIONS => DBMS_LOGMNR.DICT_FROM_ONLINE_CATALOG " :
+						"DICTFILENAME => '"+dictionaryPath+"'") +
 //					+" + DBMS_LOGMNR.COMMITTED_DATA_ONLY  "
-					+" ); end;");
+					" "
+					+" ); end;";
+			
+			System.out.println("Starting logminer: "+strlmnrStr);
+			stm.execute(strlmnrStr);
 			
 			stm.close();
 			return true;
