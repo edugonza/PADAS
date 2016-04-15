@@ -275,7 +275,9 @@ public class OracleRelationsExplorer {
 					
 					k.fields.add(c);
 					k.fields_ordered.put(column_position,c);
-					k.refers_to_column.put(c,k.refers_to.fields_ordered.get(column_position));
+					if (k.refers_to != null) {
+						k.refers_to_column.put(c,k.refers_to.fields_ordered.get(column_position));
+					}
 					
 				} else if (constraint_type.equalsIgnoreCase("P")) {
 					// Primary Key

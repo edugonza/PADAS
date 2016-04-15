@@ -98,7 +98,12 @@ public class SLEXDataModelExportImport {
 					// For every FK k create a Key
 					SLEXDMClass cl = classesTable.get(k.table);
 					SLEXDMKey refers_to_key = keysTable.get(k.refers_to);
-					SLEXDMKey key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.FOREIGN_KEY,refers_to_key.getId());
+					SLEXDMKey key = null;
+					if (refers_to_key != null) {
+						key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.FOREIGN_KEY,refers_to_key.getId());
+					} else {
+						key = storage.createDMKey(cl.getId(),k.name,SLEXDMKey.FOREIGN_KEY,-1);
+					}
 					keysTable.put(k, key);
 					
 					for (Column c : k.fields) {
@@ -120,7 +125,11 @@ public class SLEXDataModelExportImport {
 							}
 						}
 						
-						storage.createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
+						if (refers_to_at != null) {
+							storage.createDMKeyAttribute(key.getId(),at.getId(),refers_to_at.getId(),position);
+						} else {
+							storage.createDMKeyAttribute(key.getId(),at.getId(),-1,position);
+						}
 					}
 				}
 			}
