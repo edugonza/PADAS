@@ -301,6 +301,7 @@ public class EditConnectionDialog extends JDialog {
 						connection.service = txtService.getText();
 						String redoLogFilesStr = redoLogsTextArea.getText();
 						String[] redoLogFilesArr = redoLogFilesStr.split("\\r?\\n");
+						connection.isRedoLogFilesListOnline = redoLogsCheckBox.isSelected();
 						connection.redologFiles = Arrays.asList(redoLogFilesArr);
 						connection.isDictionaryOnline = dictionaryCheckBox.isSelected();
 						connection.dictionaryPath = dictionaryField.getText();
