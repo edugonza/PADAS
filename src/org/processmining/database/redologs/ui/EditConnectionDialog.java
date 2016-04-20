@@ -69,6 +69,7 @@ public class EditConnectionDialog extends JDialog {
 	private MaskFormatter formatter;
 	private String dbnames = "";
 	private JCheckBox switchRootCheckBox;
+	private JCheckBox chckbxNewToOld;
 
 	/**
 	 * Create the dialog.
@@ -279,6 +280,11 @@ public class EditConnectionDialog extends JDialog {
 					lblNewLabel_2 = new JLabel("  ");					
 					panel.add(lblNewLabel_2);
 				}
+				{
+					chckbxNewToOld = new JCheckBox("Extract events older than snapshot");
+					chckbxNewToOld.setSelected(connection.newToOld);
+					panel.add(chckbxNewToOld);
+				}
 			}
 		}
 		
@@ -306,6 +312,7 @@ public class EditConnectionDialog extends JDialog {
 						connection.isDictionaryOnline = dictionaryCheckBox.isSelected();
 						connection.dictionaryPath = dictionaryField.getText();
 						connection.switchRootContainer = switchRootCheckBox.isSelected();
+						connection.newToOld = chckbxNewToOld.isSelected();
 						result = true;
 						EditConnectionDialog.this.setVisible(false);
 						EditConnectionDialog.this.dispose();

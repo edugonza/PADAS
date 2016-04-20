@@ -338,8 +338,10 @@ public class FrameTables extends CustomInternalFrame {
 										}
 										System.out.println("Table: "+t.name);
 										
+										boolean newToOld = dbcond.newToOld;
+										
 										extractor.getLogsForTableWithColumns(t,
-												null, eventCollection, false, true,orderIds, scn_limit);
+												eventCollection, false, true,orderIds, scn_limit, newToOld);
 										progressBar_1.setValue((progress*100)/total);
 										progressBar_1.setString("Extracting: "+(progress*100)/total+"%");
 									}

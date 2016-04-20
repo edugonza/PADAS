@@ -24,6 +24,7 @@ public class DatabaseConnectionData implements Serializable {
 	public String dictionaryPath = "";
 	public boolean switchRootContainer = false;
 	public boolean isRedoLogFilesListOnline = true;
+	public boolean newToOld = true;
 		
 	@Override
 	public String toString() {
