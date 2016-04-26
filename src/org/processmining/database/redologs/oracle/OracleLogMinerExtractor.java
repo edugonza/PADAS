@@ -1,6 +1,5 @@
 package org.processmining.database.redologs.oracle;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -71,6 +70,7 @@ public class OracleLogMinerExtractor {
 	private static final String OLD_VALUES_CP_PREFIX_KEY = "CP_OLD";
 	
 	private boolean stopExtraction = false;
+	private boolean switchRootContainer = false;
 	
 	public OracleLogMinerExtractor() {
 		init(CONFIG_FILE);
@@ -189,6 +189,8 @@ public class OracleLogMinerExtractor {
 	}
 	
 	public boolean startLogMiner(List<String> logs, boolean isDictionaryOnline, String dictionaryPath, boolean switchRootContainer) {
+		
+		this.switchRootContainer = switchRootContainer;
 		
 		if (logs == null || logs.size() == 0) { 
 			return false;
@@ -519,17 +521,33 @@ public class OracleLogMinerExtractor {
 
 		try {
 			Statement stm = con.createStatement();
+			
+			if (switchRootContainer) {
+				/* Switch to the pluggable db */
+				stm.execute("ALTER SESSION SET CONTAINER = "+t.db);
+				/**/
+			}
+			
 			ResultSet res = stm.executeQuery(query);
 			if (res.next()) {
 				for (int i = 0; i < t.columns.size(); i++) {
 					result.put(t.columns.get(i).name,res.getString(t.columns.get(i).name));
 				}
 			}
+			
+			if (switchRootContainer) {
+				/* Switch to the root container */
+				stm.execute("ALTER SESSION SET CONTAINER = CDB$ROOT");
+				/**/
+			}
+			
 			stm.close();
 			return result;
 		} catch (SQLException e) {
+			System.err.println(query);
 			e.printStackTrace();
 		} catch (Exception e) {
+			System.err.println(query);
 			e.printStackTrace();
 		}
 		

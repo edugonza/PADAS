@@ -24,7 +24,6 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JPasswordField;
 import javax.swing.DefaultComboBoxModel;
 
-import org.apache.commons.io.input.SwappedDataInputStream;
 import org.processmining.database.redologs.config.DatabaseConnectionData;
 import org.processmining.database.redologs.config.DatabaseTypes;
 
