@@ -44,6 +44,7 @@ public class OracleLogMinerExtractor {
 	private UniversalConnectionPoolManager mgr;
 	private PoolDataSource pds;
 	private Connection con;
+	private Connection con2;
 	private Properties prop;
 	private List<TableInfo> targetTables;
 	public static final String[] LOG_MINER_BASIC_FIELDS = {"SCN", "TIMESTAMP","SEG_OWNER","TABLE_NAME","OPERATION","SQL_REDO","SQL_UNDO","ROW_ID","RS_ID","SSN"};
@@ -158,6 +159,7 @@ public class OracleLogMinerExtractor {
 			mgr.startConnectionPool(CONNECTION_POOL_NAME);
 			
 			con = pds.getConnection();
+			con2 = pds.getConnection();
 			
 			success=true;
 		} catch (Exception e) {
@@ -520,11 +522,12 @@ public class OracleLogMinerExtractor {
 
 
 		try {
-			Statement stm = con.createStatement();
+			Statement stm = null;
 			
 			if (switchRootContainer) {
+				stm = con2.createStatement();
 				/* Switch to the pluggable db */
-				stm.execute("ALTER SESSION SET CONTAINER = "+t.db);
+				//stm.execute("ALTER SESSION SET CONTAINER = "+t.db);
 				/**/
 			}
 			
@@ -535,11 +538,11 @@ public class OracleLogMinerExtractor {
 				}
 			}
 			
-			if (switchRootContainer) {
-				/* Switch to the root container */
-				stm.execute("ALTER SESSION SET CONTAINER = CDB$ROOT");
-				/**/
-			}
+//			if (switchRootContainer) {
+//				/* Switch to the root container */
+//				stm.execute("ALTER SESSION SET CONTAINER = CDB$ROOT");
+//				/**/
+//			}
 			
 			stm.close();
 			return result;

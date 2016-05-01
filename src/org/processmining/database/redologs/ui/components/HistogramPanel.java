@@ -123,6 +123,11 @@ public class HistogramPanel extends JPanel {
 	
 	public void setData(SLEXEventCollection ec, SimpleDateFormat dateFormat) {
 		tseries.clear();
+		
+		if (ec == null) {
+			return;
+		}
+		
 		try {
 			List<SLEXAttribute> orderAttributes = new Vector<>();
 			//orderAttributes
