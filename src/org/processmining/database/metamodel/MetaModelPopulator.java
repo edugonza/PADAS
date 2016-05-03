@@ -556,15 +556,20 @@ public class MetaModelPopulator {
 			
 			// Create Activities
 			for (String actName: mm.activitySet) {
-				SLEXMMActivity act = strg.createActivity(proc.getId(), actName);
+				SLEXMMActivity act = strg.createActivity(actName);
+				proc.add(act.getId());
 				activityMap.put(actName,act);
 			}			
 
+			// Create Log
+			SLEXMMLog log = strg.createLog(proc.getId(),"log01");
+			
 			strg.setAutoCommit(false);
 
 			// Save Cases and Activity Instances			
 			for (SLEXTrace tr : mm.caseToActivityInstancesMap.keySet()) {
 				SLEXMMCase pcase = strg.createCase(tr.getCaseId());
+				log.add(pcase.getId());
 				for (CompactActivityInstance ai : mm.caseToActivityInstancesMap
 						.get(tr)) {
 					if (!activityInstancesMap.containsKey(ai.hashCode())) {
@@ -580,7 +585,7 @@ public class MetaModelPopulator {
 			}
 
 			strg.commit();
-				
+			
 			// Save Event Collection
 						
 			SLEXEventResultSet evrset = evCol.getEventsResultSetOrderedBy(orderAttributes);
