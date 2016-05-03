@@ -269,7 +269,7 @@ public class OracleLogMinerExtractor {
 		try {
 			String query = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='"+
 							t.name+"' AND OWNER='"+t.db+"'";
-			Statement stm = con.createStatement();
+			Statement stm = con2.createStatement();
 			ResultSet res = stm.executeQuery(query);
 			
 			while(res.next()) {
