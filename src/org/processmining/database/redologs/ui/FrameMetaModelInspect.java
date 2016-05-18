@@ -1,10 +1,10 @@
 package org.processmining.database.redologs.ui;
 
-import org.processmining.database.metamodel.poql.ui.components.MetaModelInspectorPanel;
-import org.processmining.database.metamodel.poql.ui.components.POQLPanel;
-import org.processmining.database.metamodel.poql.ui.components.SQLPanel;
 import org.processmining.database.redologs.ui.components.CustomInternalFrame;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
+import org.processmining.database.metamodel.dapoql.ui.components.MetaModelInspectorPanel;
+import org.processmining.database.metamodel.dapoql.ui.components.DAPOQLPanel;
+import org.processmining.database.metamodel.dapoql.ui.components.SQLPanel;
 import org.processmining.database.redologs.common.Column;
 import org.processmining.database.redologs.common.DataModel;
 import org.processmining.database.redologs.common.Key;
@@ -47,7 +47,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		
 		tabbedPane_1.addTab("Inspector", null, new MetaModelInspectorPanel(getMetaModel()), null);
 
-		tabbedPane_1.addTab("POQL", null, new POQLPanel(getMetaModel()), null);
+		tabbedPane_1.addTab("DAPOQ-Lang", null, new DAPOQLPanel(getMetaModel()), null);
 		
 		tabbedPane_1.addTab("SQL", null, new SQLPanel(getMetaModel()), null);
 
