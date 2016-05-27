@@ -606,7 +606,7 @@ public class OracleLogMinerExtractor {
 				t.name+"' AND OWNER='"+t.db+"'";
 		
 		try {
-			Statement stm = con.createStatement();
+			Statement stm = con2.createStatement();
 			ResultSet res = stm.executeQuery(query);
 
 			while (res.next()) {
