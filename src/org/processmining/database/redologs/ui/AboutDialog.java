@@ -39,7 +39,13 @@ public class AboutDialog extends JWindow {
 				AboutDialog.this.dispose();
 			}
 		};
-		setBackground(new Color(0, 0, 0, 0));
+		
+		try {
+			setBackground(new Color(0, 0, 0, 0));
+		
+		} catch (Exception e) {
+			setBackground(new Color(255,255,255));
+		}
 		
 		addMouseListener(closeOnMouseRelease);
 		//setBounds(100, 100, 720, 170);
