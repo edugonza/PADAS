@@ -520,9 +520,9 @@ public class OracleLogMinerExtractor {
 		Map<String,String> result = new HashMap<>();
 		String query = "SELECT * FROM "+t.db+"."+t.name+" WHERE ROWID='"+rowid+"'";
 
-
+		Statement stm = null;
+		
 		try {
-			Statement stm = null;
 			
 			if (switchRootContainer) {
 				stm = con2.createStatement();
@@ -552,6 +552,14 @@ public class OracleLogMinerExtractor {
 		} catch (Exception e) {
 			System.err.println(query);
 			e.printStackTrace();
+		} finally {
+			if (stm != null) {
+				try {
+					stm.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		return result;
