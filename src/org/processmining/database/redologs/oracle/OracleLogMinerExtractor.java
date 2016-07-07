@@ -529,6 +529,8 @@ public class OracleLogMinerExtractor {
 				/* Switch to the pluggable db */
 				//stm.execute("ALTER SESSION SET CONTAINER = "+t.db);
 				/**/
+			} else {
+				stm = con.createStatement();
 			}
 			
 			ResultSet res = stm.executeQuery(query);
