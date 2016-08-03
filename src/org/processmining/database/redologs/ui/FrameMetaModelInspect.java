@@ -45,7 +45,7 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		JTabbedPane tabbedPane_1 = new JTabbedPane(JTabbedPane.BOTTOM);
 		getContentPane().add(tabbedPane_1, BorderLayout.CENTER);
 		
-		tabbedPane_1.addTab("Inspector", null, new MetaModelInspectorPanel(getMetaModel()), null);
+		tabbedPane_1.addTab("Inspector", null, new MetaModelInspectorPanel(getMetaModel(),true), null);
 
 		tabbedPane_1.addTab("DAPOQ-Lang", null, new DAPOQLPanel(getMetaModel()), null);
 		
