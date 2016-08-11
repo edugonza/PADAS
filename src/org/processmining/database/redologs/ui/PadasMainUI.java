@@ -146,9 +146,14 @@ public class PadasMainUI {
 		
 		try {
 			String dir = "data";
+			String lib = "lib";
 			File dataDir = new File(dir);
+			File libDir = new File(lib);
 			if (!dataDir.exists()) {
 				dataDir.mkdirs();
+			}
+			if (!libDir.exists()) {
+				libDir.mkdir();
 			}
 			File[] filesInData = dataDir.listFiles();
 			for (File f: filesInData) {
