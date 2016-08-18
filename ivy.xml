@@ -35,6 +35,6 @@
 	<dependency org="prom-libs" name="OpenXES" rev="2.0" />
 	<dependency org="prom-libs" name="OpenXES-XStream" rev="2.0" />
 	<dependency org="com.jgoodies" name="jgoodies-forms" rev="1.9.0" />
-	<dependency org="db-process-mining" name="OpenSLEX" rev="0.6"/>
-	<dependency org="db-process-mining" name="DAPOQ-Lang" rev="0.7"/>
+<!--	<dependency org="db-process-mining" name="OpenSLEX" rev="0.6"/>
+	<dependency org="db-process-mining" name="DAPOQ-Lang" rev="0.7"/> -->
 </ivy-module>

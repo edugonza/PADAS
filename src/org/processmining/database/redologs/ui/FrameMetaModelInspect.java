@@ -3,6 +3,7 @@ package org.processmining.database.redologs.ui;
 import org.processmining.database.redologs.ui.components.CustomInternalFrame;
 import org.processmining.openslex.metamodel.SLEXMMStorageMetaModel;
 import org.processmining.database.metamodel.dapoql.ui.components.MetaModelInspectorPanel;
+import org.processmining.database.metamodel.dapoql.ui.components.DAPOQLGroovyPanel;
 import org.processmining.database.metamodel.dapoql.ui.components.DAPOQLPanel;
 import org.processmining.database.metamodel.dapoql.ui.components.SQLPanel;
 import org.processmining.database.redologs.common.Column;
@@ -48,6 +49,8 @@ public class FrameMetaModelInspect extends CustomInternalFrame {
 		tabbedPane_1.addTab("Inspector", null, new MetaModelInspectorPanel(getMetaModel(),true), null);
 
 		tabbedPane_1.addTab("DAPOQ-Lang", null, new DAPOQLPanel(getMetaModel()), null);
+		
+		tabbedPane_1.addTab("DAPOQ-Lang Groovy", null, new DAPOQLGroovyPanel(getMetaModel()), null);
 		
 		tabbedPane_1.addTab("SQL", null, new SQLPanel(getMetaModel()), null);
 
