@@ -32,9 +32,9 @@
 	<dependency org="net.sf.jung" name="jung-visualization" rev="2.0.1" />
 	<dependency org="net.sf.jung" name="jung-graph-impl" rev="2.0.1" />
 	<dependency org="org.jfree" name="jfreechart" rev="1.0.19" />
-	<dependency org="prom-libs" name="OpenXES" rev="2.0" />
-	<dependency org="prom-libs" name="OpenXES-XStream" rev="2.0" />
+	<dependency org="org.rapidprom.thirdparty.lib" name="OpenXES" rev="20160212" />
+	<dependency org="org.rapidprom.thirdparty.lib" name="OpenXES-XStream" rev="20160212" />
 	<dependency org="com.jgoodies" name="jgoodies-forms" rev="1.9.0" />
-<!--	<dependency org="db-process-mining" name="OpenSLEX" rev="0.6"/>
+<!--	<dependency org="db-process-mining" name="OpenSLEX" rev="0.7"/>
 	<dependency org="db-process-mining" name="DAPOQ-Lang" rev="0.7"/> -->
 </ivy-module>
