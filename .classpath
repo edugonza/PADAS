@@ -8,7 +8,5 @@
 	<classpathentry kind="lib" path="lib/Spex.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=PADAS&amp;ivyXmlPath=ivy.xml&amp;confs=*&amp;ivySettingsPath=ivysettings.xml&amp;loadSettingsOnDemand=false&amp;ivyUserDir=&amp;propertyFiles=&amp;acceptedTypes=jar%2Cbundle%2Cejb%2Cmaven-plugin&amp;alphaOrder=false&amp;resolveInWorkspace=true&amp;transitiveResolve=true&amp;readOSGiMetadata=false&amp;retrievedClasspath=false"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/DAPOQ-Lang"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/OpenSLEX"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
