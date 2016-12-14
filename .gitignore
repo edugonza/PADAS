@@ -4,3 +4,6 @@
 /inspector.conf
 /build/
 /.gradle/
+/.classpath
+/.project
+/.settings/
