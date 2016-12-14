@@ -60,8 +60,6 @@ import org.processmining.database.redologs.dag.DAG;
 import org.processmining.database.redologs.dag.DAGNode;
 import org.processmining.database.redologs.ui.FramePerspectives;
 
-import com.sun.beans.finder.FieldFinder;
-
 public class LogTraceSplitter {
 	
 	public static void splitLog(File logFile, DataModel model, String traceIdField, final String orderField, String timestampField, String[] activityNameFields, File splittedLogFile) {
