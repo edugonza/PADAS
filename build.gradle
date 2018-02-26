@@ -3,7 +3,7 @@ plugins {
 }
 
 apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 version = '1.3.4'
 group = 'com.github.edugonza'
@@ -54,9 +54,20 @@ sourceSets {
 
 task fatCapsule(type: FatCapsule) {
 	applicationClass 'org.processmining.database.redologs.ui.PadasMainUI'
+	classifier "capsule"
 }
 
-install.finalizedBy fatCapsule
+//install.finalizedBy fatCapsule
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifact fatCapsule {
+				classifier "capsule"
+			}
+		}
+	}
+}
 
 dependencies {
 	compile  fileTree(dir: 'lib', include: ['*.jar'])
