@@ -2,4 +2,8 @@
 
 [![Release](https://jitpack.io/v/edugonza/PADAS.svg?style=flat-square)](https://jitpack.io/#edugonza/PADAS) [![Build Status](https://travis-ci.org/edugonza/PADAS.svg?branch=master)](https://travis-ci.org/edugonza/PADAS)
 
-Download self contained Jar capsule: [PADAS-1.3.4](https://jitpack.io/com/github/edugonza/PADAS/1.3.4/PADAS-1.3.4-capsule.jar)
+Download the self contained Jar capsule for the [Latest Release](https://github.com/edugonza/PADAS/releases/latest), and run the following command replacing XXX by the right version:
+
+```bash
+$ java -jar PADAS-XXX-capsule.jar
+```
