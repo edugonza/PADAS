@@ -1,4 +1,6 @@
 language: java
+before_deploy:
+  ./gradlew publish
 deploy:
   provider: releases
   api_key:
