@@ -1,1 +1,12 @@
 language: java
+before_deploy:
+  ./gradlew fatCapsule
+deploy:
+  provider: releases
+  api_key:
+    secure: UDr62fJybB8jTZ9SDd2dnj87HxD0NRt3Bwf/aWQ3uN7DUSaqFCV/dyxwwVvQMRON3kb3Y4fpKzJd9JVJf8XZYjdDzCgDeHUbDH4y/odBjiF6Ac5cTM2hXoMD8KMrIK1LIs0C5Fo0lEz4pElbuRaki3pboxK7GIs5BJaLpM+mZu8e/mZ4BLTKJNh+xLGeBR31vx9SgES7Nc29c8CZmx9BPrhii/MAm505OvM5a3gunXenlVIN2GxS2b6I0Fyb/kvFgGXDFfm0xpZ0Wk3mnJxSO3nMYj5wW8b85s9lGPfphr+TiWS5el6rMWLGeG4/4VLRdxjG+yXZhJGaofnYmXu+pfg0wYGLBOQNmwH/5T43skeNa3NDp5ByOAuVMvPMCEj0UiJK6EB+Al6VYQoS4OGnpO4+VQHa0ZxPDuBrnmjURAadXulcr58++d3I40vDSIWaKTnRsKl6UY8M/vkTjfTGeO0BSXghcYY6juxtq2V83GwS4gs/uAUlxdZSZCFgRoy9u82DhJjGmdeB262OSNdHab88e5j0Qhlhz9Q2C5ssxcr3GOZqJBY3ONG+AdcAe3SRzmL7d0HdPQWBZuk87JIS+Ic83gzglf3vsVg3UKgHfvMavpORvx4SjQKv4zOerudao+NdSLD3zZaSYa2nbr3uQqA8ir6CY7YdistrOvVCAkc=
+  file_glob: true
+  file: build/libs/*-capsule.jar
+  skip_cleanup: true
+  on:
+    tags: true
