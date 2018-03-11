@@ -222,7 +222,7 @@ public class PadasMainUI {
 	 */
 	private void initialize() {
 		frmRedologInspector = new JFrame();
-		frmRedologInspector.setTitle(Constants.APP_NAME+" v"+Constants.VERSION);
+		frmRedologInspector.setTitle(Constants.getAppName()+" v"+Constants.getVersion());
 		//frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(RedoLogInspector.class.getResource("/org/processmining/redologs/resources/r.png")));
 		frmRedologInspector.setIconImage(Toolkit.getDefaultToolkit().getImage(PadasMainUI.class.getResource("/org/processmining/database/resources/letters/p.png")));
 		frmRedologInspector.setBounds(100, 100, 1111, 829);

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -175,7 +176,7 @@ public class MetaModelPopulator {
 		
 	public void computeMetaModel() {
 		
-		DB db = DBMaker.tempFileDB().transactionDisable().fileMmapEnableIfSupported().make();
+		DB db = DBMaker.tempFileDB().fileMmapEnableIfSupported().make();
 		//DB db = DBMaker.newTempFileDB().transactionDisable().mmapFileEnableIfSupported().make();
 		
 		SLEXEventResultSet evrset = evCol.getEventsResultSetOrderedBy(orderAttributes);
@@ -188,14 +189,14 @@ public class MetaModelPopulator {
 		
 		// import org.mapdb.*;
 		HTreeMap<Integer,CompactActivityInstance> eventActivityInstanceMap = 
-				db.hashMap("eventActivityInstanceMap"+System.currentTimeMillis());
-		Set<CompactRelation> relationsSet = db.hashSet("relationsSet"+System.currentTimeMillis());
+				(HTreeMap<Integer, CompactActivityInstance>) db.hashMap("eventActivityInstanceMap"+System.currentTimeMillis()).create();;
+		Set<CompactRelation> relationsSet = (Set<CompactRelation>) db.hashSet("relationsSet"+System.currentTimeMillis()).create();;
 		HashMap<TableInfo,Set<CompactObjectID>> objects = new HashMap<>();
 		HTreeMap<SLEXTrace,HashSet<CompactActivityInstance>> caseToActivityInstancesMap =
-				db.hashMap("caseToActivityInstancesMap"+System.currentTimeMillis());
+				(HTreeMap<SLEXTrace, HashSet<CompactActivityInstance>>) db.hashMap("caseToActivityInstancesMap"+System.currentTimeMillis()).create();;
 		
 		HTreeMap<Integer,CompactObjectVersion> objectVersionsId =
-				db.hashMap("objectVersionsToId"+System.currentTimeMillis());
+				(HTreeMap<Integer, CompactObjectVersion>) db.hashMap("objectVersionsToId"+System.currentTimeMillis()).create();;
 		
 		HashMap<TableInfo,HashMap<CompactObjectID,LinkedHashSet<Integer>>> objectVersions = new HashMap<>();
 		HashMap<TableInfo,HashMap<CompactObjectID,Integer>> objectVersionsLast = new HashMap<>();
@@ -203,7 +204,7 @@ public class MetaModelPopulator {
 		//HashMap<TableInfo,NavigableSet<CompactObject[]>> objectVersions = new HashMap<>();
 		
 		HTreeMap<Integer,Long> endDateObjectVersionsMap =
-				db.hashMap("endDateObjectVersionsMap"+System.currentTimeMillis());
+				(HTreeMap<Integer, Long>) db.hashMap("endDateObjectVersionsMap"+System.currentTimeMillis()).create();;
 		
 		HashMap<Integer,Key> keyIndexMap = new HashMap<>();
 		HashMap<Key,Integer> keyIndexReverseMap = new HashMap<>();
@@ -311,7 +312,7 @@ public class MetaModelPopulator {
 			// If object does not exist
 			if (!objects.containsKey(t)) {
 				//objects.put(t, new HashSet<TraceID>());
-				Set<CompactObjectID> set = DBMaker.tempHashSet();
+				Set<CompactObjectID> set = (Set<CompactObjectID>) DBMaker.tempFileDB().make().hashSet(String.valueOf(System.currentTimeMillis())).create();
 				objects.put(t, set);
 			}
 			Set<CompactObjectID> objs = objects.get(t);
@@ -408,8 +409,8 @@ public class MetaModelPopulator {
 				
 				/**/
 				if (!objects.containsKey(referred_pk.table)) {
-					Set<CompactObjectID> set = db.hashSet(
-							"objects-set-for-table-"+creferredTable.db+"-"+creferredTable.name+System.currentTimeMillis());
+					Set<CompactObjectID> set = (Set<CompactObjectID>) db.hashSet(
+							"objects-set-for-table-"+creferredTable.db+"-"+creferredTable.name+System.currentTimeMillis()).create();
 					objects.put(referred_pk.table, set);
 				}
 				if (objects.get(referred_pk.table).contains(creferredID)) {
@@ -567,7 +568,9 @@ public class MetaModelPopulator {
 			strg.setAutoCommit(false);
 
 			// Save Cases and Activity Instances			
-			for (SLEXTrace tr : mm.caseToActivityInstancesMap.keySet()) {
+			SLEXTrace tr = null;
+			Iterator<SLEXTrace> it = mm.caseToActivityInstancesMap.keySet().iterator();
+			while ((tr = it.next()) != null) {
 				SLEXMMCase pcase = strg.createCase(tr.getCaseId());
 				log.add(pcase.getId());
 				for (CompactActivityInstance ai : mm.caseToActivityInstancesMap
