@@ -67,25 +67,25 @@ public class AboutDialog extends JWindow {
 		getContentPane().add(panel);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		
-		JLabel lblNewLabel = new JLabel(Constants.APP_NAME);
+		JLabel lblNewLabel = new JLabel(Constants.getAppName());
 		lblNewLabel.setForeground(Color.WHITE);
 		panel.add(lblNewLabel);
 		lblNewLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		
-		JLabel lblNewLabel_1 = new JLabel("Version "+Constants.VERSION);
+		JLabel lblNewLabel_1 = new JLabel("Version "+Constants.getVersion());
 		lblNewLabel_1.setForeground(Color.WHITE);
 		panel.add(lblNewLabel_1);
 		lblNewLabel_1.setAlignmentX(Component.CENTER_ALIGNMENT);
 		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
 		
-		JLabel lblNewLabel_2 = new JLabel(Constants.AUTHOR);
+		JLabel lblNewLabel_2 = new JLabel(Constants.getAuthor());
 		lblNewLabel_2.setForeground(Color.WHITE);
 		panel.add(lblNewLabel_2);
 		lblNewLabel_2.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel_2.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
-		JLabel lblNewLabel_3 = new JLabel("<"+Constants.EMAIL+">");
+		JLabel lblNewLabel_3 = new JLabel("<"+Constants.getEmail()+">");
 		lblNewLabel_3.setForeground(Color.WHITE);
 		panel.add(lblNewLabel_3);
 		lblNewLabel_3.addMouseListener(new MouseAdapter() {
@@ -93,7 +93,7 @@ public class AboutDialog extends JWindow {
 			public void mouseClicked(MouseEvent e) {
 				try {
 					if (Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
-						Desktop.getDesktop().mail(new URI("mailto",Constants.EMAIL,null));
+						Desktop.getDesktop().mail(new URI("mailto",Constants.getEmail(),null));
 			        } else {
 			        	System.out.println("Mail links not supported");
 			        }

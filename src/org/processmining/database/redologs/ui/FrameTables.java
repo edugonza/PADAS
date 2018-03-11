@@ -116,7 +116,7 @@ public class FrameTables extends CustomInternalFrame {
 	private FrameTables() {		
 		super("Tables list");
 		
-		slexFactory = new SLEXFactory(null);
+		slexFactory = new SLEXFactory();
 		
 		this.setClosable(false);
 		this.setResizable(true);

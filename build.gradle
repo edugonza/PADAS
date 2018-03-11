@@ -1,20 +1,27 @@
 plugins {
 	id "us.kirchmeier.capsule" version "1.0.2"
+	id 'jacoco'
+	id 'com.github.kt3k.coveralls' version '2.8.2'
 }
 
+apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-version = '1.3.4.01'
+wrapper.gradleVersion = '4.6'
+
+version = '1.3.5'
 group = 'com.github.edugonza'
 
 println name+" v"+version
 
 ext {
 	rapidprom_version = '4.0.2'
+	padas_version = version
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	maven { url "https://jitpack.io" }
 	ivy {
@@ -52,6 +59,15 @@ sourceSets {
 	}
 }
 
+jar {
+    manifest {
+	attributes 'PADAS-Version': "${padas_version}"
+	attributes 'PADAS-Author': "Eduardo González López de Murillas"
+	attributes 'PADAS-App-Name': "Process Aware Data Suite" 
+	attributes 'PADAS-Email': "e.gonzalez@tue.nl"
+    }
+}
+
 task fatCapsule(type: FatCapsule) {
 	applicationClass 'org.processmining.database.redologs.ui.PadasMainUI'
 	classifier "capsule"
@@ -69,13 +85,24 @@ publishing {
 	}
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled = true // coveralls plugin depends on xml format report
+        html.enabled = true
+    }
+}
+
+
 dependencies {
 	compile  fileTree(dir: 'lib', include: ['*.jar'])
-	compile  'org.apache.commons:commons-csv:1.2'
+	compile  'org.apache.commons:commons-csv:1.5'
 	compile  'net.sf.jung:jung-visualization:2.0.1'
 	compile  'net.sf.jung:jung-graph-impl:2.0.1'
 	compile  'org.jfree:jfreechart:1.0.19'
 	compile  'com.jgoodies:jgoodies-forms:1.9.0'
-	compile  'com.github.edugonza:OpenSLEX:0.9'
-	compile  'com.github.edugonza:DAPOQ-Lang:0.9'
+	compile  'org.mapdb:mapdb:3.0.5'
+	compile  'org.rapidprom:XESLite:6.7.333'
+	compile  'com.github.edugonza:OpenSLEX:1.0'
+	compile  'com.github.edugonza:DAPOQ-Lang:1.0'
+	compile  'com.jcabi:jcabi-manifests:0.7.5'
 }

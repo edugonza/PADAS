@@ -483,7 +483,7 @@ public class LogTraceSplitter {
 			int events = 0;
 			int traces = 0;
 			
-			SLEXFactory slexFactory = new SLEXFactory(null);
+			SLEXFactory slexFactory = new SLEXFactory();
 			
 			perspective = slexFactory.createStoragePerspective().createPerspective(evCol, name);
 			final SLEXPerspective perspectiveF = perspective;
@@ -1334,7 +1334,7 @@ public class LogTraceSplitter {
 			activityAttributes.add(evCol.getStorage().findAttribute("COMMON", "OPERATION"));
 			
 			// Create new interaction perspective
-			SLEXFactory slexFactory = new SLEXFactory(null);
+			SLEXFactory slexFactory = new SLEXFactory();
 			
 			SLEXPerspective interactionP = slexFactory.createStoragePerspective().createPerspective(evCol, "interactionLog");
 			

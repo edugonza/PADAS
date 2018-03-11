@@ -1,7 +1,6 @@
 package org.processmining.database.exploration;
 
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
@@ -13,12 +12,9 @@ import org.processmining.openslex.SLEXAttributeValue;
 import org.processmining.openslex.SLEXEvent;
 import org.processmining.openslex.SLEXEventCollection;
 import org.processmining.openslex.SLEXEventResultSet;
-import org.processmining.openslex.SLEXFactory;
-import org.processmining.openslex.SLEXStorage;
 import org.processmining.openslex.SLEXStorageCollection;
 import org.processmining.database.redologs.common.DataModel;
 import org.processmining.database.redologs.common.Key;
-import org.processmining.database.redologs.common.SLEXAttributeMapper;
 import org.processmining.database.redologs.common.TableInfo;
 import org.processmining.database.redologs.oracle.OracleLogMinerExtractor;
 
@@ -26,7 +22,7 @@ public class PerspectiveDetector {
 	
 	private SLEXEventCollection evCol;
 	private DataModel dm;
-	private SLEXAttributeMapper mapper;
+	//private SLEXAttributeMapper mapper;
 	
 	private List<Set<TableInfo>> subgraphs;
 	private HashMap<TableInfo,Integer> eventsPerTable;
@@ -34,8 +30,8 @@ public class PerspectiveDetector {
 	private HashMap<TableInfo, Integer> outArcs;
 	private DirectedGraph<TableInfo,Key> dirGraph;
 	
-	public PerspectiveDetector(SLEXEventCollection evCol, DataModel dm, SLEXAttributeMapper mapper) {
-		this.mapper = mapper;
+	public PerspectiveDetector(SLEXEventCollection evCol, DataModel dm /*, SLEXAttributeMapper mapper*/) {
+		//this.mapper = mapper;
 		this.evCol = evCol;
 		this.dm = dm;
 	}
