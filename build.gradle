@@ -10,7 +10,7 @@ apply plugin: 'maven-publish'
 
 wrapper.gradleVersion = '4.6'
 
-version = '1.3.5'
+version = '1.3.6'
 group = 'com.github.edugonza'
 
 println name+" v"+version
@@ -102,7 +102,7 @@ dependencies {
 	compile  'com.jgoodies:jgoodies-forms:1.9.0'
 	compile  'org.mapdb:mapdb:3.0.5'
 	compile  'org.rapidprom:XESLite:6.7.333'
-	compile  'com.github.edugonza:OpenSLEX:1.0'
-	compile  'com.github.edugonza:DAPOQ-Lang:1.0'
+	compile  'com.github.edugonza:OpenSLEX:1.0.1'
+	compile  'com.github.edugonza:DAPOQ-Lang:1.0.1'
 	compile  'com.jcabi:jcabi-manifests:0.7.5'
 }
